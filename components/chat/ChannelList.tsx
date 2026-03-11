@@ -117,11 +117,6 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     return channels.filter((ch) => getChannelDisplayName(ch, client.userID!).toLowerCase().includes(q));
   }, [channels, channelSearch, client?.userID]);
 
-  if (!client?.userID) return null;
-
-  const isEmpty = list.length === 0 && !channelSearch.trim();
-  const showEmptyState = isEmpty && !showArchived;
-
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const el = scrollRef.current;
     if (el && el.scrollTop === 0) pullStartY.current = e.touches[0].clientY;
@@ -140,6 +135,11 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     setPullY(0);
     pullStartY.current = 0;
   }, [pullY, fetchChannels]);
+
+  if (!client?.userID) return null;
+
+  const isEmpty = list.length === 0 && !channelSearch.trim();
+  const showEmptyState = isEmpty && !showArchived;
 
   return (
     <div

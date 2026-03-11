@@ -65,7 +65,7 @@ function buildSessions(
 
   if (meId && byUser.has(meId)) {
     const my = byUser.get(meId)!;
-    const statuses: StatusItem[] = [...my.statuses]
+    const statuses = [...my.statuses]
       .sort(
         (a, b) =>
           new Date(a.createdAt || 0).getTime() -
@@ -78,7 +78,7 @@ function buildSessions(
         caption: s.caption,
         textOverlays: s.textOverlays,
         mediaTransform: s.mediaTransform,
-      }));
+      })) as StatusItem[];
     sessions.push({
       userId: meId,
       userName: me?.fullName || me?.name || "You",
@@ -89,7 +89,7 @@ function buildSessions(
 
   for (const [userId, info] of byUser.entries()) {
     if (userId === meId) continue;
-    const statuses: StatusItem[] = [...info.statuses]
+    const statuses = [...info.statuses]
       .sort(
         (a, b) =>
           new Date(a.createdAt || 0).getTime() -
@@ -102,7 +102,7 @@ function buildSessions(
         caption: s.caption,
         textOverlays: s.textOverlays,
         mediaTransform: s.mediaTransform,
-      }));
+      })) as StatusItem[];
     sessions.push({
       userId,
       userName: info.name,

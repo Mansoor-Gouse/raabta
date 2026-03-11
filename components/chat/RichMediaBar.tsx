@@ -13,6 +13,8 @@ export function RichMediaBar() {
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const { uploadNewFiles, isUploadEnabled, maxFilesLeft } = useMessageInputContext();
+
   useEffect(() => {
     if (!expanded) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -24,22 +26,18 @@ export function RichMediaBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [expanded]);
 
-  try {
-    const { uploadNewFiles, isUploadEnabled, maxFilesLeft } =
-      useMessageInputContext();
+  if (!isUploadEnabled || maxFilesLeft === 0) return null;
 
-    if (!isUploadEnabled || maxFilesLeft === 0) return null;
+  const handlePhoto = () => {
+    inputRef.current?.click();
+    setExpanded(false);
+  };
+  const handleFile = () => {
+    fileRef.current?.click();
+    setExpanded(false);
+  };
 
-    const handlePhoto = () => {
-      inputRef.current?.click();
-      setExpanded(false);
-    };
-    const handleFile = () => {
-      fileRef.current?.click();
-      setExpanded(false);
-    };
-
-    return (
+  return (
       <div className="relative flex items-center" ref={panelRef}>
         <input
           ref={inputRef}
@@ -96,10 +94,7 @@ export function RichMediaBar() {
           </div>
         )}
       </div>
-    );
-  } catch {
-    return null;
-  }
+  );
 }
 
 function AttachIcon() {

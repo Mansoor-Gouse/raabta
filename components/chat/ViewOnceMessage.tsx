@@ -25,22 +25,11 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
   const { client } = useChatContext();
   const currentUserId = client?.userID;
 
-  const postShareAttachment = getPostShareAttachment(message);
-  if (postShareAttachment) {
-    return (
-      <div className="str-chat__message str-chat__message-simple">
-        <SharedPostCard attachment={postShareAttachment} />
-      </div>
-    );
-  }
+  const [hasRevealed, setHasRevealed] = useState(false);
 
   const customData = (message.customData || {}) as CustomData;
-  const isViewOnce = !!customData.view_once;
   const consumedBy = customData.view_once_consumed_by || [];
   const consumed = !!currentUserId && consumedBy.includes(currentUserId);
-  const isSender = isMyMessage?.() ?? false;
-
-  const [hasRevealed, setHasRevealed] = useState(false);
 
   const handleTapToView = useCallback(() => {
     if (!currentUserId || consumed) return;
@@ -54,6 +43,18 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
     };
     updateMessage(updated);
   }, [currentUserId, consumed, message, consumedBy, updateMessage]);
+
+  const postShareAttachment = getPostShareAttachment(message);
+  if (postShareAttachment) {
+    return (
+      <div className="str-chat__message str-chat__message-simple">
+        <SharedPostCard attachment={postShareAttachment} />
+      </div>
+    );
+  }
+
+  const isViewOnce = !!customData.view_once;
+  const isSender = isMyMessage?.() ?? false;
 
   if (!isViewOnce) {
     return <MessageSimple {...props} />;
