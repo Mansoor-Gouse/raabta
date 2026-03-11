@@ -1,0 +1,499 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Instagram UI Mockup 2.0 design tokens */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  /* Instagram palette */
+  --ig-bg: #fafafa;
+  --ig-bg-primary: #ffffff;
+  --ig-border: #dbdbdb;
+  --ig-border-light: #efefef;
+  --ig-text: #262626;
+  --ig-text-secondary: #8e8e8e;
+  --ig-text-tertiary: #a8a8a8;
+  --ig-link: #0095f6;
+  --ig-link-active: #00376b;
+  --ig-error: #ed4956;
+  --ig-like: #ed4956;
+  --ig-story-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  --ig-story-ring-gradient: linear-gradient(145deg, #3d3d3d 0%, #1a1a1a 35%, #000000 70%, #2a2a2a 100%);
+  --ig-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--ig-font);
+  background-color: var(--ig-bg);
+  color: var(--ig-text);
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark {
+  --ig-bg: #000000;
+  --ig-bg-primary: #000000;
+  --ig-border: #262626;
+  --ig-border-light: #262626;
+  --ig-text: #f5f5f5;
+  --ig-text-secondary: #a8a8a8;
+  --ig-text-tertiary: #737373;
+  --ig-link: #0095f6;
+  --ig-like: #ed4956;
+  --ig-story-ring-gradient: linear-gradient(145deg, #404040 0%, #1a1a1a 40%, #0a0a0a 80%, #252525 100%);
+}
+
+/* Add to story flow: B&W theme + subtle gradients */
+.story-add-flow {
+  --story-add-bg: #0b0b0c;
+  --story-add-text: #ffffff;
+  --story-add-bar: #1a1a1c;
+  --story-add-cell: #2a2a2d;
+  --story-add-border: #2f2f33;
+  --story-add-muted: rgba(255, 255, 255, 0.72);
+
+  --story-add-gradient-header: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+  --story-add-gradient-bar: linear-gradient(180deg, #242424 0%, #151515 100%);
+  --story-add-gradient-cell: linear-gradient(180deg, #2d2d2f 0%, #1a1a1c 100%);
+  --story-add-gradient-button: linear-gradient(180deg, #ffffff 0%, #e6e6e6 100%);
+}
+
+/* Hide scrollbar for story strip */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* 1:1 channel: hide message avatar for cleaner look */
+.channel-message-root[data-dm="true"] .str-chat__message-sender-avatar,
+.channel-message-root[data-dm="true"] .str-chat__message-simple .str-chat__avatar {
+  display: none !important;
+}
+
+/* Custom input: use single expandable attach icon; hide Stream's duplicate file button (v1 + v2) */
+.custom-message-input .str-chat__fileupload-wrapper,
+.custom-message-input .str-chat__file-input-container {
+  display: none !important;
+}
+
+/* Stream Chat: fallback avatar (initials when no image) – grey */
+.str-chat__avatar-fallback {
+  background-color: var(--ig-border-light) !important;
+  color: var(--ig-text-secondary) !important;
+}
+
+/* Stream Chat: use SDK default styling (no custom overrides) */
+
+/* Global focus rings */
+input:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #2563eb;
+}
+textarea:focus-visible {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Mobile: message input fixed at bottom so keyboard pushes it up */
+@media (max-width: 767px) {
+  .str-chat__main-panel {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .str-chat__list .str-chat__message-list-scroll {
+    padding-inline: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .channel-message-root {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  .channel-message-list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .channel-message-input-wrap {
+    flex-shrink: 0;
+    padding-bottom: var(--safe-area-inset-bottom);
+    background: white;
+  }
+  .dark .channel-message-input-wrap {
+    background: #111827;
+  }
+}
+
+/* Story viewer drawer: slide up from bottom */
+@keyframes story-viewer-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes story-viewer-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0.9;
+  }
+}
+.animate-story-viewer-in {
+  animation: story-viewer-in 0.25s ease-out forwards;
+}
+.animate-story-viewer-out {
+  animation: story-viewer-out 0.2s ease-in forwards;
+}
+
+/* ========== Elite Events – premium design system (scoped, black gradient highlights) ========== */
+.elite-events {
+  /* Light theme: black/dark gradient shades for highlighting instead of blue */
+  --elite-bg: #fafafa;
+  --elite-surface: #ffffff;
+  --elite-card: #ffffff;
+  --elite-card-text: #262626;
+  --elite-border: #dbdbdb;
+  --elite-border-light: #efefef;
+  --elite-text: #262626;
+  --elite-text-secondary: #8e8e8e;
+  --elite-text-muted: #a8a8a8;
+  --elite-accent: #1a1a1a;
+  --elite-accent-muted: #333333;
+  --elite-accent-hover: #2d2d2d;
+  --elite-accent-gradient: linear-gradient(135deg, #3d3d3d 0%, #1a1a1a 50%, #0d0d0d 100%);
+  --elite-on-accent: #ffffff;
+  --elite-error: #ed4956;
+  --elite-font-serif: "Playfair Display", "Cormorant", Georgia, serif;
+  --elite-font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --elite-radius: 12px;
+  --elite-radius-lg: 16px;
+  --elite-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --elite-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --elite-transition: 200ms ease;
+  --elite-spotlight-accent: #b8860b;
+  --elite-spotlight-glow: 0 0 20px rgba(184, 134, 11, 0.15);
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events {
+    --elite-transition: 0ms;
+  }
+}
+.dark .elite-events {
+  --elite-bg: #000000;
+  --elite-surface: #0a0a0a;
+  --elite-card: #0a0a0a;
+  --elite-card-text: #f5f5f5;
+  --elite-border: #262626;
+  --elite-border-light: #333333;
+  --elite-text: #f5f5f5;
+  --elite-text-secondary: #a8a8a8;
+  --elite-text-muted: #737373;
+  --elite-accent: #e5e5e5;
+  --elite-accent-muted: #a3a3a3;
+  --elite-accent-hover: #fafafa;
+  --elite-accent-gradient: linear-gradient(135deg, #525252 0%, #262626 50%, #171717 100%);
+  --elite-on-accent: #ffffff;
+  --elite-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --elite-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --elite-spotlight-accent: #d4a84b;
+  --elite-spotlight-glow: 0 0 24px rgba(212, 168, 75, 0.2);
+}
+/* Use black gradient for prominent surfaces (FAB, etc.) */
+.elite-events .elite-accent-gradient-bg {
+  background: var(--elite-accent-gradient);
+  border-color: var(--elite-accent);
+  color: var(--elite-on-accent);
+}
+.elite-events .elite-heading {
+  font-family: var(--elite-font-serif);
+}
+.elite-events .elite-body {
+  font-family: var(--elite-font-sans);
+}
+
+/* Trip plan page: force visible icon color on icon-only buttons (contrast with surface) */
+.elite-events .trip-plan-icon-btn:not(.trip-plan-icon-btn-filled) {
+  color: var(--elite-accent);
+}
+.elite-events .trip-plan-icon-btn:not(.trip-plan-icon-btn-filled) svg,
+.elite-events .trip-plan-icon-btn:not(.trip-plan-icon-btn-filled) span {
+  color: inherit;
+}
+.elite-events .trip-plan-icon-btn-danger {
+  color: var(--elite-error);
+}
+.elite-events .trip-plan-icon-btn-danger svg {
+  color: inherit;
+}
+.elite-events .trip-plan-icon-btn-filled {
+  color: #fff;
+}
+.elite-events .trip-plan-icon-btn-filled svg {
+  color: inherit;
+}
+
+/* Elite events: modern select/dropdown (slim, consistent with inputs) */
+.elite-events select,
+.elite-events .elite-select {
+  min-height: 38px;
+  padding: 0.375rem 2rem 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  color: var(--elite-text);
+  background-color: var(--elite-surface);
+  border: 1px solid var(--elite-border);
+  border-radius: var(--elite-radius);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.25rem;
+  transition: border-color var(--elite-transition), box-shadow var(--elite-transition);
+}
+.elite-events select:hover,
+.elite-events .elite-select:hover {
+  border-color: var(--elite-border-light);
+}
+.elite-events select:focus,
+.elite-events .elite-select:focus {
+  outline: none;
+  border-color: var(--elite-accent);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+}
+.dark .elite-events select,
+.dark .elite-events .elite-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a8a8a8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+/* Create event type picker: subtle stagger on load */
+@keyframes create-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.elite-events .create-type-card {
+  opacity: 0;
+  animation: create-card-in 0.35s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .create-type-card {
+    animation: none;
+  }
+}
+
+/* Elite events: card/section entrance animation */
+@keyframes elite-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.elite-events .elite-card-in {
+  opacity: 0;
+  animation: elite-card-in 0.4s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .elite-card-in {
+    animation: none;
+  }
+}
+
+/* Optional field reveal in create flow */
+@keyframes elite-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.elite-events .elite-reveal {
+  animation: elite-reveal-in 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .elite-reveal {
+    animation: none;
+  }
+}
+
+/* Staggered event card entrance: use elite-card-in with animation-delay via --card-index */
+.elite-events .elite-event-card-in {
+  opacity: 0;
+  animation: elite-card-in 0.4s ease-out forwards;
+  animation-delay: calc(var(--card-index, 0) * 50ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .elite-event-card-in {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* FAB idle: subtle scale pulse */
+@keyframes elite-fab-idle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+.elite-events .elite-fab-idle {
+  animation: elite-fab-idle 2s ease-in-out infinite;
+}
+.elite-events .elite-fab-idle:hover,
+.elite-events .elite-fab-idle:focus-visible {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .elite-fab-idle {
+    animation: none;
+  }
+}
+
+/* Optional B&W gradient text (hero/section title) */
+.elite-events .elite-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Elite press feedback: subtle scale on active (for links/cards that are not button) */
+.elite-events .elite-press {
+  transition: transform var(--elite-transition);
+}
+.elite-events .elite-press:active {
+  transform: scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .elite-press:active {
+    transform: none;
+  }
+}
+
+/* Elite hover lift: subtle lift for tappable cards/links */
+.elite-events .elite-hover-lift {
+  transition: transform var(--elite-transition);
+}
+.elite-events .elite-hover-lift:hover {
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .elite-hover-lift:hover {
+    transform: none;
+  }
+}
+
+/* Create wizard: step content enter (playful slide-up + fade) */
+@keyframes create-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.elite-events .create-step-content {
+  animation: create-step-in 0.35s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .create-step-content {
+    animation: none;
+  }
+}
+
+/* Create wizard: staggered section reveal within a step */
+.elite-events .create-form-section {
+  opacity: 0;
+  animation: create-step-in 0.3s ease-out forwards;
+}
+.elite-events .create-form-section:nth-child(1) { animation-delay: 0.02s; }
+.elite-events .create-form-section:nth-child(2) { animation-delay: 0.06s; }
+.elite-events .create-form-section:nth-child(3) { animation-delay: 0.1s; }
+.elite-events .create-form-section:nth-child(4) { animation-delay: 0.14s; }
+.elite-events .create-form-section:nth-child(5) { animation-delay: 0.18s; }
+.elite-events .create-form-section:nth-child(6) { animation-delay: 0.22s; }
+.elite-events .create-form-section:nth-child(7) { animation-delay: 0.26s; }
+.elite-events .create-form-section:nth-child(8) { animation-delay: 0.3s; }
+.elite-events .create-form-section:nth-child(9) { animation-delay: 0.34s; }
+.elite-events .create-form-section:nth-child(n+10) { animation-delay: 0.38s; }
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .create-form-section {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Create wizard: progress segment fill transition */
+.elite-events .create-progress-segment {
+  transition: transform 0.25s ease-out, background-color var(--elite-transition);
+}
+@media (prefers-reduced-motion: reduce) {
+  .elite-events .create-progress-segment {
+    transition: none;
+  }
+}
+
+/* Elite button/card/chip press feedback (Tailwind active:scale overridden when reduced) */
+@media (prefers-reduced-motion: reduce) {
+  .elite-events button,
+  .elite-events [role="button"] {
+    transform: none !important;
+  }
+}

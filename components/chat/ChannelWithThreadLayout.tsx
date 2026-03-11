@@ -1,0 +1,112 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Thread, useChannelStateContext, Window } from "stream-chat-react";
+import { CustomChannelHeader } from "./CustomChannelHeader";
+import { ChannelMessageLayout } from "./ChannelMessageLayout";
+import { ChannelMessageSearch } from "./ChannelMessageSearch";
+import { ChannelOptionsMenu } from "./ChannelOptionsMenu";
+import { ViewOnceMessage } from "./ViewOnceMessage";
+
+/**
+ * Renders channel main panel and thread panel. When a thread is open:
+ * - Mobile: main panel hidden, thread full width with back button.
+ * - Desktop: main and thread side by side.
+ */
+export function ChannelWithThreadLayout() {
+  const { thread } = useChannelStateContext();
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  return (
+    <div className="flex flex-1 min-h-0 min-w-0">
+      {/* Main channel: hide on mobile when thread is open */}
+      <div
+        className={
+          thread
+            ? "hidden md:flex flex-1 min-h-0 min-w-0 flex-col"
+            : "flex flex-1 min-h-0 min-w-0 flex-col"
+        }
+      >
+        <Window>
+          <div className="flex items-center gap-1 sm:gap-2 border-b border-[var(--ig-border)] px-2 py-1 min-h-[44px] shrink-0 bg-[var(--ig-bg-primary)]">
+            <Link
+              href="/app/chats"
+              className="md:hidden p-2 -ml-1 rounded-lg text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)] min-w-[40px] min-h-[40px] flex items-center justify-center shrink-0"
+              aria-label="Back to chats"
+            >
+              <BackIcon />
+            </Link>
+            <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
+              <CustomChannelHeader />
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  className="p-2 rounded-lg text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                  aria-label="Search in conversation"
+                >
+                  <SearchIcon />
+                </button>
+                <ChannelOptionsMenu />
+              </div>
+            </div>
+          </div>
+          {searchOpen && (
+            <ChannelMessageSearch
+              open={searchOpen}
+              onClose={() => setSearchOpen(false)}
+            />
+          )}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <ChannelMessageLayout />
+          </div>
+        </Window>
+      </div>
+
+      {/* Thread panel: visible when thread is set */}
+      {thread && (
+        <div className="flex flex-1 md:max-w-md min-w-0 flex-col border-l border-[var(--ig-border)] bg-[var(--ig-bg-primary)]">
+          <Thread fullWidth Message={ViewOnceMessage} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BackIcon() {
+  return (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 19l-7-7 7-7"
+      />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      />
+    </svg>
+  );
+}

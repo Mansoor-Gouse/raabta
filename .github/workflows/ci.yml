@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+        env:
+          MONGODB_URI: mongodb://localhost:27017/messaging
+          SESSION_SECRET: ci-dummy-session-secret-min-32-characters-long
+          NEXT_PUBLIC_STREAM_API_KEY: dummy-stream-api-key
+          STREAM_SECRET: dummy-stream-secret
