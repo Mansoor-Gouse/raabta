@@ -32,10 +32,11 @@ Do these in order. Your repo is already on GitHub.
    | `SESSION_SECRET` | Long random string (32+ chars); e.g. run in PowerShell: `[Convert]::ToBase64String((1..32 \| ForEach-Object { Get-Random -Maximum 256 }) -as [byte[]])` |
    | `NEXT_PUBLIC_STREAM_API_KEY` | From [Stream dashboard](https://dashboard.getstream.io/) |
    | `STREAM_SECRET` | From Stream dashboard (same app) |
+| `FIXED_OTP_CODE` | Optional. When set (e.g. `123456`), this code is accepted for any phone; no SMS needed. |
 
 5. **Deployments** → open the latest deployment → **Redeploy** (or push a new commit) so the app runs with the new env vars.
 
-Your app URL will be like `https://raabta-xxx.vercel.app`. OTP stays as-is (no SMS); add a provider later if needed.
+Your app URL will be like `https://raabta-xxx.vercel.app`. For login without SMS, set `FIXED_OTP_CODE` (e.g. `123456`) in Vercel env vars; users can enter that code for any phone.
 
 ---
 
@@ -74,6 +75,7 @@ Set these in your hosting dashboard (Vercel, Railway, Render, or in `.env` for D
 | `NEXT_PUBLIC_STREAM_API_KEY` | Yes | Stream Chat/Video API key (public, safe in client). |
 | `STREAM_SECRET` | Yes | Stream secret (server-only; never expose). |
 | `DEVICE_BINDING_SALT` | No | Salt for device-binding hashes; omit to use default. |
+| `FIXED_OTP_CODE` | No | When set (e.g. `123456`), this code is accepted for any phone; no SMS. |
 | `VAPID_PUBLIC_KEY` | No | Web Push: public key (from `npx web-push generate-vapid-keys`). |
 | `VAPID_PRIVATE_KEY` | No | Web Push: private key. Set both or neither for push to work. |
 

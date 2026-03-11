@@ -42,12 +42,11 @@ export async function POST(request: NextRequest) {
           { status: 429 }
         );
       }
-      const otpCode = generateOtpCode();
+      const fixedOtp = process.env.FIXED_OTP_CODE;
+      const otpCode = fixedOtp && fixedOtp.length >= 4 ? fixedOtp : generateOtpCode();
       await storeOtpSession(normalized, otpCode);
       sendCooldown.set(normalized, Date.now());
-      // In production: send SMS via Twilio/Firebase/MSG91 here.
-      // For dev, log the code (remove in production):
-      if (process.env.NODE_ENV !== "production") {
+      if (!fixedOtp && process.env.NODE_ENV !== "production") {
         console.log("[DEV] OTP for", normalized, ":", otpCode);
       }
       return NextResponse.json({ ok: true, message: "Code sent" });
@@ -61,7 +60,11 @@ export async function POST(request: NextRequest) {
         );
       }
       const normalized = normalizePhone(phone);
-      const valid = await verifyOtpSession(normalized, String(code).trim());
+      const codeStr = String(code).trim();
+      const fixedOtp = process.env.FIXED_OTP_CODE;
+      const valid =
+        (fixedOtp && fixedOtp.length >= 4 && codeStr === fixedOtp) ||
+        (await verifyOtpSession(normalized, codeStr));
       if (!valid) {
         return NextResponse.json(
           { error: "Invalid or expired code" },
