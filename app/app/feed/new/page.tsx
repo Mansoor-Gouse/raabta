@@ -155,22 +155,27 @@ export default function NewPostPage() {
             </span>
           ))}
         </div>
-        {step === "select" ? (
-          <div className="w-9" aria-hidden />
-        ) : step === "caption" ? (
-          <button
-            type="button"
-            onClick={handleShare}
-            disabled={saving}
-            className="text-sm font-semibold text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50 transition-opacity"
-          >
-            {saving ? "Posting…" : "Share"}
-          </button>
-        ) : (
-          <div className="text-xs text-[var(--ig-text-secondary)] w-9 text-center">
-            {editIndex + 1}/{items.length}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-[var(--ig-text)]">
+            {step === "select" ? "New post" : step === "edit" ? "Edit media" : "Write post"}
+          </span>
+          {step === "select" ? (
+            <div className="w-9" aria-hidden />
+          ) : step === "caption" ? (
+            <button
+              type="button"
+              onClick={handleShare}
+              disabled={saving}
+              className="text-sm font-semibold text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50 transition-opacity"
+            >
+              {saving ? "Posting…" : "Share"}
+            </button>
+          ) : (
+            <div className="text-xs text-[var(--ig-text-secondary)] w-9 text-center">
+              {editIndex + 1}/{items.length}
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">

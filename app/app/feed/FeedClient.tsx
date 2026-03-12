@@ -22,6 +22,7 @@ export type FeedPost = {
   savedByMe: boolean;
   fromInnerCircle?: boolean;
   fromTrustedCircle?: boolean;
+  likedSampleName?: string;
 };
 
 export function FeedClient() {

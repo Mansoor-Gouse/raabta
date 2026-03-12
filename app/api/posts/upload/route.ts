@@ -67,9 +67,20 @@ export async function POST(request: NextRequest) {
       : (file.name.split(".").pop() || "jpg");
     const name = `${randomUUID()}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const url = await uploadBuffer(Buffer.from(bytes), name, "posts");
-    mediaUrls.push(url);
-    types.push(type);
+    try {
+      const url = await uploadBuffer(Buffer.from(bytes), name, "posts");
+      mediaUrls.push(url);
+      types.push(type);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      if (message.includes("Blob storage is required")) {
+        return NextResponse.json(
+          { error: message },
+          { status: 503 }
+        );
+      }
+      throw err;
+    }
   }
 
   return NextResponse.json({ mediaUrls, types });

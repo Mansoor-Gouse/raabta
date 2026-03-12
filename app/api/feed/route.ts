@@ -84,7 +84,18 @@ export async function GET(request: NextRequest) {
     : null;
 
   const postIds = list.map((p) => (p as unknown as { _id: mongoose.Types.ObjectId })._id);
-  const [likes, saves] = await Promise.all([
+  const circleUserIdStrings = new Set<string>([
+    ...myInnerMemberIds,
+    ...authorsWhoHaveMeInInner,
+    ...authorsWhoHaveMeInTrusted,
+  ]);
+  circleUserIdStrings.delete(String(myId));
+  const circleUserIds =
+    circleUserIdStrings.size > 0
+      ? [...circleUserIdStrings].map((id) => new mongoose.Types.ObjectId(id))
+      : [];
+
+  const [likes, saves, circleLikers] = await Promise.all([
     PostLikeModel.find({ postId: { $in: postIds }, userId: session.userId })
       .select("postId")
       .lean()
@@ -93,6 +104,13 @@ export async function GET(request: NextRequest) {
       .select("postId")
       .lean()
       .exec(),
+    circleUserIds.length > 0
+      ? PostLikeModel.find({ postId: { $in: postIds }, userId: { $in: circleUserIds } })
+          .select("postId userId")
+          .populate("userId", "fullName name")
+          .lean()
+          .exec()
+      : Promise.resolve([]),
   ]);
   const likedSet = new Set(
     likes.map(
@@ -127,6 +145,21 @@ export async function GET(request: NextRequest) {
   ]);
   const commentCountMap = new Map(commentCounts.map((c) => [String(c._id), c.count]));
 
+  const likedSampleMap = new Map<
+    string,
+    { name: string }
+  >();
+  for (const row of circleLikers as unknown as {
+    postId: mongoose.Types.ObjectId;
+    userId: { fullName?: string; name?: string };
+  }[]) {
+    const id = String(row.postId);
+    if (!likedSampleMap.has(id)) {
+      const name = row.userId?.fullName || row.userId?.name;
+      if (name) likedSampleMap.set(id, { name });
+    }
+  }
+
   const items = list.map((p) => {
     const post = p as unknown as {
       _id: mongoose.Types.ObjectId;
@@ -146,6 +179,7 @@ export async function GET(request: NextRequest) {
     const authorIdStr = String(author._id);
     const fromInnerCircle = myInnerMemberIds.has(authorIdStr) || authorsWhoHaveMeInInner.has(authorIdStr);
     const fromTrustedCircle = authorsWhoHaveMeInTrusted.has(authorIdStr);
+    const likedSample = likedSampleMap.get(id);
     return {
       _id: id,
       authorId: authorIdStr,
@@ -160,6 +194,7 @@ export async function GET(request: NextRequest) {
       savedByMe: savedSet.has(id),
       fromInnerCircle,
       fromTrustedCircle: fromTrustedCircle && !fromInnerCircle,
+      likedSampleName: likedSample?.name,
     };
   });
 

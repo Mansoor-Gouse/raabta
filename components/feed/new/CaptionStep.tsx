@@ -103,7 +103,7 @@ export function CaptionStep({
 
         <div>
           <label htmlFor="caption" className="block text-sm font-medium text-[var(--ig-text)] mb-1">
-            Caption
+            Post content
           </label>
           <textarea
             id="caption"
@@ -113,7 +113,7 @@ export function CaptionStep({
               if (v.length <= CAPTION_MAX_LENGTH) onCaptionChange(v);
             }}
             rows={4}
-            placeholder="Write a caption..."
+            placeholder="What do you want to share?"
             maxLength={CAPTION_MAX_LENGTH}
             className="w-full rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] px-3 py-2 text-sm text-[var(--ig-text)] placeholder:text-[var(--ig-text-tertiary)] resize-y focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] focus:border-transparent"
             aria-describedby="caption-count"
@@ -128,13 +128,21 @@ export function CaptionStep({
           )}
         </div>
 
-        <div>
+        <div className="flex gap-2 pt-2">
           <button
             type="button"
-            onClick={() => setShowPreview(true)}
-            className="post-flow-cta px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-95"
+            onClick={onBack}
+            className="px-4 py-2.5 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium hover:bg-[var(--ig-border-light)] transition-colors"
           >
-            Preview post
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={onShare}
+            disabled={saving}
+            className="post-flow-cta flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-all hover:opacity-95"
+          >
+            {saving ? "Posting…" : "Post"}
           </button>
         </div>
 
@@ -164,24 +172,6 @@ export function CaptionStep({
           <p role="alert" className="text-sm text-[var(--ig-error)]">{error}</p>
         )}
         </div>
-      </div>
-
-      <div className="p-4 border-t border-[var(--ig-border-light)] flex gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-4 py-2.5 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium hover:bg-[var(--ig-border-light)] transition-colors"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={onShare}
-          disabled={saving}
-          className="post-flow-cta flex-1 py-3 rounded-xl text-sm font-semibold disabled:opacity-50 transition-all hover:opacity-95"
-        >
-          {saving ? "Posting…" : "Share"}
-        </button>
       </div>
     </div>
   );

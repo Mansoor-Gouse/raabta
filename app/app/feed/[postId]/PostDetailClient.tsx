@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReportButton } from "@/components/report/ReportButton";
 import { ShareSheet } from "@/components/feed/ShareSheet";
-import { IconHeart, IconThumbsUp, IconClap, IconGlobe, IconShare, IconBookmark } from "@/components/layout/InstagramIcons";
+import { IconHeart, IconThumbsUp, IconClap, IconGlobe, IconShare, IconBookmark, IconComment } from "@/components/layout/InstagramIcons";
 
 type Post = {
   _id: string;
@@ -405,32 +405,49 @@ export function PostDetailClient({
           </div>
         )}
 
-        {/* Footer: overlapping reaction icons + count + comments */}
-        <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--ig-border-light)]">
-          <div className="flex items-center gap-1">
-            <div className="flex -space-x-2">
-              <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-link)]" aria-hidden>
-                <IconThumbsUp className="w-3.5 h-3.5" filled />
-              </span>
-              <button type="button" onClick={toggleLike} className={`w-6 h-6 rounded-full flex items-center justify-center border-2 border-[var(--ig-bg-primary)] ${liked ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)]"}`} aria-label={liked ? "Unlike" : "Like"}>
-                <IconHeart className="w-3.5 h-3.5" filled={liked} filledGradientId={liked ? `heart-gradient-detail-${post._id}` : undefined} />
-              </button>
-              <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]" aria-hidden>
-                <IconClap className="w-3.5 h-3.5" />
-              </span>
-            </div>
-            {likeCount > 0 && <span className="text-sm font-semibold text-[var(--ig-text)] ml-1">{likeCount}</span>}
-          </div>
-          <div className="flex-1 flex justify-end items-center gap-2">
-            <span className="text-sm text-[var(--ig-text)]">{commentCount} comment{commentCount !== 1 ? "s" : ""}</span>
-            <span className="text-sm text-[var(--ig-text-secondary)]">0 reposts</span>
-            <button type="button" onClick={() => setShareSheetOpen(true)} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label="Share">
-              <IconShare className="w-5 h-5" />
-            </button>
-            <button type="button" onClick={toggleSave} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label={saved ? "Unsave" : "Save"}>
-              <IconBookmark className="w-5 h-5" filled={saved} />
-            </button>
-          </div>
+        {/* Footer: reaction bar — icon-only, compact */}
+        <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--ig-border-light)] text-sm">
+          <button
+            type="button"
+            onClick={toggleLike}
+            aria-pressed={liked}
+            className={`p-1.5 rounded-full transition-colors ${
+              liked ? "bg-[var(--ig-text)] text-[var(--ig-bg-primary)]" : "text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+            }`}
+          >
+            <IconHeart
+              className="w-5 h-5"
+              filled={liked}
+              filledGradientId={liked ? `heart-gradient-detail-${post._id}` : undefined}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const commentsEl = document.getElementById("comments");
+              commentsEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+            aria-label="Comments"
+          >
+            <IconComment className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShareSheetOpen(true)}
+            className="p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+            aria-label="Share"
+          >
+            <IconShare className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={toggleSave}
+            className="ml-auto p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+            aria-label={saved ? "Unsave" : "Save"}
+          >
+            <IconBookmark className="w-5 h-5" filled={saved} />
+          </button>
         </div>
 
         <div id="comments" className="px-4 py-2 border-t border-[var(--ig-border-light)]">

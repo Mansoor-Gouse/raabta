@@ -30,6 +30,7 @@ export type PostCardPost = {
   savedByMe: boolean;
   fromInnerCircle?: boolean;
   fromTrustedCircle?: boolean;
+  likedSampleName?: string;
 };
 
 const CAPTION_LINE_HEIGHT = 1.35;
@@ -155,19 +156,21 @@ export function PostCard({
   const caption = post.caption ?? "";
   const captionNeedsExpand = caption.length > 120;
   const showCaptionPreview = captionNeedsExpand && !captionExpanded;
+  const likedSampleName = post.likedSampleName;
 
   return (
     <article className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
-      {/* 1. Top row — Likes (when likeCount > 0) */}
-      {likeCount > 0 && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--ig-border-light)]">
-          <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)] shrink-0">
-            <span className="text-xs font-semibold text-[var(--ig-text-secondary)]">
-              {likeCount > 0 ? "♥" : ""}
+      {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
+      {likedSampleName && likeCount > 0 && (
+        <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[var(--ig-border-light)]">
+          <div className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)] shrink-0">
+            <span className="text-[10px] font-semibold text-[var(--ig-text-secondary)]">
+              ♥
             </span>
           </div>
-          <span className="text-sm text-[var(--ig-text)] flex-1 min-w-0">
-            <span className="font-semibold">{likeCount}</span> {likeCount === 1 ? "likes" : "others like"} this
+          <span className="text-xs text-[var(--ig-text)] flex-1 min-w-0">
+            <span className="font-semibold">{likedSampleName}</span>
+            {likeCount > 1 ? ` and ${likeCount - 1} others like this` : " likes this"}
           </span>
           <div className="relative flex items-center gap-1 shrink-0" ref={menuRef}>
             <button
@@ -228,7 +231,7 @@ export function PostCard({
       )}
 
       {/* 2. Author block */}
-      <header className="flex items-center gap-3 px-4 py-3">
+      <header className="flex items-center gap-3 px-4 py-2.5">
         <Link href={`/app/members/${post.authorId}`} className="shrink-0">
           <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)]">
             {post.authorImage ? (
@@ -297,12 +300,6 @@ export function PostCard({
             )}
           </div>
         )}
-        <Link
-          href={`/app/members/${post.authorId}`}
-          className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--ig-link)] text-white hover:opacity-90 transition-opacity"
-        >
-          Follow
-        </Link>
       </header>
 
       {/* 3. Caption / body text */}
@@ -376,51 +373,52 @@ export function PostCard({
         </div>
       )}
 
-      {/* 5. Footer — overlapping reaction icons + count + comments • reposts + share/save */}
-      <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--ig-border-light)]">
-        <div className="flex items-center gap-1">
-          <div className="flex -space-x-2">
-            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-link)]" aria-hidden>
-              <IconThumbsUp className="w-3.5 h-3.5" filled />
-            </span>
-            <button
-              type="button"
-              onClick={toggleLike}
-              className={`w-6 h-6 rounded-full flex items-center justify-center border-2 border-[var(--ig-bg-primary)] transition-opacity hover:opacity-80 ${liked ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)]"}`}
-              aria-label={liked ? "Unlike" : "Like"}
-            >
-              <IconHeart className="w-3.5 h-3.5" filled={liked} filledGradientId={liked ? `heart-gradient-${post._id}` : undefined} />
-            </button>
-            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]" aria-hidden>
-              <IconClap className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          {totalReactions > 0 && (
-            <span className="text-sm font-semibold text-[var(--ig-text)] ml-1">{totalReactions}</span>
-          )}
-        </div>
-        <div className="flex-1 flex justify-end items-center gap-2">
-          {onOpenComments ? (
-            <button
-              type="button"
-              onClick={() => onOpenComments(post._id, post.authorName)}
-              className="text-sm text-[var(--ig-text)] hover:opacity-80"
-            >
-              {post.commentCount} comment{post.commentCount !== 1 ? "s" : ""}
-            </button>
-          ) : (
-            <Link href={`/app/feed/${post._id}`} className="text-sm text-[var(--ig-text)] hover:opacity-80">
-              {post.commentCount} comment{post.commentCount !== 1 ? "s" : ""}
-            </Link>
-          )}
-          <span className="text-sm text-[var(--ig-text-secondary)]">{repostCount} repost{repostCount !== 1 ? "s" : ""}</span>
-          <button type="button" onClick={() => onShare?.(post)} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label="Share">
-            <IconShare className="w-5 h-5" />
+      {/* 5. Reaction bar — icon-only, compact */}
+      <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--ig-border-light)] text-sm">
+        <button
+          type="button"
+          onClick={toggleLike}
+          aria-pressed={liked}
+          className={`p-1.5 rounded-full transition-colors ${
+            liked ? "bg-[var(--ig-text)] text-[var(--ig-bg-primary)]" : "text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+          }`}
+        >
+          <IconHeart className="w-5 h-5" filled={liked} filledGradientId={liked ? `heart-gradient-${post._id}` : undefined} />
+        </button>
+        {onOpenComments ? (
+          <button
+            type="button"
+            onClick={() => onOpenComments(post._id, post.authorName)}
+            className="p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+            aria-label="Comments"
+          >
+            <IconComment className="w-5 h-5" />
           </button>
-          <button type="button" onClick={toggleSave} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label={saved ? "Unsave" : "Save"}>
-            <IconBookmark className="w-5 h-5" filled={saved} />
-          </button>
-        </div>
+        ) : (
+          <Link
+            href={`/app/feed/${post._id}`}
+            className="p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+            aria-label="Comments"
+          >
+            <IconComment className="w-5 h-5" />
+          </Link>
+        )}
+        <button
+          type="button"
+          onClick={() => onShare?.(post)}
+          className="p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+          aria-label="Share"
+        >
+          <IconShare className="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          onClick={toggleSave}
+          className="ml-auto p-1.5 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
+          aria-label={saved ? "Unsave" : "Save"}
+        >
+          <IconBookmark className="w-5 h-5" filled={saved} />
+        </button>
       </div>
     </article>
   );

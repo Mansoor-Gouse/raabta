@@ -14,6 +14,13 @@ export async function POST(request: Request) {
     visibility?: "network" | "friends" | "event-attendees" | "inner_circle" | "trusted_circle";
   };
   const urls = Array.isArray(mediaUrls) ? mediaUrls.filter((u): u is string => typeof u === "string") : [];
+  const trimmedCaption = typeof caption === "string" ? caption.trim() : "";
+  if (!trimmedCaption && urls.length === 0) {
+    return NextResponse.json(
+      { error: "Post must include text or media." },
+      { status: 400 }
+    );
+  }
   const visibilityValue =
     visibility === "friends" || visibility === "event-attendees" || visibility === "inner_circle" || visibility === "trusted_circle"
       ? visibility
@@ -22,7 +29,7 @@ export async function POST(request: Request) {
   const post = await PostModel.create({
     authorId: session.userId,
     mediaUrls: urls,
-    caption: typeof caption === "string" ? caption : "",
+    caption: trimmedCaption,
     visibility: visibilityValue,
   });
   const created = await PostModel.findById(post._id)

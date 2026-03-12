@@ -83,7 +83,7 @@ export function MediaSelector({
   return (
     <div className="flex flex-col h-full p-4">
       <div className="flex-1 overflow-auto">
-        <div className="post-flow-card p-6 min-h-[280px] flex flex-col">
+        <div className="post-flow-card p-6 min-h-[280px] flex flex-col gap-4">
         {items.length === 0 ? (
           <div
             role="button"
@@ -113,7 +113,7 @@ export function MediaSelector({
           </div>
         ) : (
           <div
-            className="space-y-3"
+            className="space-y-3 flex-1 flex flex-col"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
@@ -187,19 +187,19 @@ export function MediaSelector({
             </p>
           </div>
         )}
+        {items.length > 0 && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={onNext}
+              className="post-flow-cta w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 shadow-md"
+            >
+              Next
+            </button>
+          </div>
+        )}
         </div>
       </div>
-      {items.length > 0 && (
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={onNext}
-            className="post-flow-cta w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 shadow-md"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 }
