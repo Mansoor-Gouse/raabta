@@ -264,8 +264,9 @@ export function PostCard({
               </span>
             )}
           </div>
-          <p className="text-xs text-[var(--ig-text-secondary)] truncate">Member</p>
           <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
+            <span className="truncate">Member</span>
+            <span>•</span>
             <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
             <span>•</span>
             <IconGlobe className="w-3.5 h-3.5" aria-hidden />
@@ -373,17 +374,19 @@ export function PostCard({
         </div>
       )}
 
-      {/* 5. Reaction bar — icon-only, compact */}
+      {/* 5. Reaction bar — icon-only, compact (no background highlight, only icon changes) */}
       <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--ig-border-light)] text-sm">
         <button
           type="button"
           onClick={toggleLike}
           aria-pressed={liked}
-          className={`p-1.5 rounded-full transition-colors ${
-            liked ? "bg-[var(--ig-text)] text-[var(--ig-bg-primary)]" : "text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-          }`}
+          className="p-1.5 rounded-full text-[var(--ig-text)] transition-transform hover:scale-105"
         >
-          <IconHeart className="w-5 h-5" filled={liked} filledGradientId={liked ? `heart-gradient-${post._id}` : undefined} />
+          <IconHeart
+            className="w-5 h-5"
+            filled={liked}
+            filledGradientId={liked ? `heart-gradient-${post._id}` : undefined}
+          />
         </button>
         {onOpenComments ? (
           <button

@@ -124,8 +124,11 @@ export function CommentsDrawer({
           [parentId]: [...(prev[parentId] ?? []), created],
         }));
         setComments((prev) =>
-          prev.map((c) => (c._id === parentId ? { ...c, replyCount: (c.replyCount ?? 0) + 1 } : c))
+          prev.map((c) =>
+            c._id === parentId ? { ...c, replyCount: (c.replyCount ?? 0) + 1 } : c
+          )
         );
+        setExpandedReplies((prev) => new Set(prev).add(parentId));
       } else {
         setComments((prev) => [...prev, created]);
       }
@@ -203,6 +206,21 @@ export function CommentsDrawer({
           : x
       )
     );
+    setRepliesByParentId((prev) => {
+      const next: typeof prev = {};
+      for (const key of Object.keys(prev)) {
+        next[key] = prev[key].map((r) =>
+          r._id === c._id
+            ? {
+                ...r,
+                likedByMe: !liked,
+                likeCount: Math.max(0, (r.likeCount ?? 0) + (liked ? -1 : 1)),
+              }
+            : r
+        );
+      }
+      return next;
+    });
   }
 
   if (!open) return null;

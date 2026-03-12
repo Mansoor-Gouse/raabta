@@ -7,7 +7,6 @@ import { ChannelList } from "@/components/chat/ChannelList";
 import {
   IconHome,
   IconEvents,
-  IconAdd,
   IconMessenger,
   IconProfile,
   IconMembers,
@@ -22,7 +21,6 @@ export function useAppUser() {
 const mainNav = [
   { href: "/app/feed", label: "Home", icon: "home" },
   { href: "/app/events", label: "Explore", icon: "explore" },
-  { href: "/app/feed/new", label: "Create", icon: "add" },
   { href: "/app/chats", label: "Chats", icon: "chat" },
   { href: "/app/members", label: "Members", icon: "members" },
   { href: "/app/profile", label: "Profile", icon: "profile" },
@@ -42,8 +40,7 @@ function isChatsActive(pathname: string) {
 
 function getActiveNav(pathname: string) {
   if (pathname === "/app/feed" || pathname.startsWith("/app/feed/")) return "/app/feed";
-  if (pathname === "/app/events" || pathname.startsWith("/app/events/")) return "/app/events";
-  if (pathname === "/app/feed/new") return "/app/feed/new";
+          if (pathname === "/app/events" || pathname.startsWith("/app/events/")) return "/app/events";
   if (isChatsActive(pathname)) return "/app/chats";
   if (pathname === "/app/profile" || pathname.startsWith("/app/profile/")) return "/app/profile";
   if (pathname === "/app/members" || pathname.startsWith("/app/members/")) return "/app/members";
@@ -168,12 +165,6 @@ export function AppShell({
             aria-current={activeNav === "/app/events" ? "page" : undefined}
           >
             <IconEvents className="w-6 h-6" filled={activeNav === "/app/events"} />
-          </Link>
-          <Link
-            href="/app/feed/new"
-            className="flex flex-col items-center justify-center flex-1 py-2 text-[var(--ig-text)] min-w-0"
-          >
-            <IconAdd className="w-6 h-6" />
           </Link>
           <Link
             href="/app/chats"

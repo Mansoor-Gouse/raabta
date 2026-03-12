@@ -124,8 +124,16 @@ export function PostDetailClient({
       if (!res.ok) throw new Error(data.error || "Failed to post comment");
       const newComment: Comment = { ...data, likeCount: 0, likedByMe: false };
       if (parentId) {
-        setRepliesByParentId((prev) => ({ ...prev, [parentId]: [...(prev[parentId] ?? []), newComment] }));
-        setComments((prev) => prev.map((c) => (c._id === parentId ? { ...c, replyCount: (c.replyCount ?? 0) + 1 } : c)));
+        setRepliesByParentId((prev) => ({
+          ...prev,
+          [parentId]: [...(prev[parentId] ?? []), newComment],
+        }));
+        setComments((prev) =>
+          prev.map((c) =>
+            c._id === parentId ? { ...c, replyCount: (c.replyCount ?? 0) + 1 } : c
+          )
+        );
+        setExpandedReplies((prev) => new Set(prev).add(parentId));
       } else {
         setComments((prev) => [...prev, newComment]);
       }
@@ -229,6 +237,21 @@ export function PostDetailClient({
           : x
       )
     );
+    setRepliesByParentId((prev) => {
+      const next: typeof prev = {};
+      for (const key of Object.keys(prev)) {
+        next[key] = prev[key].map((r) =>
+          r._id === c._id
+            ? {
+                ...r,
+                likedByMe: !liked,
+                likeCount: Math.max(0, (r.likeCount ?? 0) + (liked ? -1 : 1)),
+              }
+            : r
+        );
+      }
+      return next;
+    });
   }
 
   const media = post.mediaUrls[mediaIndex];
@@ -338,8 +361,9 @@ export function PostDetailClient({
             <Link href={`/app/members/${post.authorId}`} className="font-semibold text-[var(--ig-text)] text-sm hover:opacity-80 block truncate">
               {post.authorName}
             </Link>
-            <p className="text-xs text-[var(--ig-text-secondary)]">Member</p>
             <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
+              <span>Member</span>
+              <span>•</span>
               <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
               <span>•</span>
               <IconGlobe className="w-3.5 h-3.5" aria-hidden />
@@ -405,15 +429,13 @@ export function PostDetailClient({
           </div>
         )}
 
-        {/* Footer: reaction bar — icon-only, compact */}
+        {/* Footer: reaction bar — icon-only, compact (no background highlight, only icon changes) */}
         <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--ig-border-light)] text-sm">
           <button
             type="button"
             onClick={toggleLike}
             aria-pressed={liked}
-            className={`p-1.5 rounded-full transition-colors ${
-              liked ? "bg-[var(--ig-text)] text-[var(--ig-bg-primary)]" : "text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-            }`}
+            className="p-1.5 rounded-full text-[var(--ig-text)] transition-transform hover:scale-105"
           >
             <IconHeart
               className="w-5 h-5"

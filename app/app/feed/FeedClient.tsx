@@ -103,7 +103,7 @@ export function FeedClient() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[var(--ig-bg)]">
+    <div className="flex-1 overflow-y-auto bg-[var(--ig-bg)] relative">
       <StoryBar />
       <div>
         {posts.length === 0 ? (
@@ -165,6 +165,15 @@ export function FeedClient() {
         onClose={() => setShareSheetPost(null)}
         post={shareSheetPost}
       />
+
+      {/* Floating create button above bottom nav (mobile) */}
+      <Link
+        href="/app/feed/new"
+        className="md:hidden fixed right-4 bottom-[72px] z-40 w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-lg shadow-black/40"
+        aria-label="Create post"
+      >
+        <span className="text-2xl leading-none">+</span>
+      </Link>
     </div>
   );
 }
