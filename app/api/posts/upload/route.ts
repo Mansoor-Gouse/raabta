@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { requireAuth } from "@/lib/auth";
+import { uploadBuffer } from "@/lib/storage";
 import { randomUUID } from "crypto";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -46,8 +45,6 @@ export async function POST(request: NextRequest) {
 
   const mediaUrls: string[] = [];
   const types: ("image" | "video")[] = [];
-  const dir = path.join(process.cwd(), "public", "posts");
-  await mkdir(dir, { recursive: true });
 
   for (const file of files) {
     if (file.size > MAX_FILE_SIZE) {
@@ -69,10 +66,9 @@ export async function POST(request: NextRequest) {
       ? (file.name.split(".").pop() || "mp4")
       : (file.name.split(".").pop() || "jpg");
     const name = `${randomUUID()}.${ext}`;
-    const filePath = path.join(dir, name);
     const bytes = await file.arrayBuffer();
-    await writeFile(filePath, Buffer.from(bytes));
-    mediaUrls.push("/posts/" + name);
+    const url = await uploadBuffer(Buffer.from(bytes), name, "posts");
+    mediaUrls.push(url);
     types.push(type);
   }
 

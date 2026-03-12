@@ -1,5 +1,6 @@
 "use client";
 
+import { IconThumbsUp, IconHeart, IconClap, IconGlobe } from "@/components/layout/InstagramIcons";
 import type { Visibility } from "./CaptionStep";
 
 type PostPreviewCardProps = {
@@ -29,23 +30,46 @@ export function PostPreviewCard({
   const isImage = firstUrl?.match(/\.(gif|webp|png|jpe?g|avif)$/i);
 
   return (
-    <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-lg overflow-hidden max-w-md mx-auto">
+    <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden max-w-md mx-auto shadow-lg">
+      {/* Author block — same as feed card */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-[var(--ig-border-light)]">
-        <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)] shrink-0">
+        <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)] shrink-0">
           {authorImage ? (
             <img src={authorImage} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span className="text-sm font-semibold text-[var(--ig-text-secondary)]">
+            <span className="text-base font-semibold text-[var(--ig-text-secondary)]">
               {authorName?.charAt(0)?.toUpperCase() || "?"}
             </span>
           )}
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm text-[var(--ig-text)] truncate">{authorName}</p>
-          <p className="text-xs text-[var(--ig-text-secondary)]">Preview</p>
+          <p className="text-xs text-[var(--ig-text-secondary)]">Member</p>
+          <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
+            <span>Now</span>
+            <span>•</span>
+            <IconGlobe className="w-3.5 h-3.5" aria-hidden />
+          </div>
         </div>
+        <span className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--ig-link)] text-white">
+          Follow
+        </span>
       </header>
-      <div className="relative aspect-square w-full bg-black">
+
+      {/* Caption */}
+      {caption && (
+        <div className="px-4 py-2 border-b border-[var(--ig-border-light)]">
+          <p className="text-sm text-[var(--ig-text)] leading-snug">
+            <span className="font-semibold mr-1.5">{authorName}</span>
+            {caption}
+          </p>
+        </div>
+      )}
+      {!caption && <div className="border-b border-[var(--ig-border-light)]" />}
+
+      {/* Rectangular image (omit when text-only) */}
+      {mediaUrls.length > 0 && (
+      <div className="relative aspect-[16/10] w-full bg-black">
         {firstUrl ? (
           isImage ? (
             <img src={firstUrl} alt="" className="w-full h-full object-cover" />
@@ -72,19 +96,33 @@ export function PostPreviewCard({
           </div>
         )}
       </div>
-      <div className="px-4 py-2 space-y-1">
-        {caption ? (
-          <p className="text-sm text-[var(--ig-text)]">
-            <span className="font-semibold mr-1.5">{authorName}</span>
-            {caption}
-          </p>
-        ) : (
-          <p className="text-sm text-[var(--ig-text-tertiary)] italic">No caption</p>
-        )}
-        <p className="text-xs text-[var(--ig-text-secondary)]">
-          {VISIBILITY_LABELS[visibility]}
-        </p>
+      )}
+
+      {/* Footer — overlapping reaction icons + comments • reposts */}
+      <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--ig-border-light)]">
+        <div className="flex items-center gap-1">
+          <div className="flex -space-x-2">
+            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]">
+              <IconThumbsUp className="w-3.5 h-3.5" filled />
+            </span>
+            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]">
+              <IconHeart className="w-3.5 h-3.5" />
+            </span>
+            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]">
+              <IconClap className="w-3.5 h-3.5" />
+            </span>
+          </div>
+          <span className="text-sm font-semibold text-[var(--ig-text-secondary)] ml-1">0</span>
+        </div>
+        <div className="flex-1 flex justify-end gap-2 text-sm text-[var(--ig-text-secondary)]">
+          <span>0 comments</span>
+          <span>0 reposts</span>
+        </div>
       </div>
+
+      <p className="px-4 pb-3 text-xs text-[var(--ig-text-secondary)]">
+        {VISIBILITY_LABELS[visibility]}
+      </p>
     </article>
   );
 }

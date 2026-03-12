@@ -14,12 +14,6 @@ export async function POST(request: Request) {
     visibility?: "network" | "friends" | "event-attendees" | "inner_circle" | "trusted_circle";
   };
   const urls = Array.isArray(mediaUrls) ? mediaUrls.filter((u): u is string => typeof u === "string") : [];
-  if (urls.length === 0) {
-    return NextResponse.json(
-      { error: "At least one media URL is required" },
-      { status: 400 }
-    );
-  }
   const visibilityValue =
     visibility === "friends" || visibility === "event-attendees" || visibility === "inner_circle" || visibility === "trusted_circle"
       ? visibility

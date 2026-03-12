@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReportButton } from "@/components/report/ReportButton";
 import { ShareSheet } from "@/components/feed/ShareSheet";
-import { IconHeart } from "@/components/layout/InstagramIcons";
+import { IconHeart, IconThumbsUp, IconClap, IconGlobe, IconShare, IconBookmark } from "@/components/layout/InstagramIcons";
 
 type Post = {
   _id: string;
@@ -309,123 +309,129 @@ export function PostDetailClient({
           </div>
         </div>
 
+        {/* Likes row (when likeCount > 0) */}
+        {likeCount > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--ig-border-light)]">
+            <div className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center shrink-0">
+              <span className="text-xs">♥</span>
+            </div>
+            <span className="text-sm text-[var(--ig-text)] flex-1">
+              <span className="font-semibold">{likeCount}</span> {likeCount === 1 ? "likes" : "others like"} this
+            </span>
+          </div>
+        )}
+
+        {/* Author block */}
         <header className="flex items-center gap-3 px-4 py-3">
           <Link href={`/app/members/${post.authorId}`} className="shrink-0">
-            <div className="w-10 h-10 rounded-full bg-[var(--ig-border-light)] overflow-hidden flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--ig-border-light)] overflow-hidden flex items-center justify-center">
               {post.authorImage ? (
                 <img src={post.authorImage} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lg font-medium text-[var(--ig-text-secondary)]">
+                <span className="text-base font-semibold text-[var(--ig-text-secondary)]">
                   {post.authorName?.charAt(0)?.toUpperCase() || "?"}
                 </span>
               )}
             </div>
           </Link>
           <div className="min-w-0 flex-1">
-            <Link
-              href={`/app/members/${post.authorId}`}
-              className="font-semibold text-[var(--ig-text)] text-sm hover:opacity-80"
-            >
+            <Link href={`/app/members/${post.authorId}`} className="font-semibold text-[var(--ig-text)] text-sm hover:opacity-80 block truncate">
               {post.authorName}
             </Link>
-            <p className="text-xs text-[var(--ig-text-secondary)]">
-              {new Date(post.createdAt).toLocaleString()}
-            </p>
+            <p className="text-xs text-[var(--ig-text-secondary)]">Member</p>
+            <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
+              <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
+              <span>•</span>
+              <IconGlobe className="w-3.5 h-3.5" aria-hidden />
+            </div>
           </div>
+          <Link href={`/app/members/${post.authorId}`} className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--ig-link)] text-white hover:opacity-90">
+            Follow
+          </Link>
         </header>
 
-        <div
-          className="relative aspect-square max-h-[500px] w-full bg-black cursor-default"
-          onClick={(e) => {
-            if (!hasMultiple) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            if (x < rect.width * 0.4) setMediaIndex((i) => (i === 0 ? post.mediaUrls.length - 1 : i - 1));
-            else if (x > rect.width * 0.6) setMediaIndex((i) => (i === post.mediaUrls.length - 1 ? 0 : i + 1));
-          }}
-        >
-          {media && (
-            <>
-              {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
-                <img src={media} alt="" className="w-full h-full object-contain pointer-events-none" />
-              ) : (
-                <video src={media} controls className="w-full h-full object-contain pointer-events-auto" onClick={(ev) => ev.stopPropagation()} />
-              )}
-              {hasMultiple && (
-                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
-                  {post.mediaUrls.map((_, i) => (
-                    <span
-                      key={i}
-                      className={`block rounded-full transition-all ${
-                        i === mediaIndex ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="px-4 py-2 flex items-center gap-4">
-          <button
-            type="button"
-            onClick={toggleLike}
-            className="p-1 -ml-1 text-[var(--ig-text)]"
-            aria-label={liked ? "Unlike" : "Like"}
-          >
-            <IconHeart
-              className="w-7 h-7"
-              filled={liked}
-              filledGradientId={liked ? `heart-gradient-detail-${post._id}` : undefined}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => setShareSheetOpen(true)}
-            className="p-1 text-[var(--ig-text)]"
-            aria-label="Share"
-          >
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={toggleSave}
-            className="ml-auto p-1 text-[var(--ig-text)]"
-          >
-            <svg className="w-7 h-7" fill={saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-          </button>
-        </div>
-
-        {likeCount > 0 && (
-          <p className="px-4 pb-1 text-sm font-semibold text-[var(--ig-text)]">
-            {likeCount} {likeCount === 1 ? "like" : "likes"}
-          </p>
-        )}
-
+        {/* Caption */}
         {post.caption && (
           <div className="px-4 pb-2">
-            <span className="text-sm text-[var(--ig-text)]">
-              <Link href={`/app/members/${post.authorId}`} className="font-semibold mr-1.5 hover:underline">
-                {post.authorName}
-              </Link>
+            <p className="text-sm text-[var(--ig-text)] leading-snug">
+              <Link href={`/app/members/${post.authorId}`} className="font-semibold mr-1.5 hover:underline">{post.authorName}</Link>
               {post.caption}
-            </span>
+            </p>
           </div>
         )}
 
-        {commentCount > 0 && (
-          <Link
-            href="#comments"
-            className="block px-4 pb-2 text-sm text-[var(--ig-text-secondary)] hover:opacity-80"
+        {/* Gradient for liked heart */}
+        <svg aria-hidden className="absolute w-0 h-0 overflow-hidden" focusable="false">
+          <defs>
+            <linearGradient id={`heart-gradient-detail-${post._id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1a1a1a" />
+              <stop offset="50%" stopColor="#000000" />
+              <stop offset="100%" stopColor="#2d2d2d" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Rectangular media (omit when text-only post) */}
+        {post.mediaUrls.length > 0 && (
+          <div
+            className="relative aspect-[16/10] w-full bg-black cursor-default"
+            onClick={handleMediaClick}
+            onDoubleClick={(e) => { e.preventDefault(); toggleLike(); }}
+            role="button"
+            tabIndex={0}
+            aria-label="Double-tap to like"
           >
-            View all {commentCount} comments
-          </Link>
+            {media && (
+              <>
+                {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
+                  <img src={media} alt="" className="w-full h-full object-cover pointer-events-none" />
+                ) : (
+                  <video src={media} controls className="w-full h-full object-cover pointer-events-auto" onClick={(ev) => ev.stopPropagation()} />
+                )}
+                {hasMultiple && (
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
+                    {post.mediaUrls.map((_, i) => (
+                      <span
+                        key={i}
+                        className={`block rounded-full transition-all ${
+                          i === mediaIndex ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
+
+        {/* Footer: overlapping reaction icons + count + comments */}
+        <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--ig-border-light)]">
+          <div className="flex items-center gap-1">
+            <div className="flex -space-x-2">
+              <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-link)]" aria-hidden>
+                <IconThumbsUp className="w-3.5 h-3.5" filled />
+              </span>
+              <button type="button" onClick={toggleLike} className={`w-6 h-6 rounded-full flex items-center justify-center border-2 border-[var(--ig-bg-primary)] ${liked ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)]"}`} aria-label={liked ? "Unlike" : "Like"}>
+                <IconHeart className="w-3.5 h-3.5" filled={liked} filledGradientId={liked ? `heart-gradient-detail-${post._id}` : undefined} />
+              </button>
+              <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]" aria-hidden>
+                <IconClap className="w-3.5 h-3.5" />
+              </span>
+            </div>
+            {likeCount > 0 && <span className="text-sm font-semibold text-[var(--ig-text)] ml-1">{likeCount}</span>}
+          </div>
+          <div className="flex-1 flex justify-end items-center gap-2">
+            <span className="text-sm text-[var(--ig-text)]">{commentCount} comment{commentCount !== 1 ? "s" : ""}</span>
+            <span className="text-sm text-[var(--ig-text-secondary)]">0 reposts</span>
+            <button type="button" onClick={() => setShareSheetOpen(true)} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label="Share">
+              <IconShare className="w-5 h-5" />
+            </button>
+            <button type="button" onClick={toggleSave} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label={saved ? "Unsave" : "Save"}>
+              <IconBookmark className="w-5 h-5" filled={saved} />
+            </button>
+          </div>
+        </div>
 
         <div id="comments" className="px-4 py-2 border-t border-[var(--ig-border-light)]">
           <ul className="space-y-2 mb-3">
@@ -571,16 +577,6 @@ export function PostDetailClient({
               Post
             </button>
           </form>
-        </div>
-
-        <div className="px-4 pb-4 flex gap-4">
-          <Link
-            href={`/app/new?userId=${post.authorId}`}
-            className="text-sm text-[var(--ig-link)] hover:opacity-80"
-          >
-            Message author
-          </Link>
-          <ReportButton targetType="post" targetId={post._id} />
         </div>
 
         <ShareSheet

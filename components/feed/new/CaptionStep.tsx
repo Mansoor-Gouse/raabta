@@ -63,7 +63,7 @@ export function CaptionStep({
         >
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md">
             <PostPreviewCard
-              mediaUrls={previewMediaUrls.length > 0 ? previewMediaUrls : [""]}
+              mediaUrls={previewMediaUrls.length > 0 ? previewMediaUrls : []}
               caption={caption}
               visibility={visibility}
               authorName={authorName}
@@ -79,7 +79,8 @@ export function CaptionStep({
           </div>
         </div>
       )}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div className="flex-1 overflow-auto p-4">
+        <div className="post-flow-card p-6 space-y-4">
         {/* Thumbnail strip */}
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {items.map((item, i) => (
@@ -120,13 +121,18 @@ export function CaptionStep({
           <p id="caption-count" className="mt-1 text-xs text-[var(--ig-text-secondary)] text-right">
             {caption.length} / {CAPTION_MAX_LENGTH}
           </p>
+          {items.length === 0 && (
+            <p className="mt-2 text-xs text-[var(--ig-text-secondary)]">
+              You&apos;re creating a text-only post. You can always add photos/videos next time.
+            </p>
+          )}
         </div>
 
         <div>
           <button
             type="button"
             onClick={() => setShowPreview(true)}
-            className="text-sm font-medium text-[var(--ig-link)] hover:opacity-80"
+            className="post-flow-cta px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-95"
           >
             Preview post
           </button>
@@ -157,13 +163,14 @@ export function CaptionStep({
         {error && (
           <p role="alert" className="text-sm text-[var(--ig-error)]">{error}</p>
         )}
+        </div>
       </div>
 
       <div className="p-4 border-t border-[var(--ig-border-light)] flex gap-2">
         <button
           type="button"
           onClick={onBack}
-          className="px-4 py-2.5 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium hover:bg-[var(--ig-border-light)]"
+          className="px-4 py-2.5 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium hover:bg-[var(--ig-border-light)] transition-colors"
         >
           Back
         </button>
@@ -171,7 +178,7 @@ export function CaptionStep({
           type="button"
           onClick={onShare}
           disabled={saving}
-          className="flex-1 py-2.5 rounded-lg bg-[var(--ig-link)] text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          className="post-flow-cta flex-1 py-3 rounded-xl text-sm font-semibold disabled:opacity-50 transition-all hover:opacity-95"
         >
           {saving ? "Posting…" : "Share"}
         </button>

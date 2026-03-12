@@ -2,7 +2,18 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { IconHeart, IconComment, IconShare, IconBookmark, IconMore, IconCircleInner, IconTrusted } from "@/components/layout/InstagramIcons";
+import {
+  IconHeart,
+  IconComment,
+  IconShare,
+  IconBookmark,
+  IconMore,
+  IconCircleInner,
+  IconTrusted,
+  IconThumbsUp,
+  IconClap,
+  IconGlobe,
+} from "@/components/layout/InstagramIcons";
 import { ReportButton } from "@/components/report/ReportButton";
 
 export type PostCardPost = {
@@ -20,6 +31,8 @@ export type PostCardPost = {
   fromInnerCircle?: boolean;
   fromTrustedCircle?: boolean;
 };
+
+const CAPTION_LINE_HEIGHT = 1.35;
 
 export function PostCard({
   post,
@@ -42,6 +55,7 @@ export function PostCard({
   const [mediaIndex, setMediaIndex] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
 
@@ -135,103 +149,186 @@ export function PostCard({
 
   const media = post.mediaUrls[mediaIndex];
   const hasMultiple = post.mediaUrls.length > 1;
+  const totalReactions = likeCount;
+  const repostCount: number = 0; // placeholder until backend supports it
+
+  const caption = post.caption ?? "";
+  const captionNeedsExpand = caption.length > 120;
+  const showCaptionPreview = captionNeedsExpand && !captionExpanded;
 
   return (
     <article className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
-      {/* Header: avatar, post creator name, time, more */}
-      <header className="flex items-center gap-3 px-4 py-2">
+      {/* 1. Top row — Likes (when likeCount > 0) */}
+      {likeCount > 0 && (
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--ig-border-light)]">
+          <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)] shrink-0">
+            <span className="text-xs font-semibold text-[var(--ig-text-secondary)]">
+              {likeCount > 0 ? "♥" : ""}
+            </span>
+          </div>
+          <span className="text-sm text-[var(--ig-text)] flex-1 min-w-0">
+            <span className="font-semibold">{likeCount}</span> {likeCount === 1 ? "likes" : "others like"} this
+          </span>
+          <div className="relative flex items-center gap-1 shrink-0" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
+              className="p-1.5 text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+              aria-label="More options"
+              aria-expanded={moreOpen}
+            >
+              <IconMore className="w-5 h-5" />
+            </button>
+            {moreOpen && (
+              <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
+                {isAuthor ? (
+                  <>
+                    <Link
+                      href={`/app/feed/${post._id}/edit`}
+                      className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+                      onClick={() => setMoreOpen(false)}
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]"
+                    >
+                      {deleteConfirm ? "Confirm delete?" : "Delete"}
+                    </button>
+                    {deleteConfirm && (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirm(false)}
+                        className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                      <ReportButton targetType="post" targetId={post._id} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMoreOpen(false)}
+                      className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Author block */}
+      <header className="flex items-center gap-3 px-4 py-3">
         <Link href={`/app/members/${post.authorId}`} className="shrink-0">
-          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)]">
+          <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)]">
             {post.authorImage ? (
               <img src={post.authorImage} alt="" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-sm font-semibold text-[var(--ig-text-secondary)]">
+              <span className="text-base font-semibold text-[var(--ig-text-secondary)]">
                 {post.authorName?.charAt(0)?.toUpperCase() || "?"}
               </span>
             )}
           </div>
         </Link>
-        <div className="min-w-0 flex-1 flex items-baseline gap-2 flex-wrap">
-          <Link
-            href={`/app/members/${post.authorId}`}
-            className="font-semibold text-sm text-[var(--ig-text)] hover:opacity-80 truncate"
-          >
-            {post.authorName}
-          </Link>
-          {post.fromInnerCircle && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400" title="From your Inner Circle">
-              <IconCircleInner className="w-3.5 h-3.5 shrink-0" />
-              Inner Circle
-            </span>
-          )}
-          {post.fromTrustedCircle && !post.fromInnerCircle && (
-            <span className="inline-flex items-center gap-1 text-xs text-[var(--ig-text-secondary)]" title="From your Trusted Circle">
-              <IconTrusted className="w-3.5 h-3.5 shrink-0" />
-              Trusted Circle
-            </span>
-          )}
-          <time className="text-xs text-[var(--ig-text-secondary)] shrink-0" dateTime={post.createdAt}>
-            {timeAgo(post.createdAt)}
-          </time>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Link
+              href={`/app/members/${post.authorId}`}
+              className="font-semibold text-sm text-[var(--ig-text)] hover:opacity-80 truncate"
+            >
+              {post.authorName}
+            </Link>
+            {post.fromInnerCircle && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400" title="From your Inner Circle">
+                <IconCircleInner className="w-3.5 h-3.5 shrink-0" />
+                Inner Circle
+              </span>
+            )}
+            {post.fromTrustedCircle && !post.fromInnerCircle && (
+              <span className="inline-flex items-center gap-1 text-xs text-[var(--ig-text-secondary)]" title="From your Trusted Circle">
+                <IconTrusted className="w-3.5 h-3.5 shrink-0" />
+                Trusted Circle
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[var(--ig-text-secondary)] truncate">Member</p>
+          <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
+            <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
+            <span>•</span>
+            <IconGlobe className="w-3.5 h-3.5" aria-hidden />
+          </div>
         </div>
-        <div className="relative" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
-            className="p-1 text-[var(--ig-text)]"
-            aria-label="More options"
-            aria-expanded={moreOpen}
-          >
-            <IconMore className="w-5 h-5" />
-          </button>
-          {moreOpen && (
-            <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
-              {isAuthor ? (
-                <>
-                  <Link
-                    href={`/app/feed/${post._id}/edit`}
-                    className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-                    onClick={() => setMoreOpen(false)}
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]"
-                  >
-                    {deleteConfirm ? "Confirm delete?" : "Delete"}
-                  </button>
-                  {deleteConfirm && (
-                    <button
-                      type="button"
-                      onClick={() => setDeleteConfirm(false)}
-                      className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
-                    <ReportButton targetType="post" targetId={post._id} />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setMoreOpen(false)}
-                    className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
-                  >
-                    Cancel
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        {likeCount === 0 && (
+          <div className="relative shrink-0" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
+              className="p-1.5 text-[var(--ig-text)]"
+              aria-label="More options"
+              aria-expanded={moreOpen}
+            >
+              <IconMore className="w-5 h-5" />
+            </button>
+            {moreOpen && (
+              <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
+                {isAuthor ? (
+                  <>
+                    <Link href={`/app/feed/${post._id}/edit`} className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]" onClick={() => setMoreOpen(false)}>Edit</Link>
+                    <button type="button" onClick={handleDelete} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]">{deleteConfirm ? "Confirm delete?" : "Delete"}</button>
+                    {deleteConfirm && <button type="button" onClick={() => setDeleteConfirm(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>}
+                  </>
+                ) : (
+                  <>
+                    <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}><ReportButton targetType="post" targetId={post._id} /></div>
+                    <button type="button" onClick={() => setMoreOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        <Link
+          href={`/app/members/${post.authorId}`}
+          className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--ig-link)] text-white hover:opacity-90 transition-opacity"
+        >
+          Follow
+        </Link>
       </header>
 
-      {/* Black gradient for liked heart (one def per post to avoid duplicate ids) */}
+      {/* 3. Caption / body text */}
+      {caption && (
+        <div className="px-4 pb-2">
+          <p className="text-sm text-[var(--ig-text)]" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
+            {showCaptionPreview ? (
+              <>
+                {caption.slice(0, 120).trim()}
+                {caption.length > 120 && "… "}
+                <button
+                  type="button"
+                  onClick={() => setCaptionExpanded(true)}
+                  className="text-[var(--ig-link)] font-medium hover:underline"
+                >
+                  ... more
+                </button>
+              </>
+            ) : (
+              caption
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Black gradient for liked heart */}
       <svg aria-hidden className="absolute w-0 h-0 overflow-hidden" focusable="false">
         <defs>
           <linearGradient id={`heart-gradient-${post._id}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -242,128 +339,89 @@ export function PostCard({
         </defs>
       </svg>
 
-      {/* Media: 1:1 with carousel; double-tap to like */}
-      <div
-        className="relative aspect-square w-full bg-black cursor-default"
-        onClick={handleMediaClick}
-        onDoubleClick={(e) => { e.preventDefault(); toggleLike(); }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleMediaDoubleTap(); } }}
-        aria-label="Double-tap to like"
-      >
-        {media ? (
-          <>
-            {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
-              <img src={media} alt="" className="w-full h-full object-cover pointer-events-none" />
-            ) : (
-              <video src={media} controls className="w-full h-full object-cover pointer-events-auto" onClick={(e) => e.stopPropagation()} />
-            )}
-            {hasMultiple && (
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
-                {post.mediaUrls.map((_, i) => (
-                  <span
-                    key={i}
-                    className={`block rounded-full transition-all ${
-                      i === mediaIndex ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm text-[var(--ig-text-secondary)]">No media</div>
-        )}
-      </div>
-
-      {/* Action row: heart, comment, share, bookmark */}
-      <div className="flex items-center gap-5 px-4 py-2.5">
-        <button
-          type="button"
-          onClick={toggleLike}
-          className={`p-1 -ml-1 ${liked ? "text-[var(--ig-text)]" : "text-[var(--ig-text)]"} hover:opacity-70 transition-opacity`}
-          aria-label={liked ? "Unlike" : "Like"}
+      {/* 4. Main image — rectangular (omit when text-only post) */}
+      {post.mediaUrls.length > 0 && (
+        <div
+          className="relative aspect-[16/10] w-full bg-black cursor-default"
+          onClick={handleMediaClick}
+          onDoubleClick={(e) => { e.preventDefault(); toggleLike(); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleMediaDoubleTap(); } }}
+          aria-label="Double-tap to like"
         >
-          <IconHeart
-            className="w-6 h-6"
-            filled={liked}
-            filledGradientId={liked ? `heart-gradient-${post._id}` : undefined}
-          />
-          {liked && <span className="sr-only">Liked</span>}
-        </button>
-        {onOpenComments ? (
-          <button
-            type="button"
-            onClick={() => onOpenComments(post._id, post.authorName)}
-            className="p-1 -ml-1 text-[var(--ig-text)] hover:opacity-70 transition-opacity"
-            aria-label="Comments"
-          >
-            <IconComment className="w-6 h-6" />
-          </button>
-        ) : (
-          <Link href={`/app/feed/${post._id}`} className="p-1 text-[var(--ig-text)] hover:opacity-70 transition-opacity" aria-label="Comments">
-            <IconComment className="w-6 h-6" />
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={() => onShare?.(post)}
-          className="p-1 text-[var(--ig-text)] hover:opacity-70 transition-opacity"
-          aria-label="Share"
-        >
-          <IconShare className="w-6 h-6" />
-        </button>
-        <button
-          type="button"
-          onClick={toggleSave}
-          className="ml-auto p-1 text-[var(--ig-text)] hover:opacity-70 transition-opacity"
-          aria-label={saved ? "Unsave" : "Save"}
-        >
-          <IconBookmark className="w-6 h-6" filled={saved} />
-        </button>
-      </div>
-
-      {/* Likes */}
-      {likeCount > 0 && (
-        <div className="px-4 pb-1">
-          <span className="font-semibold text-sm text-[var(--ig-text)]">
-            {likeCount} {likeCount === 1 ? "like" : "likes"}
-          </span>
+          {media ? (
+            <>
+              {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
+                <img src={media} alt="" className="w-full h-full object-cover pointer-events-none" />
+              ) : (
+                <video src={media} controls className="w-full h-full object-cover pointer-events-auto" onClick={(e) => e.stopPropagation()} />
+              )}
+              {hasMultiple && (
+                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
+                  {post.mediaUrls.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`block rounded-full transition-all ${
+                        i === mediaIndex ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-sm text-[var(--ig-text-secondary)]">No media</div>
+          )}
         </div>
       )}
 
-      {/* Caption: username bold + caption */}
-      {post.caption && (
-        <div className="px-4 pb-2">
-          <span className="text-sm text-[var(--ig-text)]">
-            <Link href={`/app/members/${post.authorId}`} className="font-semibold mr-1.5 hover:opacity-80">
-              {post.authorName}
+      {/* 5. Footer — overlapping reaction icons + count + comments • reposts + share/save */}
+      <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--ig-border-light)]">
+        <div className="flex items-center gap-1">
+          <div className="flex -space-x-2">
+            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-link)]" aria-hidden>
+              <IconThumbsUp className="w-3.5 h-3.5" filled />
+            </span>
+            <button
+              type="button"
+              onClick={toggleLike}
+              className={`w-6 h-6 rounded-full flex items-center justify-center border-2 border-[var(--ig-bg-primary)] transition-opacity hover:opacity-80 ${liked ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)]"}`}
+              aria-label={liked ? "Unlike" : "Like"}
+            >
+              <IconHeart className="w-3.5 h-3.5" filled={liked} filledGradientId={liked ? `heart-gradient-${post._id}` : undefined} />
+            </button>
+            <span className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center border-2 border-[var(--ig-bg-primary)] text-[var(--ig-text-secondary)]" aria-hidden>
+              <IconClap className="w-3.5 h-3.5" />
+            </span>
+          </div>
+          {totalReactions > 0 && (
+            <span className="text-sm font-semibold text-[var(--ig-text)] ml-1">{totalReactions}</span>
+          )}
+        </div>
+        <div className="flex-1 flex justify-end items-center gap-2">
+          {onOpenComments ? (
+            <button
+              type="button"
+              onClick={() => onOpenComments(post._id, post.authorName)}
+              className="text-sm text-[var(--ig-text)] hover:opacity-80"
+            >
+              {post.commentCount} comment{post.commentCount !== 1 ? "s" : ""}
+            </button>
+          ) : (
+            <Link href={`/app/feed/${post._id}`} className="text-sm text-[var(--ig-text)] hover:opacity-80">
+              {post.commentCount} comment{post.commentCount !== 1 ? "s" : ""}
             </Link>
-            {post.caption}
-          </span>
-        </div>
-      )}
-
-      {/* View all comments */}
-      {post.commentCount > 0 && (
-        onOpenComments ? (
-          <button
-            type="button"
-            onClick={() => onOpenComments(post._id, post.authorName)}
-            className="block px-4 pb-3 text-sm text-[var(--ig-text-secondary)] hover:opacity-80 text-left w-full"
-          >
-            View all {post.commentCount} comments
+          )}
+          <span className="text-sm text-[var(--ig-text-secondary)]">{repostCount} repost{repostCount !== 1 ? "s" : ""}</span>
+          <button type="button" onClick={() => onShare?.(post)} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label="Share">
+            <IconShare className="w-5 h-5" />
           </button>
-        ) : (
-          <Link
-            href={`/app/feed/${post._id}`}
-            className="block px-4 pb-3 text-sm text-[var(--ig-text-secondary)] hover:opacity-80"
-          >
-            View all {post.commentCount} comments
-          </Link>
-        )
-      )}
+          <button type="button" onClick={toggleSave} className="p-1 text-[var(--ig-text)] hover:opacity-70" aria-label={saved ? "Unsave" : "Save"}>
+            <IconBookmark className="w-5 h-5" filled={saved} />
+          </button>
+        </div>
+      </div>
     </article>
   );
 }

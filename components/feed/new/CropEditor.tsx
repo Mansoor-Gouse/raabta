@@ -16,6 +16,7 @@ const FILTER_PRESETS: { id: FilterPreset; label: string }[] = [
 
 const ASPECT_OPTIONS: { value: number; label: string }[] = [
   { value: 1, label: "Square" },
+  { value: 16 / 10, label: "Landscape" },
   { value: 4 / 5, label: "Portrait" },
 ];
 
@@ -83,7 +84,8 @@ export function CropEditor({
   const effectiveAspect = aspectRatio;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-4">
+      <div className="post-flow-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="shrink-0 flex gap-2 px-3 py-2 border-b border-[var(--ig-border-light)]">
         {ASPECT_OPTIONS.map(({ value, label }) => (
           <button
@@ -184,12 +186,12 @@ export function CropEditor({
             />
           </div>
         </div>
-        <div className="shrink-0 p-3 pt-0 flex gap-2 border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]">
+        <div className="shrink-0 p-3 pt-0 flex gap-2 border-t border-[var(--ig-border-light)]">
           {onSkip && (
             <button
               type="button"
               onClick={onSkip}
-              className="min-h-[44px] px-4 py-2.5 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] focus:ring-offset-2"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] focus:ring-offset-2 hover:bg-[var(--ig-border-light)]"
             >
               Skip
             </button>
@@ -198,11 +200,12 @@ export function CropEditor({
             type="button"
             onClick={handleApply}
             disabled={applying}
-            className="min-h-[44px] flex-1 py-2.5 rounded-lg bg-[var(--ig-link)] text-white text-sm font-semibold disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] focus:ring-offset-2"
+            className="post-flow-cta min-h-[44px] flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] focus:ring-offset-2 transition-all hover:opacity-95"
           >
             {applying ? "Applying…" : "Apply"}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

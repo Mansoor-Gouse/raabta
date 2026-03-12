@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { requireAuth } from "@/lib/auth";
+import { uploadBuffer } from "@/lib/storage";
 import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
@@ -26,12 +25,7 @@ export async function POST(request: NextRequest) {
 
   const ext = type === "video" ? (file.name.split(".").pop() || "mp4") : (file.name.split(".").pop() || "jpg");
   const name = `${randomUUID()}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "status");
-  await mkdir(dir, { recursive: true });
-  const filePath = path.join(dir, name);
   const bytes = await file.arrayBuffer();
-  await writeFile(filePath, Buffer.from(bytes));
-
-  const mediaUrl = "/status/" + name;
+  const mediaUrl = await uploadBuffer(Buffer.from(bytes), name, "status");
   return NextResponse.json({ mediaUrl, type });
 }
