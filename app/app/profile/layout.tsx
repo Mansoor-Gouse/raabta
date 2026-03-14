@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import { getSession } from "@/lib/auth";
 import { connectDB, User, PostModel, EventAttendeeModel, CircleRelationshipModel } from "@/lib/db";
 import { ProfileTabs } from "./ProfileTabs";
+import { EditableProfileAvatar } from "./EditableProfileAvatar";
+import { EditableCoverImage } from "./EditableCoverImage";
 
 export default async function ProfileLayout({
   children,
@@ -91,42 +93,15 @@ export default async function ProfileLayout({
 
   return (
     <div className="elite-events flex-1 overflow-y-auto min-h-full bg-[var(--elite-bg)] no-scrollbar">
-      <div
-        className="h-32 sm:h-40 bg-[var(--elite-border-light)]"
-        style={{
-          backgroundImage: u.bannerImage ? `url(${u.bannerImage})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
+      <EditableCoverImage bannerImage={u.bannerImage} />
       <div className="px-4 pb-6 -mt-12 sm:-mt-16">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-[var(--elite-radius)] border-4 border-[var(--elite-bg)] bg-[var(--elite-border)] overflow-hidden flex items-center justify-center">
-              {avatar ? (
-                <img src={avatar} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="elite-heading text-3xl font-medium text-[var(--elite-text-muted)]">
-                  {displayName?.charAt(0)?.toUpperCase() || "?"}
-                </span>
-              )}
-            </div>
-            {u.isVerified && (
-              <span
-                className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[var(--elite-accent)] flex items-center justify-center text-[var(--elite-on-accent)]"
-                title={`Verified: ${u.verificationLevel ?? "member"}`}
-                aria-hidden
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-            )}
-          </div>
+          <EditableProfileAvatar
+            profileImage={avatar}
+            displayName={displayName}
+            isVerified={u.isVerified}
+            verificationLevel={u.verificationLevel}
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
