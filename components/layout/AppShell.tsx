@@ -66,6 +66,7 @@ export function AppShell({
   const isChannelScreen = pathname.startsWith("/app/channel/");
   const isEventsScreen = pathname === "/app/events" || pathname.startsWith("/app/events/");
   const isStatusFlow = pathname === "/app/status" || pathname.startsWith("/app/status/");
+  const isNewPostFlow = pathname === "/app/feed/new" || pathname.startsWith("/app/feed/new/");
   const isChatsPage = pathname === "/app/chats";
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
@@ -145,8 +146,8 @@ export function AppShell({
           </AppUserContext.Provider>
         </main>
 
-        {/* Bottom navigation: hidden on channel, events, and status flow */}
-        {!isChannelScreen && !isEventsScreen && !isStatusFlow && (
+        {/* Bottom navigation: hidden on channel, events, status, and new-post flow */}
+        {!isChannelScreen && !isEventsScreen && !isStatusFlow && !isNewPostFlow && (
         <nav
           className="md:hidden shrink-0 flex items-center justify-around h-[50px] border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
           style={{ paddingBottom: "var(--safe-area-inset-bottom)" }}
@@ -171,7 +172,7 @@ export function AppShell({
             className="flex flex-col items-center justify-center flex-1 py-2 text-[var(--ig-text)] min-w-0"
             aria-current={isChatsActive(pathname) ? "page" : undefined}
           >
-            <IconMessenger className="w-6 h-6" />
+            <IconMessenger className="w-6 h-6" filled={isChatsActive(pathname)} />
           </Link>
           <Link
             href="/app/members"

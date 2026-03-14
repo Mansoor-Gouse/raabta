@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AddToCircleButton } from "@/components/circles/AddToCircleButton";
 import { IconUserCard, IconEvents, IconCircleInner, IconTrusted } from "@/components/layout/InstagramIcons";
+import { EliteAvatar } from "@/components/elite";
 
 export type MemberCardData = {
   id: string;
@@ -46,37 +47,27 @@ export function MemberCard({
 
   return (
     <article
-      className={
+      className={`elite-events block rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] transition-all duration-[var(--elite-transition)] elite-hover-lift focus-within:ring-2 focus-within:ring-[var(--elite-accent)] ${
         compact
-          ? "flex shrink-0 flex-col rounded-xl border border-slate-200 bg-white p-3 w-[200px] hover:border-slate-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5 transition-all duration-200"
-          : "flex flex-col rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-300 hover:shadow-xl hover:shadow-black/10 hover:-translate-y-1 transition-all duration-200 active:translate-y-0"
-      }
+          ? "flex shrink-0 flex-col p-3 w-[200px] hover:border-[var(--elite-accent-muted)] hover:shadow-[var(--elite-shadow)]"
+          : "flex flex-col p-4 hover:border-[var(--elite-accent-muted)] hover:shadow-[var(--elite-shadow)]"
+      }`}
     >
       <div className="flex items-start gap-3">
         <Link href={`/app/members/${member.id}`} className="shrink-0 group/avatar">
-          {avatar ? (
-            <img
-              src={avatar}
-              alt=""
-              className={`rounded-full object-cover ring-2 ring-slate-200 group-hover/avatar:ring-black/20 transition-all ${
-                compact ? "h-12 w-12" : "h-14 w-14"
-              }`}
-            />
-          ) : (
-            <span
-              className={`flex items-center justify-center rounded-full bg-gradient-to-br from-black/15 to-black/6 text-slate-800 font-semibold group-hover/avatar:from-black/20 group-hover/avatar:to-black/10 transition-all ${
-                compact ? "h-12 w-12 text-sm" : "h-14 w-14 text-base"
-              }`}
-            >
-              {displayName.charAt(0).toUpperCase()}
-            </span>
-          )}
+          <EliteAvatar
+            name={displayName}
+            image={avatar ?? null}
+            size={compact ? "md" : "lg"}
+            gradientFallback
+            className="ring-2 ring-[var(--elite-border)] group-hover/avatar:ring-[var(--elite-accent-muted)] transition-all"
+          />
         </Link>
         <div className="min-w-0 flex-1">
           <Link href={`/app/members/${member.id}`} className="block">
-            <p className="truncate font-medium text-slate-900">{displayName}</p>
+            <p className="elite-heading truncate font-semibold text-[var(--elite-text)]">{displayName}</p>
             {(subline || member.location) && (
-              <p className="truncate text-xs text-slate-600">
+              <p className="elite-body truncate text-xs text-[var(--elite-text-secondary)]">
                 {subline}
                 {subline && member.location ? " — " : ""}
                 {member.location}
@@ -86,13 +77,13 @@ export function MemberCard({
           {(member.circleTypeForMe === "INNER" || member.circleTypeForMe === "TRUSTED") && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {member.circleTypeForMe === "INNER" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-black/15 to-black/8 px-2 py-0.5 text-[10px] font-medium text-slate-900">
+                <span className="elite-body inline-flex items-center gap-1 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--elite-text)]">
                   <IconCircleInner className="w-3 h-3 shrink-0" />
                   Inner Circle
                 </span>
               )}
               {member.circleTypeForMe === "TRUSTED" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-black/10 to-black/5 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                <span className="elite-body inline-flex items-center gap-1 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--elite-text-secondary)]">
                   <IconTrusted className="w-3 h-3 shrink-0" />
                   Trusted Circle
                 </span>
@@ -100,15 +91,15 @@ export function MemberCard({
             </div>
           )}
           {!compact && (member.mutualConnectionsCount ?? 0) > 0 && (
-            <p className="mt-1 flex items-center gap-1 text-[11px] text-slate-600">
-              <IconUserCard className="w-3 h-3 text-slate-500" />
+            <p className="elite-body mt-1 flex items-center gap-1 text-[11px] text-[var(--elite-text-secondary)]">
+              <IconUserCard className="w-3 h-3 text-[var(--elite-text-muted)]" />
               {member.mutualConnectionsCount} shared connection
               {(member.mutualConnectionsCount ?? 0) === 1 ? "" : "s"}
             </p>
           )}
           {!compact && (member.eventsAttendedTogether ?? 0) > 0 && (
-            <p className="flex items-center gap-1 text-[11px] text-slate-600">
-              <IconEvents className="w-3 h-3 text-slate-500" />
+            <p className="elite-body flex items-center gap-1 text-[11px] text-[var(--elite-text-secondary)]">
+              <IconEvents className="w-3 h-3 text-[var(--elite-text-muted)]" />
               {member.eventsAttendedTogether} shared event
               {(member.eventsAttendedTogether ?? 0) === 1 ? "" : "s"}
             </p>
@@ -120,11 +111,11 @@ export function MemberCard({
         <div className="mt-3 space-y-1">
           {focusTags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              <span className="text-[10px] uppercase tracking-wide text-slate-500">Focus</span>
+              <span className="elite-body text-[10px] font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">Focus</span>
               {focusTags.slice(0, 3).map((t) => (
                 <span
                   key={t}
-                  className="rounded bg-gradient-to-r from-black/6 to-black/3 px-2 py-0.5 text-[10px] text-slate-700"
+                  className="elite-body rounded border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] text-[var(--elite-text-secondary)]"
                 >
                   {t}
                 </span>
@@ -133,11 +124,11 @@ export function MemberCard({
           )}
           {concernTags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              <span className="text-[10px] uppercase tracking-wide text-slate-500">Concern</span>
+              <span className="elite-body text-[10px] font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">Concern</span>
               {concernTags.slice(0, 2).map((t) => (
                 <span
                   key={t}
-                  className="rounded bg-gradient-to-r from-black/6 to-black/3 px-2 py-0.5 text-[10px] text-slate-700"
+                  className="elite-body rounded border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] text-[var(--elite-text-secondary)]"
                 >
                   {t}
                 </span>
@@ -150,7 +141,7 @@ export function MemberCard({
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Link
           href={`/app/members/${member.id}`}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-800 hover:text-black hover:bg-gradient-to-r hover:from-black/10 hover:to-black/5 transition-colors"
+          className="elite-events inline-flex items-center gap-1.5 rounded-[var(--elite-radius)] px-2.5 py-1 text-xs font-medium text-[var(--elite-text)] border border-[var(--elite-border)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
         >
           <IconUserCard className="w-3.5 h-3.5" />
           View Profile

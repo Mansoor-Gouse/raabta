@@ -83,7 +83,7 @@ export function MediaSelector({
   return (
     <div className="flex flex-col h-full p-4">
       <div className="flex-1 overflow-auto">
-        <div className="post-flow-card p-6 min-h-[280px] flex flex-col gap-4">
+        <div className="post-flow-card p-6 min-h-[280px] flex flex-col gap-5 post-flow-animate-in">
         {items.length === 0 ? (
           <div
             role="button"
@@ -92,15 +92,16 @@ export function MediaSelector({
             onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className="flex-1 w-full min-h-[240px] rounded-xl border-2 border-dashed border-[var(--ig-border)] flex flex-col items-center justify-center gap-3 text-[var(--ig-text-secondary)] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] focus:ring-offset-2 hover:scale-[1.01] hover:border-[var(--post-flow-gradient-end)] hover:shadow-lg"
-            style={{ background: "linear-gradient(135deg, var(--post-flow-gradient-start) 0%, var(--post-flow-gradient-end) 100%)" }}
+            className="flex-1 w-full min-h-[260px] rounded-2xl border-2 border-dashed border-[var(--ig-border)] flex flex-col items-center justify-center gap-4 text-[var(--ig-text-secondary)] transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)] focus:ring-offset-4 focus:ring-offset-[var(--post-flow-gradient-start)] hover:border-[var(--ig-text)] hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+            style={{ background: "linear-gradient(145deg, var(--post-flow-gradient-start) 0%, var(--post-flow-gradient-end) 100%)" }}
           >
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span className="text-sm font-medium">Add photos/videos (optional)</span>
-            <span className="text-xs">Up to {MAX_FILES} items</span>
-            <span className="text-xs text-[var(--ig-text-tertiary)]">or drag and drop. You can also post without media.</span>
+            <div className="post-flow-icon-float rounded-2xl p-4 bg-[var(--ig-border-light)]/80">
+              <svg className="w-14 h-14 text-[var(--ig-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span className="post-flow-title text-center text-[var(--ig-text)]">Add photos or videos</span>
+            <span className="post-flow-hint text-center max-w-[240px]">Optional — up to {MAX_FILES} items. Drag and drop or tap to browse.</span>
             <input
               ref={inputRef}
               type="file"
@@ -113,15 +114,16 @@ export function MediaSelector({
           </div>
         ) : (
           <div
-            className="space-y-3 flex-1 flex flex-col"
+            className="space-y-4 flex-1 flex flex-col"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            <p className="post-flow-label">Tap to reorder or remove</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
               {items.map((item, i) => (
                 <div
                   key={i}
-                  className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-[var(--ig-border-light)] group transition-transform hover:scale-105"
+                  className="relative shrink-0 w-20 h-20 rounded-2xl overflow-hidden bg-[var(--ig-border-light)] group transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 >
                   {item.type === "image" ? (
                     <img src={item.editedPreview ?? item.preview} alt="" className="w-full h-full object-cover" />
@@ -132,29 +134,29 @@ export function MediaSelector({
                       </svg>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => move(i, -1)}
+                      onClick={(e) => { e.stopPropagation(); move(i, -1); }}
                       disabled={i === 0}
-                      className="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center text-sm disabled:opacity-40"
+                      className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-sm font-bold disabled:opacity-40 hover:scale-110 transition-transform"
                       aria-label="Move left"
                     >
                       ‹
                     </button>
                     <button
                       type="button"
-                      onClick={() => remove(i)}
-                      className="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center text-sm"
+                      onClick={(e) => { e.stopPropagation(); remove(i); }}
+                      className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-sm font-bold hover:scale-110 transition-transform"
                       aria-label="Remove"
                     >
                       ×
                     </button>
                     <button
                       type="button"
-                      onClick={() => move(i, 1)}
+                      onClick={(e) => { e.stopPropagation(); move(i, 1); }}
                       disabled={i === items.length - 1}
-                      className="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center text-sm disabled:opacity-40"
+                      className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-sm font-bold disabled:opacity-40 hover:scale-110 transition-transform"
                       aria-label="Move right"
                     >
                       ›
@@ -166,10 +168,12 @@ export function MediaSelector({
                 <button
                   type="button"
                   onClick={() => inputRef.current?.click()}
-                  className="shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-[var(--ig-border)] flex items-center justify-center text-[var(--ig-text-secondary)] hover:border-[var(--ig-link)]"
+                  className="shrink-0 w-20 h-20 rounded-2xl border-2 border-dashed border-[var(--ig-border)] flex items-center justify-center text-[var(--ig-text-tertiary)] hover:border-[var(--ig-text)] hover:bg-[var(--ig-border-light)]/50 hover:text-[var(--ig-text)] transition-all duration-200 active:scale-95"
                   aria-label="Add more"
                 >
-                  <span className="text-2xl">+</span>
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
                 </button>
               )}
             </div>
@@ -182,19 +186,16 @@ export function MediaSelector({
               onChange={handleFileSelect}
               aria-label="Select media"
             />
-            <p className="text-xs text-[var(--ig-text-secondary)]">
-              Drag to reorder. Tap an item to remove or change order.
-            </p>
           </div>
         )}
         {items.length > 0 && (
-          <div className="pt-2">
+          <div className="pt-3">
             <button
               type="button"
               onClick={onNext}
-              className="post-flow-cta w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 shadow-md"
+              className="post-flow-cta w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-95 active:scale-[0.98] shadow-lg"
             >
-              Next
+              Next — Edit & filter
             </button>
           </div>
         )}

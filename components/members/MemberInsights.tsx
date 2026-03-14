@@ -52,13 +52,13 @@ export function MemberInsights({ memberId }: { memberId: string }) {
   if (!hasConnection && !insights.circleRelation.mutualInner) return null;
 
   return (
-    <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+    <div className="elite-events mt-6 rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-surface)]/50 px-4 py-4">
+      <h3 className="elite-heading text-sm font-semibold text-[var(--elite-text)]">
         Connection with you
       </h3>
-      <div className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+      <div className="elite-body mt-2 space-y-2 text-sm text-[var(--elite-text-secondary)]">
         {insights.circleRelation.mutualInner && (
-          <p className="inline-flex items-center rounded-md bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-amber-800 dark:text-amber-200">
+          <p className="inline-flex items-center rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[var(--elite-text)]">
             You are in each other&apos;s Inner Circle
           </p>
         )}
@@ -66,7 +66,7 @@ export function MemberInsights({ memberId }: { memberId: string }) {
           <p>
             In your {insights.circleRelation.circleTypeForMe === "INNER" ? "Inner" : "Trusted"} Circle
             {insights.circleRelation.reason && (
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-[var(--elite-text-muted)]">
                 {" "}— {insights.circleRelation.reason.replace(/_/g, " ")}
               </span>
             )}
@@ -77,7 +77,7 @@ export function MemberInsights({ memberId }: { memberId: string }) {
             You share {insights.mutualConnectionsCount} trusted connection
             {insights.mutualConnectionsCount === 1 ? "" : "s"}
             {insights.mutualConnectionsBreakdown.inner + insights.mutualConnectionsBreakdown.trusted > 0 && (
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-[var(--elite-text-muted)]">
                 {" "}({insights.mutualConnectionsBreakdown.inner} in Inner, {insights.mutualConnectionsBreakdown.trusted} in Trusted)
               </span>
             )}
@@ -91,13 +91,13 @@ export function MemberInsights({ memberId }: { memberId: string }) {
         )}
         {insights.recentSharedEvents.length > 0 && (
           <div>
-            <p className="font-medium text-gray-700 dark:text-gray-200">Recent shared events</p>
-            <ul className="mt-1 space-y-0.5">
+            <p className="elite-heading font-medium text-[var(--elite-text)]">Recent shared events</p>
+            <ul className="elite-body mt-1 space-y-0.5">
               {insights.recentSharedEvents.map((e) => (
                 <li key={e.id}>
                   <Link
                     href={`/app/events/${e.id}`}
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-[var(--elite-accent)] hover:text-[var(--elite-accent-hover)] transition-colors"
                   >
                     {e.title}
                   </Link>
@@ -111,7 +111,7 @@ export function MemberInsights({ memberId }: { memberId: string }) {
             {insights.sharedIndustries.map((i) => (
               <span
                 key={i}
-                className="rounded-full bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300"
+                className="elite-body rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-xs text-[var(--elite-text-secondary)]"
               >
                 {i}
               </span>
@@ -119,7 +119,7 @@ export function MemberInsights({ memberId }: { memberId: string }) {
             {insights.sharedInterests.map((i) => (
               <span
                 key={i}
-                className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-xs text-blue-800 dark:text-blue-200"
+                className="elite-body rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-xs text-[var(--elite-text)]"
               >
                 {i}
               </span>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MemberCard, type MemberCardData } from "@/components/members/MemberCard";
+import { EliteSection, EliteChip, EliteButton } from "@/components/elite";
 import {
   IconSearch,
   IconLocation,
@@ -206,22 +207,23 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-slate-50/80 to-white px-4 py-6">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <header className="rounded-2xl border border-slate-200 bg-white px-4 py-5 shadow-md shadow-slate-200/60 transition-shadow hover:shadow-lg hover:shadow-black/5">
-          <div className="flex items-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-black/12 to-black/5 text-slate-800">
-              <IconMembers className="w-6 h-6" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">Members</h1>
-              <p className="text-sm text-slate-600">
-                Discover people · Build your circles
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+    <div className="elite-events flex-1 flex flex-col min-h-full bg-[var(--elite-bg)] overflow-y-auto">
+      <header
+        className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-[var(--elite-border)] bg-[var(--elite-bg)] transition-colors duration-[var(--elite-transition)]"
+        style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
+      >
+        <h1 className="elite-heading text-xl font-semibold text-[var(--elite-text)]">
+          Members
+        </h1>
+      </header>
+
+      <div className="flex-1 px-4 py-4 space-y-6">
+        <section className="elite-events rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] p-4 transition-all duration-[var(--elite-transition)]">
+          <p className="elite-body text-sm text-[var(--elite-text-secondary)] mb-4">
+            Discover people · Build your circles
+          </p>
+          <div className="relative mb-4">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--elite-text-muted)] pointer-events-none">
               <IconSearch className="w-5 h-5" />
             </span>
             <input
@@ -229,31 +231,27 @@ export default function MembersPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Name, city, profession, expertise..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all"
+              className="elite-body w-full min-h-[38px] rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] pl-10 pr-4 py-2 text-sm text-[var(--elite-text)] placeholder-[var(--elite-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--elite-accent)] focus:border-transparent transition-colors duration-[var(--elite-transition)]"
             />
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="elite-body flex items-center gap-1.5 text-xs font-medium text-[var(--elite-text-muted)] uppercase tracking-wide">
               <IconFilter className="w-3.5 h-3.5" />
               Filter
             </span>
             {(["any", "inner", "trusted", "not_in_circle"] as const).map((val) => (
-              <button
+              <EliteChip
                 key={val}
-                type="button"
+                selected={inNetwork === val}
                 onClick={() => setInNetwork(val)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 active:scale-95 ${
-                  inNetwork === val
-                    ? "bg-gradient-to-r from-black/15 to-black/8 text-slate-900 shadow-md shadow-black/10"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 hover:scale-[1.02]"
-                }`}
+                className="inline-flex items-center gap-1.5"
               >
                 {filterLabels[val].icon}
                 {filterLabels[val].label}
-              </button>
+              </EliteChip>
             ))}
             <div className="relative flex items-center">
-              <span className="absolute left-2.5 text-slate-400 pointer-events-none">
+              <span className="absolute left-2.5 text-[var(--elite-text-muted)] pointer-events-none">
                 <IconLocation className="w-4 h-4" />
               </span>
               <input
@@ -261,25 +259,25 @@ export default function MembersPage() {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="City"
-                className="w-28 rounded-lg border border-slate-200 bg-slate-50/80 pl-8 pr-2 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/20 transition-all"
+                className="elite-body w-28 min-h-[32px] rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] pl-8 pr-2 py-1.5 text-xs text-[var(--elite-text)] placeholder-[var(--elite-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--elite-accent)] transition-colors duration-[var(--elite-transition)]"
               />
             </div>
           </div>
-        </header>
+        </section>
 
         {(discoveryByCity.length > 0 || discoveryEducation.length > 0) && (
-          <section className="space-y-5">
+          <section className="elite-events space-y-5">
             {discoveryByCity.length > 0 && userLocation && (
-              <div className="opacity-100 transition-all duration-300">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-black/12 to-black/5 text-slate-800">
+              <div className="elite-card-in transition-opacity duration-[var(--elite-transition)]">
+                <h2 className="elite-heading flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--elite-text)] mb-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-[var(--elite-radius)] bg-[var(--elite-border-light)] text-[var(--elite-text)]">
                     <IconRocket className="w-4 h-4" />
                   </span>
                   Entrepreneurs in your city
                 </h2>
-                <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-thin">
+                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x snap-mandatory">
                   {discoveryByCity.map((m, i) => (
-                    <div key={m.id} className="flex shrink-0" style={{ animationDelay: `${i * 40}ms` }}>
+                    <div key={m.id} className="flex shrink-0 snap-start">
                       <MemberCard
                         member={m}
                         innerCount={innerCount}
@@ -293,16 +291,16 @@ export default function MembersPage() {
               </div>
             )}
             {discoveryEducation.length > 0 && (
-              <div className="opacity-100 transition-all duration-300">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-black/12 to-black/5 text-slate-800">
+              <div className="elite-card-in transition-opacity duration-[var(--elite-transition)]">
+                <h2 className="elite-heading flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--elite-text)] mb-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-[var(--elite-radius)] bg-[var(--elite-border-light)] text-[var(--elite-text)]">
                     <IconSparkles className="w-4 h-4" />
                   </span>
                   Members active in education
                 </h2>
-                <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
-                  {discoveryEducation.map((m, i) => (
-                    <div key={m.id} className="flex shrink-0">
+                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x snap-mandatory">
+                  {discoveryEducation.map((m) => (
+                    <div key={m.id} className="flex shrink-0 snap-start">
                       <MemberCard
                         member={m}
                         innerCount={innerCount}
@@ -318,16 +316,10 @@ export default function MembersPage() {
           </section>
         )}
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/60">
+        <EliteSection title="Directory">
           <div className="flex items-center justify-between gap-2 mb-4">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-black/12 to-black/5 text-slate-800">
-                <IconMembers className="w-4 h-4" />
-              </span>
-              Directory
-            </h2>
             {meta && (
-              <span className="rounded-full bg-gradient-to-r from-black/8 to-black/4 px-2.5 py-0.5 text-xs font-medium text-slate-600 tabular-nums">
+              <span className="elite-body rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2.5 py-0.5 text-xs font-medium text-[var(--elite-text-secondary)] tabular-nums">
                 {meta.total} member{meta.total === 1 ? "" : "s"}
               </span>
             )}
@@ -337,17 +329,17 @@ export default function MembersPage() {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="h-48 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 animate-pulse"
+                  className="h-48 rounded-[var(--elite-radius-lg)] bg-[var(--elite-border)]/60 animate-pulse"
                 />
               ))}
             </div>
           ) : members.length === 0 ? (
-            <div className="py-12 flex flex-col items-center justify-center text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-black/10 to-black/5 text-slate-500 mb-3">
+            <div className="py-12 flex flex-col items-center justify-center text-center rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-surface)]/50">
+              <span className="flex h-14 w-14 items-center justify-center rounded-[var(--elite-radius-lg)] bg-[var(--elite-border-light)] text-[var(--elite-text-muted)] mb-3">
                 <IconSearch className="w-7 h-7" />
               </span>
-              <p className="text-sm font-medium text-slate-700">No one here yet</p>
-              <p className="text-xs text-slate-500 mt-1">Try different filters or search terms — your people are out there.</p>
+              <p className="elite-body text-sm font-medium text-[var(--elite-text)]">No one here yet</p>
+              <p className="elite-body text-xs text-[var(--elite-text-muted)] mt-1">Try different filters or search terms — your people are out there.</p>
             </div>
           ) : (
             <>
@@ -366,37 +358,32 @@ export default function MembersPage() {
                 ))}
               </div>
               {meta?.hasMore && (
-                <div className="mt-4 flex justify-center">
-                  <button
-                    type="button"
+                <div className="mt-6 flex justify-center">
+                  <EliteButton
+                    variant="secondary"
                     onClick={loadMore}
                     disabled={loading}
-                    className="rounded-xl border border-slate-200 bg-gradient-to-r from-black/8 to-black/4 px-5 py-2.5 text-sm font-medium text-slate-800 hover:from-black/12 hover:to-black/6 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all duration-200"
+                    loading={loading}
+                    ariaLabel="Load more members"
                   >
                     {loading ? "Loading…" : "Load more"}
-                  </button>
+                  </EliteButton>
                 </div>
               )}
             </>
           )}
-        </section>
+        </EliteSection>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/60">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-1">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-black/12 to-black/5 text-slate-800">
-              <IconSparkles className="w-4 h-4" />
-            </span>
-            People you may want to know
-          </h2>
-          <p className="text-xs text-slate-600 mb-4 ml-9">
+        <EliteSection title="People you may want to know">
+          <p className="elite-body text-xs text-[var(--elite-text-muted)] mb-4">
             Based on shared events and trusted connections.
           </p>
           {suggestions.length === 0 ? (
-            <div className="py-6 flex flex-col items-center text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-black/10 to-black/5 text-slate-500 mb-2">
+            <div className="py-6 flex flex-col items-center text-center rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-surface)]/50">
+              <span className="flex h-12 w-12 items-center justify-center rounded-[var(--elite-radius)] bg-[var(--elite-border-light)] text-[var(--elite-text-muted)] mb-2">
                 <IconSparkles className="w-6 h-6" />
               </span>
-              <p className="text-xs text-slate-500">No suggestions yet. Attend events and grow your circles to see recommendations here.</p>
+              <p className="elite-body text-xs text-[var(--elite-text-muted)]">No suggestions yet. Attend events and grow your circles to see recommendations here.</p>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
@@ -427,13 +414,13 @@ export default function MembersPage() {
           <div className="mt-4">
             <Link
               href="/app/profile/circles"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800 hover:text-black transition-colors"
+              className="elite-events inline-flex items-center gap-1.5 text-sm font-medium text-[var(--elite-accent)] hover:text-[var(--elite-accent-hover)] transition-colors"
             >
               <IconCircleInner className="w-3.5 h-3.5" />
               Manage my circles
             </Link>
           </div>
-        </section>
+        </EliteSection>
       </div>
     </div>
   );

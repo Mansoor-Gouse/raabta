@@ -742,9 +742,15 @@ export default function NewStatusPage() {
       {/* Primary preview — full bleed, padding so floating bar doesn’t cover */}
       <div className="flex-1 min-h-0 flex flex-col bg-black relative overflow-hidden pb-[160px]">
         {!hasMedia ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8 text-center min-h-[200px] relative">
+          <button
+            type="button"
+            onClick={handleGalleryClick}
+            disabled={isSelecting || saving}
+            className="flex-1 flex flex-col items-center justify-center gap-6 px-8 text-center min-h-[200px] relative w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-60"
+            aria-label="Add photos or videos from gallery"
+          >
             {isSelecting && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 rounded-2xl">
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                   <p className="text-sm font-medium text-white/90">Opening…</p>
@@ -752,7 +758,7 @@ export default function NewStatusPage() {
               </div>
             )}
             <div
-              className="w-24 h-24 rounded-full flex items-center justify-center transition-opacity duration-200"
+              className="w-24 h-24 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
               style={{ background: "var(--story-add-gradient-cell)" }}
               aria-hidden
             >
@@ -772,9 +778,9 @@ export default function NewStatusPage() {
             </div>
             <div className="space-y-1">
               <p className="text-base font-semibold text-white/95">Add photos or videos</p>
-              <p className="text-sm text-white/55">Tap Camera or Gallery below to get started</p>
+              <p className="text-sm text-white/55">Tap to choose from gallery</p>
             </div>
-          </div>
+          </button>
         ) : (
           <>
             <div ref={previewContainerRef} className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
@@ -944,7 +950,7 @@ export default function NewStatusPage() {
             onClick={handleCameraClick}
             disabled={isSelecting || saving}
             className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 active:scale-90 transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-white/40"
-            aria-label="Camera"
+            aria-label="Take photo"
           >
             {isSelecting ? (
               <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -952,8 +958,9 @@ export default function NewStatusPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             )}
           </button>
@@ -962,7 +969,7 @@ export default function NewStatusPage() {
             onClick={handleGalleryClick}
             disabled={!canAddMore || isSelecting || saving}
             className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 active:scale-90 transition-all disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-white/40"
-            aria-label="Gallery"
+            aria-label="Choose from gallery"
           >
             {isSelecting ? (
               <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -970,8 +977,11 @@ export default function NewStatusPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <rect x="3" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="14" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="3" y="14" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="14" y="14" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
           </button>
@@ -1045,8 +1055,8 @@ export default function NewStatusPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
               </svg>
             )}
           </button>

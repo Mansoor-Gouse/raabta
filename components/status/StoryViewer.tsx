@@ -8,6 +8,7 @@ import {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { StoryProgressBars } from "./StoryProgressBars";
 import { StoryViewersDrawer } from "./StoryViewersDrawer";
@@ -486,22 +487,27 @@ export function StoryViewer({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Link
+            href={isOwnStory ? "/app/profile" : `/app/members/${session?.userId ?? ""}`}
+            className="flex items-center gap-2 min-w-0 flex-1 min-w-0 hover:opacity-90 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={isOwnStory ? "Go to your profile" : `View ${session?.userName ?? "user"}'s profile`}
+          >
             {session?.userImage ? (
               <img
                 src={session.userImage}
                 alt=""
-                className="w-8 h-8 rounded-full object-cover border-2 border-white/50"
+                className="w-8 h-8 rounded-full object-cover border-2 border-white/50 shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-medium">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-medium shrink-0">
                 {(session?.userName || "?")[0]}
               </div>
             )}
             <span className="text-white text-sm font-medium truncate">
-              {session?.userName || "Story"}
+              {isOwnStory ? "Your story" : (session?.userName || "Story")}
             </span>
-          </div>
+          </Link>
           <div className="flex items-center gap-1 shrink-0">
             {isOwnStory && (
               <>
