@@ -59,8 +59,12 @@ export function PostCard({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   const isAuthor = currentUserId && post.authorId === currentUserId;
+
+  const isVideoUrl = (url: string) => !url.match(/\.(gif|webp|png|jpe?g|avif)$/i);
 
   const toggleLike = useCallback(async () => {
     const newLiked = !liked;
@@ -150,6 +154,26 @@ export function PostCard({
 
   const media = post.mediaUrls[mediaIndex];
   const hasMultiple = post.mediaUrls.length > 1;
+  const currentIsVideo = media ? isVideoUrl(media) : false;
+
+  useEffect(() => {
+    if (!currentIsVideo) setVideoPlaying(false);
+    else videoRef.current?.pause();
+  }, [mediaIndex, currentIsVideo]);
+
+  const toggleVideoPlay = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => {});
+      setVideoPlaying(true);
+    } else {
+      video.pause();
+      setVideoPlaying(false);
+    }
+  }, []);
+
   const totalReactions = likeCount;
   const repostCount: number = 0; // placeholder until backend supports it
 
@@ -353,7 +377,39 @@ export function PostCard({
               {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
                 <img src={media} alt="" className="w-full h-full object-cover pointer-events-none" />
               ) : (
-                <video src={media} controls className="w-full h-full object-cover pointer-events-auto" onClick={(e) => e.stopPropagation()} />
+                <>
+                  <video
+                    ref={videoRef}
+                    src={media}
+                    className="w-full h-full object-cover pointer-events-none"
+                    playsInline
+                    loop
+                    muted={false}
+                    onClick={toggleVideoPlay}
+                    onPlay={() => setVideoPlaying(true)}
+                    onPause={() => setVideoPlaying(false)}
+                    onEnded={() => setVideoPlaying(false)}
+                  />
+                  <div
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    aria-hidden
+                  >
+                    {!videoPlaying && (
+                      <div className="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
+                        <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  {/* Center tap zone for play/pause; left/right zones still trigger slide change when hasMultiple */}
+                  <div
+                    className="absolute inset-y-0 left-1/4 right-1/4 cursor-pointer pointer-events-auto"
+                    onClick={(e) => { e.stopPropagation(); toggleVideoPlay(e); }}
+                    onDoubleClick={(e) => e.stopPropagation()}
+                    aria-label={videoPlaying ? "Pause" : "Play"}
+                  />
+                </>
               )}
               {hasMultiple && (
                 <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
