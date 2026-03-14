@@ -14,7 +14,9 @@ export function PostCardSkeleton() {
       </div>
       {/* Author block */}
       <header className="flex items-center gap-3 px-4 py-3">
-        <div className="w-12 h-12 rounded-full bg-[var(--ig-border-light)] shrink-0" />
+        <div className="w-12 h-12 rounded-lg p-[2px] flex items-center justify-center shrink-0 bg-[var(--ig-border-light)]">
+          <div className="w-full h-full rounded-[6px] bg-[var(--ig-border)]" />
+        </div>
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="h-4 w-24 rounded bg-[var(--ig-border-light)]" />
           <div className="h-3 w-14 rounded bg-[var(--ig-border-light)]" />

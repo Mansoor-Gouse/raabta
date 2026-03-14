@@ -29,23 +29,16 @@ function ConstellationBg() {
   ];
   return (
     <svg
-      className="absolute inset-0 w-full h-full opacity-30"
+      className="absolute inset-0 w-full h-full opacity-40"
       viewBox="0 0 100 100"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden
     >
       <defs>
         <linearGradient id="nodeGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(245,245,245,0.4)" />
-          <stop offset="100%" stopColor="rgba(245,245,245,0.05)" />
+          <stop offset="0%" stopColor="rgba(11,11,11,0.15)" />
+          <stop offset="100%" stopColor="rgba(11,11,11,0.02)" />
         </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="0.8" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
       {lines.map(([a, b], i) => (
         <line
@@ -54,8 +47,8 @@ function ConstellationBg() {
           y1={nodes[a].cy}
           x2={nodes[b].cx}
           y2={nodes[b].cy}
-          stroke="rgba(245,245,245,0.12)"
-          strokeWidth="0.3"
+          stroke="rgba(11,11,11,0.08)"
+          strokeWidth="0.35"
         />
       ))}
       {nodes.map((n, i) => (
@@ -65,7 +58,6 @@ function ConstellationBg() {
           cy={n.cy}
           r="1.2"
           fill="url(#nodeGlow)"
-          filter="url(#glow)"
         />
       ))}
     </svg>
@@ -75,55 +67,55 @@ function ConstellationBg() {
 export function NetworkLanding() {
   useSmoothScroll();
   return (
-    <div className="network-landing relative min-h-screen bg-[#0B0B0B] text-[#F5F5F5] overflow-x-hidden scroll-smooth">
+    <div className="network-landing relative min-h-screen bg-[#FAFAFA] text-[#171717] overflow-x-hidden scroll-smooth">
       <a
         href="#the-idea"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-[#0B0B0B] focus:font-medium"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:ring-2 focus:ring-[#0B0B0B] focus:ring-offset-2 focus:bg-white focus:text-[#0B0B0B] focus:font-medium"
       >
         Skip to main content
       </a>
       <DynamicMeshBackground />
       <main id="main-content">
       {/* Hero */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-[#0B0B0B]/95 via-[#151515]/90 to-[#1a1a1a]/90">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <div className="absolute inset-0 overflow-hidden">
           <ConstellationBg />
         </div>
         <div className="network-hero-content relative z-10 max-w-4xl mx-auto text-center">
-          <h1 className="network-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-[#F5F5F5] leading-[1.1] opacity-0 animate-[network-fade-in_0.8s_ease-out_forwards]">
+          <h1 className="network-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-[#0B0B0B] leading-[1.1] opacity-0 animate-[network-fade-in_0.8s_ease-out_forwards]">
             The Rope
           </h1>
-          <p className="network-serif text-lg sm:text-xl md:text-2xl font-light text-[#F5F5F5]/90 mt-4 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.15s_forwards] [font-variant:small-caps] tracking-[0.15em]">
+          <p className="network-serif text-lg sm:text-xl md:text-2xl font-light text-[#262626] mt-4 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.15s_forwards] [font-variant:small-caps] tracking-[0.15em]">
             a network of faith
           </p>
-          <p className="mt-8 text-lg sm:text-xl text-[#F5F5F5]/80 font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
+          <p className="mt-8 text-lg sm:text-xl text-[#404040] font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
             An exclusive network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and collaboration.
           </p>
-          <p className="mt-3 text-sm text-[#F5F5F5]/55 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
+          <p className="mt-3 text-sm text-[#737373] opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
             By application. Curated.
           </p>
           <div className="mt-14 flex max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
             <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B]" aria-hidden />
-            <blockquote className="flex-1 ml-4 px-6 py-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm text-left">
-            <p className="text-2xl sm:text-3xl text-[#F5F5F5]/95 leading-relaxed font-arabic" dir="rtl" lang="ar">
+            <blockquote className="flex-1 ml-4 px-6 py-6 rounded-2xl border border-black/10 bg-white/80 backdrop-blur-sm text-left shadow-sm">
+            <p className="text-2xl sm:text-3xl text-[#171717] leading-relaxed font-arabic" dir="rtl" lang="ar">
               وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا
             </p>
-            <p className="network-serif text-lg sm:text-xl text-[#F5F5F5]/80 italic leading-relaxed mt-4">
+            <p className="network-serif text-lg sm:text-xl text-[#404040] italic leading-relaxed mt-4">
               &ldquo;Hold firmly to the rope of Allah all together and do not become divided.&rdquo;
             </p>
-            <cite className="mt-3 block text-sm text-[#F5F5F5]/60 not-italic">— القرآن ٣:١٠٣ / Qur&apos;an 3:103</cite>
+            <cite className="mt-3 block text-sm text-[#737373] not-italic">— القرآن ٣:١٠٣ / Qur&apos;an 3:103</cite>
           </blockquote>
           </div>
           <div className="mt-12 flex flex-wrap gap-4 justify-center opacity-0 animate-[network-fade-in_0.8s_ease-out_0.45s_forwards]">
             <a
               href="/login"
-              className="network-cta-primary inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] border border-white/10 text-[#F5F5F5] font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
+              className="network-cta-primary inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
               Request Membership
             </a>
             <a
               href="#the-idea"
-              className="network-cta-secondary inline-flex items-center justify-center px-8 py-4 rounded-full border border-white/15 text-[#F5F5F5]/90 font-medium hover:bg-white/5 hover:border-white/25 transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
+              className="network-cta-secondary inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-[#0B0B0B]/20 text-[#171717] font-medium hover:bg-black/5 hover:border-[#0B0B0B]/30 transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
               Learn More
             </a>
@@ -132,19 +124,19 @@ export function NetworkLanding() {
       </section>
 
       {/* Fragmentation & Hold the Rope Together (merged) */}
-      <section id="the-idea" className="relative py-28 px-6 bg-gradient-to-b from-[#1a1a1a]/90 via-[#222]/90 to-[#2a2a2a]/90">
+      <section id="the-idea" className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-4">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-4">
               Fragmentation in the Age of Connection
             </h2>
-            <p className="network-serif text-xl sm:text-2xl font-light text-center text-[#F5F5F5]/80 mb-16 network-heading-accent">
+            <p className="network-serif text-xl sm:text-2xl font-light text-center text-[#404040] mb-16 network-heading-accent">
               Hold the Rope Together
             </p>
             <div className="grid sm:grid-cols-3 gap-10 mb-20">
               <div className="flex flex-col items-center text-center">
-                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
-                  <svg className="w-7 h-7 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center mb-4">
+                  <svg className="w-7 h-7 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
@@ -157,29 +149,29 @@ export function NetworkLanding() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 0 1 2 2v1a2 2 0 0 0 2 2 2 2 0 0 1 2 2v2.945M8 3.935V5.5A2.5 2.5 0 0 0 10.5 8h.5a2 2 0 0 1 2 2 2 2 0 1 0 4 0v-1.055M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
                   </svg>
                 </div>
-                <p className="text-[#F5F5F5] font-medium">Muslims living in 190+ countries</p>
+                <p className="text-[#171717] font-medium">Muslims living in 190+ countries</p>
               </div>
               <div className="flex flex-col items-center text-center">
-                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
-                  <svg className="w-7 h-7 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center mb-4">
+                  <svg className="w-7 h-7 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <p className="text-[#F5F5F5] font-medium">Communities increasingly fragmented despite digital connectivity</p>
+                <p className="text-[#171717] font-medium">Communities increasingly fragmented despite digital connectivity</p>
               </div>
             </div>
             <div className="max-w-2xl mx-auto text-center">
               <div className="flex justify-center mb-12">
                 <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B] min-h-[60px]" aria-hidden />
-                <div className="flex-1 ml-4 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm px-8 py-6">
-                <p className="text-xl sm:text-2xl text-[#F5F5F5]/95 leading-relaxed font-arabic" dir="rtl" lang="ar">
+                <div className="flex-1 ml-4 rounded-2xl border border-black/10 bg-white/90 backdrop-blur-sm px-8 py-6 shadow-sm">
+                <p className="text-xl sm:text-2xl text-[#171717] leading-relaxed font-arabic" dir="rtl" lang="ar">
                   وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا
                 </p>
-                <p className="network-serif text-lg text-[#F5F5F5]/80 italic mt-3">&ldquo;Hold firmly to the rope of Allah all together and do not become divided.&rdquo;</p>
-                <p className="text-sm text-[#F5F5F5]/50 mt-2">القرآن ٣:١٠٣ / Qur&apos;an 3:103</p>
+                <p className="network-serif text-lg text-[#404040] italic mt-3">&ldquo;Hold firmly to the rope of Allah all together and do not become divided.&rdquo;</p>
+                <p className="text-sm text-[#737373] mt-2">القرآن ٣:١٠٣ / Qur&apos;an 3:103</p>
                 </div>
               </div>
-              <p className="text-[#F5F5F5]/85 text-lg leading-relaxed mb-10">
+              <p className="text-[#404040] text-lg leading-relaxed mb-10">
                 Connect through:
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -190,31 +182,31 @@ export function NetworkLanding() {
                   { icon: "users", label: "collaboration" },
                 ].map((item) => (
                   <div key={item.label} className="flex flex-col items-center">
-                    <div className="network-dynamic-icon w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2">
+                    <div className="network-dynamic-icon w-12 h-12 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center mb-2">
                       {item.icon === "lightbulb" && (
-                        <svg className="w-5 h-5 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 0 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                       )}
                       {item.icon === "message" && (
-                        <svg className="w-5 h-5 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
                       )}
                       {item.icon === "target" && (
-                        <svg className="w-5 h-5 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                           <circle cx="12" cy="12" r="10" />
                           <circle cx="12" cy="12" r="6" />
                           <circle cx="12" cy="12" r="2" />
                         </svg>
                       )}
                       {item.icon === "users" && (
-                        <svg className="w-5 h-5 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" />
                         </svg>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-[#F5F5F5]/90 capitalize">{item.label}</span>
+                    <span className="text-sm font-medium text-[#171717] capitalize">{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -224,10 +216,10 @@ export function NetworkLanding() {
       </section>
 
       {/* Platform Features */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#2a2a2a]/90 via-[#2f2f2f]/90 to-[#333]/90">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <FadeInSection>
           <div className="max-w-5xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-16 network-heading-accent">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-16 network-heading-accent">
               Platform Features
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -276,13 +268,13 @@ export function NetworkLanding() {
               ].map((card) => (
                 <div
                   key={card.title}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-8 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06] hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]"
+                  className="rounded-2xl border border-black/10 bg-white/90 backdrop-blur-md p-8 transition-all duration-300 hover:border-black/15 hover:shadow-md"
                 >
-                  <div className="network-dynamic-icon w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#F5F5F5]/90 mb-5 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+                  <div className="network-dynamic-icon w-14 h-14 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center text-[#404040] mb-5">
                     <span className="network-dynamic-icon-inner block">{card.icon}</span>
                   </div>
-                  <h3 className="network-serif text-xl font-medium text-[#F5F5F5] mb-2">{card.title}</h3>
-                  <p className="text-[#F5F5F5]/70 text-sm leading-relaxed">{card.desc}</p>
+                  <h3 className="network-serif text-xl font-medium text-[#0B0B0B] mb-2">{card.title}</h3>
+                  <p className="text-[#404040] text-sm leading-relaxed">{card.desc}</p>
                 </div>
               ))}
             </div>
@@ -291,17 +283,17 @@ export function NetworkLanding() {
       </section>
 
       {/* The Power of Small Circles */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#333]/90 via-[#383838]/90 to-[#3a3a3a]/90">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
         <FadeInSection>
           <div className="max-w-3xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-12">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-12">
               The Power of Small Circles
             </h2>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm px-8 sm:px-12 py-10 sm:py-14">
-              <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed text-center mb-10">
+            <div className="rounded-2xl border border-black/10 bg-white/90 backdrop-blur-sm px-8 sm:px-12 py-10 sm:py-14 shadow-sm">
+              <p className="text-[#404040] text-lg sm:text-xl leading-relaxed text-center mb-10">
                 History shows that civilizations are shaped not by crowds, but by small groups of sincere individuals who share belief and purpose.
               </p>
-              <p className="network-serif text-xl sm:text-2xl text-[#F5F5F5]/95 italic text-center leading-relaxed">
+              <p className="network-serif text-xl sm:text-2xl text-[#171717] italic text-center leading-relaxed">
                 &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
               </p>
             </div>
@@ -310,10 +302,10 @@ export function NetworkLanding() {
       </section>
 
       {/* Benefits */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#3a3a3a]/90 via-[#404040]/90 to-[#454545]/90">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-16">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-16">
               Benefits of the Network
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -326,20 +318,20 @@ export function NetworkLanding() {
                 { text: "Create impact with leaders and change-makers", icon: "award" },
               ].map(({ text, icon }, i) => (
                 <div key={i} className="flex gap-4 items-start">
-                  <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mt-0.5">
+                  <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center mt-0.5">
                     {icon === "map" && (
-                      <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                      <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
                       </svg>
                     )}
                     {icon === "refresh" && (
-                      <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                      <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15" />
                       </svg>
                     )}
                     {icon === "handshake" && (
-                      <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                      <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10" />
                       </svg>
                     )}
@@ -349,17 +341,17 @@ export function NetworkLanding() {
                       </svg>
                     )}
                     {icon === "heart" && (
-                      <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                      <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0z" />
                       </svg>
                     )}
                     {icon === "award" && (
-                      <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                      <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z" />
                       </svg>
                     )}
                   </div>
-                  <p className="text-[#F5F5F5]/90 leading-relaxed">{text}</p>
+                  <p className="text-[#404040] leading-relaxed">{text}</p>
                 </div>
               ))}
             </div>
@@ -368,25 +360,25 @@ export function NetworkLanding() {
       </section>
 
       {/* Final CTA */}
-      <section id="request" className="relative py-32 px-6 bg-gradient-to-b from-[#2a2a2a]/95 via-[#1a1a1a]/95 to-[#0B0B0B]/98">
+      <section id="request" className="relative py-32 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
         <FadeInSection>
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="network-serif text-3xl sm:text-4xl md:text-5xl font-light text-[#F5F5F5] mb-6 leading-tight">
+            <h2 className="network-serif text-3xl sm:text-4xl md:text-5xl font-light text-[#0B0B0B] mb-6 leading-tight">
               Great movements often begin with a few sincere people.
             </h2>
-            <p className="text-lg text-[#F5F5F5]/80 mb-10">
+            <p className="text-lg text-[#404040] mb-10">
               This platform exists to connect you with affluent, influential, and powerful Muslims who share your faith and purpose.
             </p>
             <a
               href="/login"
-              className="network-cta-primary inline-flex items-center justify-center px-10 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] border border-white/10 text-[#F5F5F5] font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
+              className="network-cta-primary inline-flex items-center justify-center px-10 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
               Request Membership
             </a>
-            <p className="mt-6 text-sm text-[#F5F5F5]/55">
+            <p className="mt-6 text-sm text-[#737373]">
               Apply once; we&apos;ll review and be in touch.
             </p>
-            <p className="mt-2 text-sm text-[#F5F5F5]/50">
+            <p className="mt-2 text-sm text-[#737373]">
               Curated. Private.
             </p>
           </div>
@@ -394,26 +386,26 @@ export function NetworkLanding() {
       </section>
 
       {/* How it works */}
-      <section className="relative py-20 px-6 bg-gradient-to-b from-[#1a1a1a]/95 via-[#1a1a1a]/98 to-[#0B0B0B]">
+      <section className="relative py-20 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <FadeInSection>
           <div className="max-w-3xl mx-auto">
-            <h2 className="network-serif text-2xl sm:text-3xl font-light text-center text-[#F5F5F5] mb-12">
+            <h2 className="network-serif text-2xl sm:text-3xl font-light text-center text-[#0B0B0B] mb-12">
               How it works
             </h2>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-8">
               <div className="flex flex-col items-center text-center">
-                <span className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-[#F5F5F5]/90 font-medium text-sm mb-2">1</span>
-                <p className="text-[#F5F5F5]/85 font-medium">Apply</p>
+                <span className="w-10 h-10 rounded-full border-2 border-[#0B0B0B]/20 flex items-center justify-center text-[#171717] font-medium text-sm mb-2">1</span>
+                <p className="text-[#404040] font-medium">Apply</p>
               </div>
-              <span className="hidden sm:block text-[#F5F5F5]/30">→</span>
+              <span className="hidden sm:block text-[#737373]">→</span>
               <div className="flex flex-col items-center text-center">
-                <span className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-[#F5F5F5]/90 font-medium text-sm mb-2">2</span>
-                <p className="text-[#F5F5F5]/85 font-medium">We review</p>
+                <span className="w-10 h-10 rounded-full border-2 border-[#0B0B0B]/20 flex items-center justify-center text-[#171717] font-medium text-sm mb-2">2</span>
+                <p className="text-[#404040] font-medium">We review</p>
               </div>
-              <span className="hidden sm:block text-[#F5F5F5]/30">→</span>
+              <span className="hidden sm:block text-[#737373]">→</span>
               <div className="flex flex-col items-center text-center">
-                <span className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-[#F5F5F5]/90 font-medium text-sm mb-2">3</span>
-                <p className="text-[#F5F5F5]/85 font-medium">Join</p>
+                <span className="w-10 h-10 rounded-full border-2 border-[#0B0B0B]/20 flex items-center justify-center text-[#171717] font-medium text-sm mb-2">3</span>
+                <p className="text-[#404040] font-medium">Join</p>
               </div>
             </div>
           </div>
@@ -421,16 +413,16 @@ export function NetworkLanding() {
       </section>
 
       {/* Footer */}
-      <footer className="relative py-8 px-6 border-t border-white/10 bg-[#0B0B0B]">
+      <footer className="relative py-8 px-6 border-t border-black/10 bg-white">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="network-serif text-[#F5F5F5]/70 text-sm">
+          <p className="network-serif text-[#404040] text-sm">
             The Rope — A network of faith
           </p>
           <div className="flex gap-6">
-            <a href="/login" className="text-sm text-[#F5F5F5]/60 hover:text-[#F5F5F5]/90 transition-colors">
+            <a href="/login" className="text-sm text-[#404040] hover:text-[#0B0B0B] transition-colors">
               Request Membership
             </a>
-            <a href="/login" className="text-sm text-[#F5F5F5]/60 hover:text-[#F5F5F5]/90 transition-colors">
+            <a href="/login" className="text-sm text-[#404040] hover:text-[#0B0B0B] transition-colors">
               Sign in
             </a>
           </div>

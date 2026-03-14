@@ -192,9 +192,10 @@ export function StoryBar() {
   }, [byUser, meId]);
   const myName = me?.fullName || me?.name || "You";
 
-  const ringSizeClass = "w-12 h-12 rounded-lg p-[2px] flex items-center justify-center shrink-0";
+  const ringSizeClass = "w-12 h-12 rounded-lg p-[2px] flex items-center justify-center shrink-0 relative";
   const innerClass = "w-full h-full rounded-[6px] bg-[var(--ig-bg-primary)] flex items-center justify-center overflow-hidden";
   const imgClass = "w-full h-full rounded-[6px] object-cover";
+  const plusBadgeClass = "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center shrink-0 text-[var(--ig-text)]";
 
   const yourStoryViewedAll = myStoryInfo?.viewedAllByMe ?? false;
 
@@ -256,14 +257,14 @@ export function StoryBar() {
                   className={ringSizeClass}
                   style={{ background: "var(--ig-story-ring-gradient)", boxSizing: "border-box" }}
                 >
-                  <div className={`${innerClass} relative`}>
+                  <div className={innerClass}>
                     {renderAvatar(undefined, me?.profileImage || me?.image, myName, myName?.charAt(0)?.toUpperCase() || "?")}
-                    <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-black shrink-0" aria-hidden>
-                      <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
-                        <path d="M6 2v8M2 6h8" />
-                      </svg>
-                    </span>
                   </div>
+                  <span className={plusBadgeClass} aria-hidden>
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                      <path d="M6 2v8M2 6h8" />
+                    </svg>
+                  </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm text-[var(--ig-text)] truncate">Your story</p>
