@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { IconCircleInner, IconTrusted } from "@/components/layout/InstagramIcons";
+import { IconCircleInner, IconTrusted, IconMessenger } from "@/components/layout/InstagramIcons";
 
 export type CircleReasonOption =
   | "mentor"
@@ -132,9 +132,10 @@ export function AddToCircleButton({
         {!compact && (
           <Link
             href={`/app/new?userId=${relatedUserId}`}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-100 ring-1 ring-slate-600/60 hover:bg-slate-800 hover:ring-slate-300/70 transition-colors"
+            className="elite-events inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
+            aria-label="Message"
           >
-            Message
+            <IconMessenger className="w-4 h-4" />
           </Link>
         )}
         {currentCircle === "INNER" && !compact && (
@@ -166,8 +167,8 @@ export function AddToCircleButton({
                 onClick={() => openAdd("TRUSTED")}
                 className={
                   compact
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-slate-600 to-slate-400 px-3 py-1 text-[11px] font-medium text-white shadow-sm hover:shadow-md hover:from-slate-500 hover:to-slate-300 transition-colors"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-slate-700 via-slate-500 to-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-900 shadow-sm hover:shadow-md transition-colors"
+                    ? "elite-events inline-flex items-center gap-1.5 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] px-3 py-1 text-[11px] font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
+                    : "elite-events inline-flex items-center gap-1.5 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] px-3 py-1.5 text-xs font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
                 }
               >
                 <IconTrusted className="w-3.5 h-3.5 shrink-0" />

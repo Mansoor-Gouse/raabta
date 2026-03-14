@@ -42,110 +42,72 @@ export function MemberCard({
   const displayName = member.fullName || member.name || "Member";
   const avatar = member.profileImage;
   const subline = [member.profession, member.company].filter(Boolean).join(" — ") || member.headline || null;
-  const focusTags = member.expertise?.length ? member.expertise : member.industries?.slice(0, 3) ?? [];
-  const concernTags = member.concerns ?? [];
 
   return (
     <article
       className={`elite-events block rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] transition-all duration-[var(--elite-transition)] elite-hover-lift focus-within:ring-2 focus-within:ring-[var(--elite-accent)] ${
         compact
           ? "flex shrink-0 flex-col p-3 w-[200px] hover:border-[var(--elite-accent-muted)] hover:shadow-[var(--elite-shadow)]"
-          : "flex flex-col p-4 hover:border-[var(--elite-accent-muted)] hover:shadow-[var(--elite-shadow)]"
+          : "flex flex-col p-3 hover:border-[var(--elite-accent-muted)] hover:shadow-[var(--elite-shadow)]"
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-2.5">
         <Link href={`/app/members/${member.id}`} className="shrink-0 group/avatar">
           <EliteAvatar
             name={displayName}
             image={avatar ?? null}
-            size={compact ? "md" : "lg"}
+            size={compact ? "md" : "md"}
             gradientFallback
             className="ring-2 ring-[var(--elite-border)] group-hover/avatar:ring-[var(--elite-accent-muted)] transition-all"
           />
         </Link>
         <div className="min-w-0 flex-1">
           <Link href={`/app/members/${member.id}`} className="block">
-            <p className="elite-heading truncate font-semibold text-[var(--elite-text)]">{displayName}</p>
+            <p className="elite-heading truncate text-sm font-semibold text-[var(--elite-text)]">{displayName}</p>
             {(subline || member.location) && (
-              <p className="elite-body truncate text-xs text-[var(--elite-text-secondary)]">
+              <p className="elite-body truncate text-[11px] text-[var(--elite-text-secondary)]">
                 {subline}
-                {subline && member.location ? " — " : ""}
+                {subline && member.location ? " · " : ""}
                 {member.location}
               </p>
             )}
           </Link>
           {(member.circleTypeForMe === "INNER" || member.circleTypeForMe === "TRUSTED") && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
+            <div className="mt-1 flex flex-wrap gap-1">
               {member.circleTypeForMe === "INNER" && (
-                <span className="elite-body inline-flex items-center gap-1 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--elite-text)]">
-                  <IconCircleInner className="w-3 h-3 shrink-0" />
-                  Inner Circle
+                <span className="elite-body inline-flex items-center gap-0.5 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--elite-text)]">
+                  <IconCircleInner className="w-2.5 h-2.5 shrink-0" />
+                  Inner
                 </span>
               )}
               {member.circleTypeForMe === "TRUSTED" && (
-                <span className="elite-body inline-flex items-center gap-1 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--elite-text-secondary)]">
-                  <IconTrusted className="w-3 h-3 shrink-0" />
-                  Trusted Circle
+                <span className="elite-body inline-flex items-center gap-0.5 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--elite-text-secondary)]">
+                  <IconTrusted className="w-2.5 h-2.5 shrink-0" />
+                  Trusted
                 </span>
               )}
             </div>
           )}
-          {!compact && (member.mutualConnectionsCount ?? 0) > 0 && (
-            <p className="elite-body mt-1 flex items-center gap-1 text-[11px] text-[var(--elite-text-secondary)]">
-              <IconUserCard className="w-3 h-3 text-[var(--elite-text-muted)]" />
-              {member.mutualConnectionsCount} shared connection
-              {(member.mutualConnectionsCount ?? 0) === 1 ? "" : "s"}
-            </p>
-          )}
-          {!compact && (member.eventsAttendedTogether ?? 0) > 0 && (
-            <p className="elite-body flex items-center gap-1 text-[11px] text-[var(--elite-text-secondary)]">
-              <IconEvents className="w-3 h-3 text-[var(--elite-text-muted)]" />
-              {member.eventsAttendedTogether} shared event
-              {(member.eventsAttendedTogether ?? 0) === 1 ? "" : "s"}
+          {!compact && ((member.mutualConnectionsCount ?? 0) > 0 || (member.eventsAttendedTogether ?? 0) > 0) && (
+            <p className="elite-body mt-0.5 flex items-center gap-1.5 text-[10px] text-[var(--elite-text-muted)]">
+              {(member.mutualConnectionsCount ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-0.5">
+                  <IconUserCard className="w-2.5 h-2.5" />
+                  {member.mutualConnectionsCount}
+                </span>
+              )}
+              {(member.eventsAttendedTogether ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-0.5">
+                  <IconEvents className="w-2.5 h-2.5" />
+                  {member.eventsAttendedTogether}
+                </span>
+              )}
             </p>
           )}
         </div>
       </div>
 
-      {!compact && (focusTags.length > 0 || concernTags.length > 0) && (
-        <div className="mt-3 space-y-1">
-          {focusTags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              <span className="elite-body text-[10px] font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">Focus</span>
-              {focusTags.slice(0, 3).map((t) => (
-                <span
-                  key={t}
-                  className="elite-body rounded border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] text-[var(--elite-text-secondary)]"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          )}
-          {concernTags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              <span className="elite-body text-[10px] font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">Concern</span>
-              {concernTags.slice(0, 2).map((t) => (
-                <span
-                  key={t}
-                  className="elite-body rounded border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-0.5 text-[10px] text-[var(--elite-text-secondary)]"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Link
-          href={`/app/members/${member.id}`}
-          className="elite-events inline-flex items-center gap-1.5 rounded-[var(--elite-radius)] px-2.5 py-1 text-xs font-medium text-[var(--elite-text)] border border-[var(--elite-border)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
-        >
-          <IconUserCard className="w-3.5 h-3.5" />
-          View Profile
-        </Link>
+      <div className="mt-2 flex items-center justify-end gap-1.5">
         <AddToCircleButton
           relatedUserId={member.id}
           currentCircle={member.circleTypeForMe ?? null}

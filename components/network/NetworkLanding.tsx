@@ -90,7 +90,7 @@ export function NetworkLanding() {
             a network of faith
           </p>
           <p className="mt-10 text-lg sm:text-xl text-[#F5F5F5]/80 font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
-            In an age of noise and fragmentation, this platform reconnects thoughtful believers through faith, dialogue, and collaboration.
+            An exclusive network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and meaningful collaboration.
           </p>
           <blockquote className="mt-14 px-6 py-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm text-left max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
             <p className="text-2xl sm:text-3xl text-[#F5F5F5]/95 leading-relaxed font-arabic" dir="rtl" lang="ar">
@@ -171,7 +171,7 @@ export function NetworkLanding() {
               <p className="text-sm text-[#F5F5F5]/50 mt-2">القرآن ٣:١٠٣ / Qur&apos;an 3:103</p>
             </div>
             <p className="text-[#F5F5F5]/85 text-lg leading-relaxed mb-12">
-              A network where thoughtful believers connect through:
+              A network where thoughtful, affluent, and influential believers connect through:
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               {[
@@ -224,7 +224,7 @@ export function NetworkLanding() {
               {[
                 {
                   title: "Private Circles",
-                  desc: "Trusted circles for meaningful conversations.",
+                  desc: "Trusted circles connecting you with affluent and influential Muslims for meaningful conversation.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <circle cx="12" cy="12" r="4" />
@@ -247,7 +247,7 @@ export function NetworkLanding() {
                 },
                 {
                   title: "Exclusive Gatherings",
-                  desc: "Private dinners, retreats, and intellectual salons.",
+                  desc: "Private dinners, retreats, and salons among powerful and purposeful believers.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
@@ -283,58 +283,19 @@ export function NetworkLanding() {
       {/* The Power of Small Circles */}
       <section className="relative py-28 px-6 bg-gradient-to-b from-[#333]/90 via-[#383838]/90 to-[#3a3a3a]/90">
         <FadeInSection>
-          <div className="max-w-4xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-14">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-12">
               The Power of Small Circles
             </h2>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-8 sm:p-12 mb-14 overflow-hidden">
-              <div className="relative flex justify-center items-center min-h-[280px] sm:min-h-[320px]">
-                {/* Animated network diagram: small circles connecting into a whole */}
-                <svg
-                  viewBox="0 0 240 200"
-                  className="w-full max-w-lg h-auto text-[#F5F5F5]"
-                  aria-hidden
-                >
-                  <defs>
-                    <linearGradient id="circleNodeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.5)" />
-                      <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
-                    </linearGradient>
-                    <filter id="circleGlow">
-                      <feGaussianBlur stdDeviation="1.5" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  {/* Connection paths (pathLength=1 for draw animation) */}
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 80 100 L 120 60" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 60 L 160 100" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 60 L 120 140" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 80 100 L 120 140" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 140 L 160 100" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1" strokeOpacity="0.35" d="M 80 100 L 160 100" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 60 L 120 100" />
-                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 100 L 120 140" />
-                  {/* Nodes */}
-                  <circle className="network-circles-node" cx="80" cy="100" r="10" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" filter="url(#circleGlow)" />
-                  <circle className="network-circles-node" cx="120" cy="60" r="12" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.5)" strokeWidth="1" filter="url(#circleGlow)" />
-                  <circle className="network-circles-node" cx="160" cy="100" r="10" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" filter="url(#circleGlow)" />
-                  <circle className="network-circles-node" cx="120" cy="140" r="10" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" filter="url(#circleGlow)" />
-                  <circle className="network-circles-node" cx="120" cy="100" r="8" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.5)" strokeWidth="1" filter="url(#circleGlow)" />
-                  <circle className="network-circles-node" cx="60" cy="70" r="6" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" filter="url(#circleGlow)" />
-                  <circle className="network-circles-node" cx="180" cy="70" r="6" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" filter="url(#circleGlow)" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-6">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm px-8 sm:px-12 py-10 sm:py-14">
+              <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed text-center mb-10">
                 History shows that civilizations are shaped not by crowds, but by small groups of sincere individuals who share belief and purpose.
               </p>
-              <p className="network-serif text-xl text-[#F5F5F5]/95 italic">
-                &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
-              </p>
+              <div className="border-t border-white/15 pt-10">
+                <p className="network-serif text-xl sm:text-2xl text-[#F5F5F5]/95 italic text-center leading-relaxed">
+                  &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
+                </p>
+              </div>
             </div>
           </div>
         </FadeInSection>
@@ -349,12 +310,12 @@ export function NetworkLanding() {
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { text: "Find thoughtful believers across cities and countries", icon: "map" },
-                { text: "Exchange meaningful ideas and reflections", icon: "refresh" },
+                { text: "Connect with affluent and influential Muslims across cities and countries", icon: "map" },
+                { text: "Exchange meaningful ideas with thoughtful, powerful believers", icon: "refresh" },
                 { text: "Collaborate on charitable and social initiatives", icon: "handshake" },
-                { text: "Organize intellectual gatherings and retreats", icon: "calendar" },
-                { text: "Build lifelong friendships grounded in faith", icon: "heart" },
-                { text: "Create lasting impact for the community", icon: "award" },
+                { text: "Organize and join exclusive gatherings and retreats", icon: "calendar" },
+                { text: "Build lasting relationships grounded in faith and purpose", icon: "heart" },
+                { text: "Create impact alongside leaders and change-makers", icon: "award" },
               ].map(({ text, icon }, i) => (
                 <div key={i} className="flex gap-4 items-start">
                   <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mt-0.5">
@@ -406,7 +367,7 @@ export function NetworkLanding() {
               Great movements often begin with a few sincere people.
             </h2>
             <p className="text-lg text-[#F5F5F5]/80 mb-12">
-              This platform exists to help those individuals find each other.
+              This platform exists to connect you with affluent, influential, and powerful Muslims who share your faith and purpose.
             </p>
             <a
               href="/login"

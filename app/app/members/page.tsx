@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MemberCard, type MemberCardData } from "@/components/members/MemberCard";
+import { MemberCardSkeleton } from "@/components/members/MemberCardSkeleton";
 import { EliteSection, EliteChip, EliteButton } from "@/components/elite";
 import {
   IconSearch,
@@ -325,12 +326,9 @@ export default function MembersPage() {
             )}
           </div>
           {loading && members.length === 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="h-48 rounded-[var(--elite-radius-lg)] bg-[var(--elite-border)]/60 animate-pulse"
-                />
+                <MemberCardSkeleton key={i} delay={i * 50} />
               ))}
             </div>
           ) : members.length === 0 ? (
@@ -343,7 +341,7 @@ export default function MembersPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {members.map((m) => (
                   <MemberCard
                     key={m.id}
