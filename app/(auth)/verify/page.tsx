@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -23,6 +23,8 @@ function VerifyContent() {
   const [step, setStep] = useState<"code" | "name">("code");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const finishLogin = useCallback(async () => {
     const deviceId = getDeviceId();
@@ -95,6 +97,11 @@ function VerifyContent() {
     if (!phone) router.replace("/login");
   }, [phone, router]);
 
+  useEffect(() => {
+    if (step === "code") codeInputRef.current?.focus();
+    else nameInputRef.current?.focus();
+  }, [step]);
+
   if (step === "name") {
     return (
       <main
@@ -106,12 +113,12 @@ function VerifyContent() {
           paddingRight: "calc(1rem + var(--safe-area-inset-right))",
         }}
       >
-        <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.3)]">
+        <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl bg-white border border-black/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
           <div className="space-y-2 text-center">
-            <h1 className="text-2xl sm:text-3xl font-light text-[#F5F5F5] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-light text-[#0B0B0B] tracking-tight">
               Welcome
             </h1>
-            <p className="text-sm text-[#F5F5F5]/60">
+            <p className="text-sm text-[#737373]">
               What should we call you?
             </p>
           </div>
@@ -123,20 +130,28 @@ function VerifyContent() {
             className="space-y-5"
           >
             <input
+              ref={nameInputRef}
               type="text"
               autoComplete="name"
               placeholder="Your name"
               value={name}
-              onChange={(e) => setName(e.target.value.slice(0, 100))}
-              className="w-full px-4 py-3.5 rounded-xl border border-white/15 bg-white/5 text-[#F5F5F5] placeholder:text-[#F5F5F5]/40 min-h-[48px] focus:outline-none focus:border-white/25 focus:ring-2 focus:ring-white/10 transition-colors"
+              onChange={(e) => {
+                setName(e.target.value.slice(0, 100));
+                if (error) setError("");
+              }}
+              className="w-full px-4 py-3.5 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] text-[#0B0B0B] placeholder:text-[#A3A3A3] min-h-[48px] focus:outline-none focus:border-[#1a1a1a]/40 focus:ring-2 focus:ring-[#0B0B0B]/10 transition-colors"
+              aria-describedby={error ? "name-error" : undefined}
+              aria-invalid={!!error}
             />
             {error && (
-              <p className="text-sm text-red-400/90">{error}</p>
+              <p id="name-error" className="text-sm text-red-600" role="alert">
+                {error}
+              </p>
             )}
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] border border-white/10 text-[#F5F5F5] font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#333] hover:to-[#252525] hover:border-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)]"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#2a2a2a] hover:to-[#1a1a1a] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:scale-[0.99]"
             >
               {loading ? "Saving…" : "Continue"}
             </button>
@@ -156,12 +171,12 @@ function VerifyContent() {
         paddingRight: "calc(1rem + var(--safe-area-inset-right))",
       }}
     >
-      <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.3)]">
+      <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl bg-white border border-black/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl sm:text-3xl font-light text-[#F5F5F5] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-light text-[#0B0B0B] tracking-tight">
             Verify
           </h1>
-          <p className="text-sm text-[#F5F5F5]/60">
+          <p className="text-sm text-[#737373]">
             Enter the code sent to your device.
           </p>
         </div>
@@ -173,24 +188,30 @@ function VerifyContent() {
           className="space-y-5"
         >
           <input
+            ref={codeInputRef}
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"
             placeholder="Verification code"
             value={code}
-            onChange={(e) =>
-              setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-            }
-            className="w-full px-4 py-3.5 rounded-xl border border-white/15 bg-white/5 text-[#F5F5F5] placeholder:text-[#F5F5F5]/40 text-center text-lg sm:text-xl tracking-[0.4em] min-h-[48px] focus:outline-none focus:border-white/25 focus:ring-2 focus:ring-white/10 transition-colors"
+            onChange={(e) => {
+              setCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+              if (error) setError("");
+            }}
+            className="w-full px-4 py-3.5 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] text-[#0B0B0B] placeholder:text-[#A3A3A3] text-center text-lg sm:text-xl tracking-[0.4em] min-h-[48px] focus:outline-none focus:border-[#1a1a1a]/40 focus:ring-2 focus:ring-[#0B0B0B]/10 transition-colors"
             maxLength={6}
+            aria-describedby={error ? "verify-error" : undefined}
+            aria-invalid={!!error}
           />
           {error && (
-            <p className="text-sm text-red-400/90">{error}</p>
+            <p id="verify-error" className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
           )}
           <button
             type="submit"
             disabled={loading || code.length < 4}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] border border-white/10 text-[#F5F5F5] font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#333] hover:to-[#252525] hover:border-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)]"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#2a2a2a] hover:to-[#1a1a1a] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:scale-[0.99]"
           >
             {loading ? "Verifying…" : "Verify"}
           </button>
@@ -198,7 +219,7 @@ function VerifyContent() {
         <p className="text-center">
           <Link
             href="/login"
-            className="text-sm text-[#F5F5F5]/60 hover:text-[#F5F5F5]/90 transition-colors min-h-[44px] inline-flex items-center justify-center"
+            className="text-sm text-[#737373] hover:text-[#0B0B0B] transition-colors min-h-[44px] inline-flex items-center justify-center"
           >
             Change number
           </Link>
@@ -212,8 +233,8 @@ export default function VerifyPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-dvh flex items-center justify-center p-4 bg-gradient-to-b from-[#0B0B0B] via-[#1a1a1a] to-[#252525]">
-          <p className="text-[#F5F5F5]/60">Loading…</p>
+        <main className="min-h-dvh flex items-center justify-center p-4 bg-gradient-to-b from-[#FAFAFA] via-[#F5F5F5] to-[#F0F0F0]">
+          <p className="text-[#737373]">Loading…</p>
         </main>
       }
     >

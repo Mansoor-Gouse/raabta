@@ -4,7 +4,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-[#0B0B0B] via-[#1a1a1a] to-[#252525]">
+    <div className="min-h-dvh bg-gradient-to-b from-[#FAFAFA] via-[#F5F5F5] to-[#F0F0F0]">
       {children}
     </div>
   );
