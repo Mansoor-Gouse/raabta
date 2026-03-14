@@ -119,9 +119,12 @@ export default function NewPostPage() {
           type="button"
           onClick={handleShare}
           disabled={!canPost || saving}
-          className="ml-auto post-flow-cta min-w-[64px] px-3 py-2 rounded-lg text-sm font-semibold hover:opacity-95 disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"
+          className="ml-auto post-flow-cta min-w-[72px] px-3 py-2 rounded-lg text-sm font-semibold hover:opacity-95 disabled:opacity-50 transition-all duration-200 active:scale-[0.98] inline-flex items-center justify-center gap-1.5"
         >
-          {saving ? "Posting…" : "Post"}
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          <span>{saving ? "Posting…" : "Post"}</span>
         </button>
       </header>
 

@@ -12,8 +12,6 @@ const VISIBILITY_OPTIONS: { value: Visibility; label: string }[] = [
   { value: "network", label: "Network" },
   { value: "trusted_circle", label: "Trusted Circle" },
   { value: "inner_circle", label: "Inner Circle" },
-  { value: "friends", label: "Friends only" },
-  { value: "event-attendees", label: "Event attendees only" },
 ];
 
 export type ComposeViewProps = {

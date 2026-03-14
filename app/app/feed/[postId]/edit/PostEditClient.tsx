@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type Visibility = "network" | "friends" | "event-attendees" | "inner_circle" | "trusted_circle";
+type Visibility = "network" | "inner_circle" | "trusted_circle";
 
 export function PostEditClient({
   postId,
@@ -116,8 +116,6 @@ export function PostEditClient({
               <option value="network">Network</option>
               <option value="trusted_circle">Trusted Circle</option>
               <option value="inner_circle">Inner Circle</option>
-              <option value="friends">Friends only</option>
-              <option value="event-attendees">Event attendees only</option>
             </select>
           </div>
           <button

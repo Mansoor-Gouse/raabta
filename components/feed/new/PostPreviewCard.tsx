@@ -15,8 +15,6 @@ const VISIBILITY_LABELS: Record<Visibility, string> = {
   network: "Network",
   trusted_circle: "Trusted Circle",
   inner_circle: "Inner Circle",
-  friends: "Friends only",
-  "event-attendees": "Event attendees only",
 };
 
 const CAPTION_LINE_HEIGHT = 1.35;
@@ -62,21 +60,38 @@ export function PostPreviewCard({
         </div>
       )}
 
-      {/* Media — rectangular, same aspect as PostCard */}
+      {/* Media — rectangular, same aspect as PostCard; ensure image fills and displays */}
       {mediaUrls.length > 0 && (
-        <div className="relative aspect-[16/10] w-full bg-black">
+        <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: "16/10", minHeight: "160px" }}>
           {firstUrl ? (
             isImage ? (
-              <img src={firstUrl} alt="" className="w-full h-full object-cover" />
+              <img
+                src={firstUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                draggable={false}
+              />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[var(--ig-text-secondary)]">
-                <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
+              <>
+                <video
+                  src={firstUrl}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  preload="metadata"
+                  muted
+                  playsInline
+                  aria-hidden
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                </div>
+              </>
             )
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-sm text-[var(--ig-text-secondary)]">
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--ig-text-secondary)]">
               No media
             </div>
           )}

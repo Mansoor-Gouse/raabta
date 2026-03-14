@@ -6,14 +6,12 @@ import { PostPreviewCard } from "./PostPreviewCard";
 
 const CAPTION_MAX_LENGTH = 2200;
 
-export type Visibility = "network" | "friends" | "event-attendees" | "inner_circle" | "trusted_circle";
+export type Visibility = "network" | "trusted_circle" | "inner_circle";
 
 const VISIBILITY_OPTIONS: { value: Visibility; label: string }[] = [
   { value: "network", label: "Network" },
   { value: "trusted_circle", label: "Trusted Circle" },
   { value: "inner_circle", label: "Inner Circle" },
-  { value: "friends", label: "Friends only" },
-  { value: "event-attendees", label: "Event attendees only" },
 ];
 
 export function CaptionStep({

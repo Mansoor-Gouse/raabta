@@ -15,7 +15,7 @@ export function processFiles(files: FileList | null, existingCount: number): Med
     const isImage = file.type.startsWith("image/");
     if (!isImage && !isVideo) continue;
     const type = isVideo ? "video" : "image";
-    const preview = type === "image" ? URL.createObjectURL(file) : "";
+    const preview = URL.createObjectURL(file);
     newItems.push({ file, preview, type });
   }
   return newItems;

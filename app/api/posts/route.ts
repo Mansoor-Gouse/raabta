@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const { caption, mediaUrls, visibility } = body as {
     caption?: string;
     mediaUrls?: string[];
-    visibility?: "network" | "friends" | "event-attendees" | "inner_circle" | "trusted_circle";
+    visibility?: "network" | "inner_circle" | "trusted_circle";
   };
   const urls = Array.isArray(mediaUrls) ? mediaUrls.filter((u): u is string => typeof u === "string") : [];
   const trimmedCaption = typeof caption === "string" ? caption.trim() : "";
@@ -22,9 +22,7 @@ export async function POST(request: Request) {
     );
   }
   const visibilityValue =
-    visibility === "friends" || visibility === "event-attendees" || visibility === "inner_circle" || visibility === "trusted_circle"
-      ? visibility
-      : "network";
+    visibility === "inner_circle" || visibility === "trusted_circle" ? visibility : "network";
   await connectDB();
   const post = await PostModel.create({
     authorId: session.userId,

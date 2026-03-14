@@ -99,7 +99,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   if (typeof body.caption === "string") (post as { caption?: string }).caption = body.caption;
-  if (body.visibility === "network" || body.visibility === "friends" || body.visibility === "event-attendees" || body.visibility === "inner_circle" || body.visibility === "trusted_circle") {
+  if (body.visibility === "network" || body.visibility === "inner_circle" || body.visibility === "trusted_circle") {
     (post as { visibility?: string }).visibility = body.visibility;
   }
   await post.save();

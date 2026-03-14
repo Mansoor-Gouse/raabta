@@ -26,10 +26,8 @@ export default async function PostEditPage({
   };
   if (String(p.authorId) !== session.userId) notFound();
 
-  const visibility =
-    p.visibility === "friends" || p.visibility === "event-attendees" || p.visibility === "inner_circle" || p.visibility === "trusted_circle"
-      ? p.visibility
-      : "network";
+  const visibility: "network" | "inner_circle" | "trusted_circle" =
+    p.visibility === "inner_circle" || p.visibility === "trusted_circle" ? p.visibility : "network";
 
   return (
     <PostEditClient
