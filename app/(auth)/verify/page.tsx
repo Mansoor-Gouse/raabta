@@ -100,25 +100,27 @@ function VerifyContent() {
       <main
         className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-6"
         style={{
-          paddingTop: "calc(1rem + var(--safe-area-inset-top))",
-          paddingBottom: "calc(1rem + var(--safe-area-inset-bottom))",
+          paddingTop: "calc(1.5rem + var(--safe-area-inset-top))",
+          paddingBottom: "calc(1.5rem + var(--safe-area-inset-bottom))",
           paddingLeft: "calc(1rem + var(--safe-area-inset-left))",
           paddingRight: "calc(1rem + var(--safe-area-inset-right))",
         }}
       >
-        <div className="w-full max-w-sm space-y-5 sm:space-y-6 p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <h1 className="text-xl sm:text-2xl font-semibold text-center">
-            Welcome
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center px-1">
-            What should we call you?
-          </p>
+        <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.3)]">
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl sm:text-3xl font-light text-[#F5F5F5] tracking-tight">
+              Welcome
+            </h1>
+            <p className="text-sm text-[#F5F5F5]/60">
+              What should we call you?
+            </p>
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSubmitName();
             }}
-            className="space-y-4"
+            className="space-y-5"
           >
             <input
               type="text"
@@ -126,15 +128,15 @@ function VerifyContent() {
               placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value.slice(0, 100))}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 min-h-[48px]"
+              className="w-full px-4 py-3.5 rounded-xl border border-white/15 bg-white/5 text-[#F5F5F5] placeholder:text-[#F5F5F5]/40 min-h-[48px] focus:outline-none focus:border-white/25 focus:ring-2 focus:ring-white/10 transition-colors"
             />
             {error && (
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <p className="text-sm text-red-400/90">{error}</p>
             )}
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="w-full py-3 rounded-xl bg-blue-600 text-white font-medium disabled:opacity-50 min-h-[48px] touch-manipulation"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] border border-white/10 text-[#F5F5F5] font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#333] hover:to-[#252525] hover:border-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)]"
             >
               {loading ? "Saving…" : "Continue"}
             </button>
@@ -148,25 +150,27 @@ function VerifyContent() {
     <main
       className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-6"
       style={{
-        paddingTop: "calc(1rem + var(--safe-area-inset-top))",
-        paddingBottom: "calc(1rem + var(--safe-area-inset-bottom))",
+        paddingTop: "calc(1.5rem + var(--safe-area-inset-top))",
+        paddingBottom: "calc(1.5rem + var(--safe-area-inset-bottom))",
         paddingLeft: "calc(1rem + var(--safe-area-inset-left))",
         paddingRight: "calc(1rem + var(--safe-area-inset-right))",
       }}
     >
-      <div className="w-full max-w-sm space-y-5 sm:space-y-6 p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-        <h1 className="text-xl sm:text-2xl font-semibold text-center">
-          Verify
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center px-1">
-          Enter the code sent to your device (device binding will be saved).
-        </p>
+      <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.3)]">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl sm:text-3xl font-light text-[#F5F5F5] tracking-tight">
+            Verify
+          </h1>
+          <p className="text-sm text-[#F5F5F5]/60">
+            Enter the code sent to your device.
+          </p>
+        </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleVerify();
           }}
-          className="space-y-4"
+          className="space-y-5"
         >
           <input
             type="text"
@@ -177,24 +181,24 @@ function VerifyContent() {
             onChange={(e) =>
               setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
             }
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-center text-lg sm:text-xl tracking-widest min-h-[48px]"
+            className="w-full px-4 py-3.5 rounded-xl border border-white/15 bg-white/5 text-[#F5F5F5] placeholder:text-[#F5F5F5]/40 text-center text-lg sm:text-xl tracking-[0.4em] min-h-[48px] focus:outline-none focus:border-white/25 focus:ring-2 focus:ring-white/10 transition-colors"
             maxLength={6}
           />
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-400/90">{error}</p>
           )}
           <button
             type="submit"
             disabled={loading || code.length < 4}
-            className="w-full py-3 rounded-xl bg-blue-600 text-white font-medium disabled:opacity-50 min-h-[48px] touch-manipulation"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] border border-white/10 text-[#F5F5F5] font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#333] hover:to-[#252525] hover:border-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)]"
           >
             {loading ? "Verifying…" : "Verify"}
           </button>
         </form>
-        <p className="text-center text-sm">
+        <p className="text-center">
           <Link
             href="/login"
-            className="text-blue-600 dark:text-blue-400 hover:underline min-h-[44px] inline-flex items-center justify-center"
+            className="text-sm text-[#F5F5F5]/60 hover:text-[#F5F5F5]/90 transition-colors min-h-[44px] inline-flex items-center justify-center"
           >
             Change number
           </Link>
@@ -208,8 +212,8 @@ export default function VerifyPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-dvh flex items-center justify-center p-4">
-          <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+        <main className="min-h-dvh flex items-center justify-center p-4 bg-gradient-to-b from-[#0B0B0B] via-[#1a1a1a] to-[#252525]">
+          <p className="text-[#F5F5F5]/60">Loading…</p>
         </main>
       }
     >

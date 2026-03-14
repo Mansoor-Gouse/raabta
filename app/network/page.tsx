@@ -1,7 +1,7 @@
 import { NetworkLanding } from "@/components/network/NetworkLanding";
 
 export const metadata = {
-  title: "A Network of Faith — A Constellation of Believers",
+  title: "The Rope — A Network of Faith",
   description:
     "An exclusive digital network connecting thoughtful believers across the world for meaningful dialogue, collaboration, and service to the community.",
 };

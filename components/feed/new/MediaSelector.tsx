@@ -2,10 +2,10 @@
 
 import { useRef, useCallback } from "react";
 
-const MAX_FILES = 10;
-const ACCEPT = "image/*,video/*";
+export const MAX_FILES = 10;
+export const ACCEPT = "image/*,video/*";
 
-function processFiles(files: FileList | null, existingCount: number): MediaItem[] {
+export function processFiles(files: FileList | null, existingCount: number): MediaItem[] {
   if (!files?.length) return [];
   const newItems: MediaItem[] = [];
   const remaining = MAX_FILES - existingCount;

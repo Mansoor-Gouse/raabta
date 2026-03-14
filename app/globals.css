@@ -154,6 +154,14 @@ body {
   animation: postFlowIconBounce 2s ease-in-out infinite;
 }
 
+@keyframes postFlowCountPulse {
+  0% { opacity: 0.6; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.post-flow-count-update {
+  animation: postFlowCountPulse 0.2s ease-out;
+}
+
 /* Post flow: styled inputs and textarea */
 .post-flow-input {
   background: var(--post-flow-gradient-start);
@@ -163,7 +171,7 @@ body {
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--ig-text);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
 }
 .post-flow-input::placeholder {
   color: var(--ig-text-tertiary);
@@ -704,6 +712,10 @@ textarea:focus-visible {
   font-family: var(--network-font-sans);
   color: var(--network-white);
   background: var(--network-black);
+}
+
+.network-landing .font-arabic {
+  font-family: "Noto Naskh Arabic", "Traditional Arabic", "Scheherazade New", serif;
 }
 
 .network-landing .network-serif {
