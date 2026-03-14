@@ -136,12 +136,17 @@ export function FeedClient() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
-      {/* Header: segment control */}
-      <div
-        role="tablist"
-        aria-label="Feed sections"
-        className="shrink-0 flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
-      >
+      {/* Sticky header: title + segment bar */}
+      <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+        <div className="flex items-center px-4 py-2.5">
+          <h1 className="text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+        </div>
+        {/* Segment control */}
+        <div
+          role="tablist"
+          aria-label="Feed sections"
+          className="flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
+        >
         {SEGMENTS.map((label, i) => (
           <button
             key={label}
@@ -160,6 +165,7 @@ export function FeedClient() {
             {label}
           </button>
         ))}
+        </div>
       </div>
 
       {/* Horizontal scroll: one panel visible at a time */}
@@ -186,7 +192,7 @@ export function FeedClient() {
           role="tabpanel"
           aria-labelledby="feed-tab-1"
           aria-label="Posts"
-          className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg)] px-3 pb-4"
+          className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg)] px-3 pb-1"
         >
           {posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--ig-bg-primary)] rounded-xl">

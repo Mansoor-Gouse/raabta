@@ -722,6 +722,20 @@ textarea:focus-visible {
   font-family: var(--network-font-serif);
 }
 
+/* Thin gradient line under section headings (black gradient accent) */
+.network-landing .network-heading-accent {
+  position: relative;
+}
+.network-landing .network-heading-accent::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 2px;
+  margin: 0.5rem auto 0;
+  background: linear-gradient(90deg, #252525 0%, #0B0B0B 100%);
+  border-radius: 1px;
+}
+
 @keyframes network-fade-in {
   from {
     opacity: 0;

@@ -96,16 +96,15 @@ export function NetworkLanding() {
           <p className="network-serif text-lg sm:text-xl md:text-2xl font-light text-[#F5F5F5]/90 mt-4 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.15s_forwards] [font-variant:small-caps] tracking-[0.15em]">
             a network of faith
           </p>
-          <p className="mt-2 text-sm sm:text-base text-[#F5F5F5]/70 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.12s_forwards]">
-            For thoughtful, affluent, and influential Muslims.
-          </p>
           <p className="mt-8 text-lg sm:text-xl text-[#F5F5F5]/80 font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
-            An exclusive network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and meaningful collaboration.
+            An exclusive network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and collaboration.
           </p>
-          <p className="mt-4 text-base text-[#F5F5F5]/60 max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
-            Membership is by application so the network stays purposeful and trusted.
+          <p className="mt-3 text-sm text-[#F5F5F5]/55 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
+            By application. Curated.
           </p>
-          <blockquote className="mt-14 px-6 py-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm text-left max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
+          <div className="mt-14 flex max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
+            <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B]" aria-hidden />
+            <blockquote className="flex-1 ml-4 px-6 py-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm text-left">
             <p className="text-2xl sm:text-3xl text-[#F5F5F5]/95 leading-relaxed font-arabic" dir="rtl" lang="ar">
               وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا
             </p>
@@ -114,10 +113,11 @@ export function NetworkLanding() {
             </p>
             <cite className="mt-3 block text-sm text-[#F5F5F5]/60 not-italic">— القرآن ٣:١٠٣ / Qur&apos;an 3:103</cite>
           </blockquote>
+          </div>
           <div className="mt-12 flex flex-wrap gap-4 justify-center opacity-0 animate-[network-fade-in_0.8s_ease-out_0.45s_forwards]">
             <a
               href="/login"
-              className="network-cta-primary inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] border border-white/10 text-[#F5F5F5] font-medium hover:from-[#333] hover:to-[#252525] hover:border-[rgba(180,160,120,0.3)] transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.06)] hover:shadow-[0_0_40px_rgba(180,160,120,0.08)] focus-visible:outline-none active:scale-[0.98]"
+              className="network-cta-primary inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] border border-white/10 text-[#F5F5F5] font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
               Request Membership
             </a>
@@ -138,7 +138,7 @@ export function NetworkLanding() {
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-4">
               Fragmentation in the Age of Connection
             </h2>
-            <p className="network-serif text-xl sm:text-2xl font-light text-center text-[#F5F5F5]/80 mb-16">
+            <p className="network-serif text-xl sm:text-2xl font-light text-center text-[#F5F5F5]/80 mb-16 network-heading-accent">
               Hold the Rope Together
             </p>
             <div className="grid sm:grid-cols-3 gap-10 mb-20">
@@ -168,27 +168,26 @@ export function NetworkLanding() {
                 <p className="text-[#F5F5F5] font-medium">Communities increasingly fragmented despite digital connectivity</p>
               </div>
             </div>
-            <p className="text-center text-[#F5F5F5]/75 text-lg max-w-2xl mx-auto mb-12">
-              The answer is not more noise—it is to hold the rope together.
-            </p>
             <div className="max-w-2xl mx-auto text-center">
-              <p className="text-sm text-[#F5F5F5]/50 mb-4">This verse inspires everything we do.</p>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm px-8 py-6 mb-12">
+              <div className="flex justify-center mb-12">
+                <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B] min-h-[60px]" aria-hidden />
+                <div className="flex-1 ml-4 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm px-8 py-6">
                 <p className="text-xl sm:text-2xl text-[#F5F5F5]/95 leading-relaxed font-arabic" dir="rtl" lang="ar">
                   وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا
                 </p>
                 <p className="network-serif text-lg text-[#F5F5F5]/80 italic mt-3">&ldquo;Hold firmly to the rope of Allah all together and do not become divided.&rdquo;</p>
                 <p className="text-sm text-[#F5F5F5]/50 mt-2">القرآن ٣:١٠٣ / Qur&apos;an 3:103</p>
+                </div>
               </div>
               <p className="text-[#F5F5F5]/85 text-lg leading-relaxed mb-10">
-                A network where thoughtful, affluent, and influential believers connect through:
+                Connect through:
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 {[
-                  { icon: "lightbulb", label: "ideas", micro: "Exchange and refine what matters." },
-                  { icon: "message", label: "dialogue", micro: "Honest conversations that deepen understanding." },
-                  { icon: "target", label: "shared purpose", micro: "Aligned vision and intention." },
-                  { icon: "users", label: "collaboration", micro: "Act together with trust." },
+                  { icon: "lightbulb", label: "ideas" },
+                  { icon: "message", label: "dialogue" },
+                  { icon: "target", label: "shared purpose" },
+                  { icon: "users", label: "collaboration" },
                 ].map((item) => (
                   <div key={item.label} className="flex flex-col items-center">
                     <div className="network-dynamic-icon w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2">
@@ -216,7 +215,6 @@ export function NetworkLanding() {
                       )}
                     </div>
                     <span className="text-sm font-medium text-[#F5F5F5]/90 capitalize">{item.label}</span>
-                    <span className="text-xs text-[#F5F5F5]/60 text-center mt-0.5 max-w-[120px]">{item.micro}</span>
                   </div>
                 ))}
               </div>
@@ -229,17 +227,14 @@ export function NetworkLanding() {
       <section className="relative py-28 px-6 bg-gradient-to-b from-[#2a2a2a]/90 via-[#2f2f2f]/90 to-[#333]/90">
         <FadeInSection>
           <div className="max-w-5xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-6">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-16 network-heading-accent">
               Platform Features
             </h2>
-            <p className="text-center text-[#F5F5F5]/75 text-lg max-w-2xl mx-auto mb-16">
-              The Rope gives you the tools to connect, reflect, and act—in private and in person.
-            </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
                   title: "Private Circles",
-                  desc: "Trusted circles connecting you with affluent and influential Muslims for meaningful, confidential conversation.",
+                  desc: "Trusted circles with influential Muslims.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <circle cx="12" cy="12" r="4" />
@@ -253,7 +248,7 @@ export function NetworkLanding() {
                 },
                 {
                   title: "Thoughtful Discussions",
-                  desc: "Deep conversations about faith, philosophy, and society—with people who share your values.",
+                  desc: "Deep conversations on faith and society.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -262,7 +257,7 @@ export function NetworkLanding() {
                 },
                 {
                   title: "Exclusive Gatherings",
-                  desc: "Private dinners, retreats, and intellectual salons among powerful and purposeful believers.",
+                  desc: "Private dinners, retreats, and salons.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
@@ -271,7 +266,7 @@ export function NetworkLanding() {
                 },
                 {
                   title: "Community Impact",
-                  desc: "Collaborate on charitable and social initiatives that create lasting change for the community.",
+                  desc: "Charitable and social initiatives.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0z" />
@@ -303,20 +298,12 @@ export function NetworkLanding() {
               The Power of Small Circles
             </h2>
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm px-8 sm:px-12 py-10 sm:py-14">
-              <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed text-center mb-4">
+              <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed text-center mb-10">
                 History shows that civilizations are shaped not by crowds, but by small groups of sincere individuals who share belief and purpose.
               </p>
-              <p className="text-[#F5F5F5]/80 text-base sm:text-lg leading-relaxed text-center mb-10">
-                The Rope is built for those circles—so the right people can find each other.
+              <p className="network-serif text-xl sm:text-2xl text-[#F5F5F5]/95 italic text-center leading-relaxed">
+                &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
               </p>
-              <div className="border-t border-white/15 pt-10">
-                <p className="network-serif text-xl sm:text-2xl text-[#F5F5F5]/95 italic text-center leading-relaxed">
-                  &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
-                </p>
-                <p className="text-[#F5F5F5]/60 text-sm sm:text-base text-center mt-6">
-                  The strength of the rope is in the strand; the strength of the community is in its bonds.
-                </p>
-              </div>
             </div>
           </div>
         </FadeInSection>
@@ -326,20 +313,17 @@ export function NetworkLanding() {
       <section className="relative py-28 px-6 bg-gradient-to-b from-[#3a3a3a]/90 via-[#404040]/90 to-[#454545]/90">
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-6">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-16">
               Benefits of the Network
             </h2>
-            <p className="text-center text-[#F5F5F5]/75 text-lg max-w-2xl mx-auto mb-16">
-              As a member, you gain access to the following.
-            </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { text: "Connect with affluent and influential Muslims across cities and countries", icon: "map" },
-                { text: "Exchange meaningful ideas with thoughtful, powerful believers", icon: "refresh" },
-                { text: "Collaborate on charitable and social initiatives that create lasting change", icon: "handshake" },
-                { text: "Attend and host exclusive gatherings and retreats", icon: "calendar" },
-                { text: "Build lasting relationships grounded in faith and purpose", icon: "heart" },
-                { text: "Create impact alongside leaders and change-makers", icon: "award" },
+                { text: "Connect with influential Muslims globally", icon: "map" },
+                { text: "Exchange ideas with like-minded believers", icon: "refresh" },
+                { text: "Collaborate on charitable initiatives", icon: "handshake" },
+                { text: "Attend and host exclusive gatherings", icon: "calendar" },
+                { text: "Build lasting relationships in faith", icon: "heart" },
+                { text: "Create impact with leaders and change-makers", icon: "award" },
               ].map(({ text, icon }, i) => (
                 <div key={i} className="flex gap-4 items-start">
                   <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mt-0.5">
@@ -395,7 +379,7 @@ export function NetworkLanding() {
             </p>
             <a
               href="/login"
-              className="network-cta-primary inline-flex items-center justify-center px-10 py-4 rounded-full bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] border border-white/15 text-[#F5F5F5] font-medium hover:from-[#333] hover:to-[#252525] hover:border-[rgba(180,160,120,0.35)] transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.08)] hover:shadow-[0_0_50px_rgba(180,160,120,0.1)] focus-visible:outline-none active:scale-[0.98]"
+              className="network-cta-primary inline-flex items-center justify-center px-10 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] border border-white/10 text-[#F5F5F5] font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
               Request Membership
             </a>
@@ -403,7 +387,7 @@ export function NetworkLanding() {
               Apply once; we&apos;ll review and be in touch.
             </p>
             <p className="mt-2 text-sm text-[#F5F5F5]/50">
-              Your information is never shared. Membership is curated.
+              Curated. Private.
             </p>
           </div>
         </FadeInSection>
@@ -420,19 +404,16 @@ export function NetworkLanding() {
               <div className="flex flex-col items-center text-center">
                 <span className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-[#F5F5F5]/90 font-medium text-sm mb-2">1</span>
                 <p className="text-[#F5F5F5]/85 font-medium">Apply</p>
-                <p className="text-sm text-[#F5F5F5]/60 mt-0.5">Submit your request</p>
               </div>
               <span className="hidden sm:block text-[#F5F5F5]/30">→</span>
               <div className="flex flex-col items-center text-center">
                 <span className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-[#F5F5F5]/90 font-medium text-sm mb-2">2</span>
                 <p className="text-[#F5F5F5]/85 font-medium">We review</p>
-                <p className="text-sm text-[#F5F5F5]/60 mt-0.5">Curated for fit</p>
               </div>
               <span className="hidden sm:block text-[#F5F5F5]/30">→</span>
               <div className="flex flex-col items-center text-center">
                 <span className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-[#F5F5F5]/90 font-medium text-sm mb-2">3</span>
-                <p className="text-[#F5F5F5]/85 font-medium">You&apos;re invited</p>
-                <p className="text-sm text-[#F5F5F5]/60 mt-0.5">Join the network</p>
+                <p className="text-[#F5F5F5]/85 font-medium">Join</p>
               </div>
             </div>
           </div>
