@@ -749,3 +749,164 @@ textarea:focus-visible {
     transform: none;
   }
 }
+
+/* ========== Network landing: dynamic mesh background (Vercel-style) ========== */
+.network-mesh-bg {
+  pointer-events: none;
+}
+
+.network-mesh-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: network-mesh-float 25s ease-in-out infinite;
+}
+
+.network-mesh-orb-1 {
+  width: 80vmax;
+  height: 80vmax;
+  background: radial-gradient(circle, rgba(60, 60, 70, 0.5) 0%, transparent 70%);
+  top: -20%;
+  left: -10%;
+  animation-delay: 0s;
+  animation-duration: 22s;
+}
+
+.network-mesh-orb-2 {
+  width: 60vmax;
+  height: 60vmax;
+  background: radial-gradient(circle, rgba(40, 40, 50, 0.45) 0%, transparent 70%);
+  top: 30%;
+  right: -15%;
+  animation-delay: -5s;
+  animation-duration: 28s;
+}
+
+.network-mesh-orb-3 {
+  width: 70vmax;
+  height: 70vmax;
+  background: radial-gradient(circle, rgba(50, 50, 58, 0.4) 0%, transparent 70%);
+  bottom: -20%;
+  left: 10%;
+  animation-delay: -10s;
+  animation-duration: 24s;
+}
+
+.network-mesh-orb-4 {
+  width: 50vmax;
+  height: 50vmax;
+  background: radial-gradient(circle, rgba(35, 35, 45, 0.35) 0%, transparent 70%);
+  top: 50%;
+  left: 40%;
+  animation-delay: -15s;
+  animation-duration: 30s;
+}
+
+.network-mesh-orb-5 {
+  width: 45vmax;
+  height: 45vmax;
+  background: radial-gradient(circle, rgba(45, 45, 55, 0.3) 0%, transparent 70%);
+  top: 10%;
+  right: 30%;
+  animation-delay: -8s;
+  animation-duration: 26s;
+}
+
+@keyframes network-mesh-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(5%, -5%) scale(1.05);
+  }
+  50% {
+    transform: translate(-5%, 5%) scale(0.98);
+  }
+  75% {
+    transform: translate(3%, 3%) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-mesh-orb {
+    animation: none;
+  }
+}
+
+/* Dynamic icons: hover and in-view animation */
+.network-dynamic-icon {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.network-dynamic-icon:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(255, 255, 255, 0.08);
+}
+
+.network-dynamic-icon-inner {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.network-dynamic-icon:hover .network-dynamic-icon-inner {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-dynamic-icon:hover {
+    transform: none;
+  }
+  .network-dynamic-icon-inner {
+    transition: none;
+  }
+}
+
+/* Power of Small Circles: animated network diagram */
+.network-circles-node {
+  animation: network-node-pulse 3s ease-in-out infinite;
+}
+
+.network-circles-node:nth-child(1) { animation-delay: 0s; }
+.network-circles-node:nth-child(2) { animation-delay: 0.4s; }
+.network-circles-node:nth-child(3) { animation-delay: 0.8s; }
+.network-circles-node:nth-child(4) { animation-delay: 1.2s; }
+.network-circles-node:nth-child(5) { animation-delay: 1.6s; }
+.network-circles-node:nth-child(6) { animation-delay: 2s; }
+.network-circles-node:nth-child(7) { animation-delay: 2.4s; }
+
+@keyframes network-node-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.network-circles-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-linecap: round;
+  animation: network-line-draw 2s ease-out forwards;
+}
+
+.network-circles-line:nth-of-type(1) { animation-delay: 0.2s; }
+.network-circles-line:nth-of-type(2) { animation-delay: 0.4s; }
+.network-circles-line:nth-of-type(3) { animation-delay: 0.6s; }
+.network-circles-line:nth-of-type(4) { animation-delay: 0.8s; }
+.network-circles-line:nth-of-type(5) { animation-delay: 1s; }
+.network-circles-line:nth-of-type(6) { animation-delay: 1.2s; }
+.network-circles-line:nth-of-type(7) { animation-delay: 1.4s; }
+.network-circles-line:nth-of-type(8) { animation-delay: 1.6s; }
+
+@keyframes network-line-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-circles-node {
+    animation: none;
+    opacity: 1;
+  }
+  .network-circles-line {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}

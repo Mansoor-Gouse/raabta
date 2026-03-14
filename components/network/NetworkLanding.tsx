@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { FadeInSection } from "./FadeInSection";
+import { DynamicMeshBackground } from "./DynamicMeshBackground";
 
 function useSmoothScroll() {
   useEffect(() => {
@@ -74,9 +75,10 @@ function ConstellationBg() {
 export function NetworkLanding() {
   useSmoothScroll();
   return (
-    <div className="network-landing min-h-screen bg-[#0B0B0B] text-[#F5F5F5] overflow-x-hidden scroll-smooth">
+    <div className="network-landing relative min-h-screen bg-[#0B0B0B] text-[#F5F5F5] overflow-x-hidden scroll-smooth">
+      <DynamicMeshBackground />
       {/* Hero */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-[#0B0B0B] via-[#151515] to-[#1a1a1a]">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-[#0B0B0B]/95 via-[#151515]/90 to-[#1a1a1a]/90">
         <div className="absolute inset-0 overflow-hidden">
           <ConstellationBg />
         </div>
@@ -117,7 +119,7 @@ export function NetworkLanding() {
       </section>
 
       {/* The Problem */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#1a1a1a] via-[#222] to-[#1a1a1a]">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-[#1a1a1a]/90 via-[#222]/90 to-[#1a1a1a]/90">
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-16">
@@ -125,7 +127,7 @@ export function NetworkLanding() {
             </h2>
             <div className="grid sm:grid-cols-3 gap-10">
               <div className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
                   <svg className="w-7 h-7 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -134,7 +136,7 @@ export function NetworkLanding() {
                 <p className="text-[#F5F5F5] font-medium">1.9 Billion Muslims Worldwide</p>
               </div>
               <div className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
                   <svg className="w-7 h-7 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 0 1 2 2v1a2 2 0 0 0 2 2 2 2 0 0 1 2 2v2.945M8 3.935V5.5A2.5 2.5 0 0 0 10.5 8h.5a2 2 0 0 1 2 2 2 2 0 1 0 4 0v-1.055M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
                   </svg>
@@ -142,7 +144,7 @@ export function NetworkLanding() {
                 <p className="text-[#F5F5F5] font-medium">Muslims living in 190+ countries</p>
               </div>
               <div className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
                   <svg className="w-7 h-7 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1" />
                   </svg>
@@ -155,7 +157,7 @@ export function NetworkLanding() {
       </section>
 
       {/* The Idea */}
-      <section id="the-idea" className="relative py-28 px-6 bg-gradient-to-b from-[#1a1a1a] via-[#252525] to-[#2a2a2a]">
+      <section id="the-idea" className="relative py-28 px-6 bg-gradient-to-b from-[#1a1a1a]/90 via-[#252525]/90 to-[#2a2a2a]/90">
         <FadeInSection>
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-[#F5F5F5] mb-8">
@@ -179,7 +181,7 @@ export function NetworkLanding() {
                 { icon: "users", label: "collaboration" },
               ].map((item) => (
                 <div key={item.label} className="flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2">
+                  <div className="network-dynamic-icon w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2">
                     {item.icon === "lightbulb" && (
                       <svg className="w-5 h-5 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 0 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -212,7 +214,7 @@ export function NetworkLanding() {
       </section>
 
       {/* Platform Features */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#2a2a2a] via-[#2f2f2f] to-[#333]">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-[#2a2a2a]/90 via-[#2f2f2f]/90 to-[#333]/90">
         <FadeInSection>
           <div className="max-w-5xl mx-auto">
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-20">
@@ -266,8 +268,8 @@ export function NetworkLanding() {
                   key={card.title}
                   className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-8 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06] hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]"
                 >
-                  <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#F5F5F5]/90 mb-5 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
-                    {card.icon}
+                  <div className="network-dynamic-icon w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#F5F5F5]/90 mb-5 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+                    <span className="network-dynamic-icon-inner block">{card.icon}</span>
                   </div>
                   <h3 className="network-serif text-xl font-medium text-[#F5F5F5] mb-2">{card.title}</h3>
                   <p className="text-[#F5F5F5]/70 text-sm leading-relaxed">{card.desc}</p>
@@ -279,40 +281,67 @@ export function NetworkLanding() {
       </section>
 
       {/* The Power of Small Circles */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#333] via-[#383838] to-[#3a3a3a]">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-[#333]/90 via-[#383838]/90 to-[#3a3a3a]/90">
         <FadeInSection>
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-[#F5F5F5] mb-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-14">
               The Power of Small Circles
             </h2>
-            <div className="mb-14 flex justify-center">
-              <svg viewBox="0 0 200 100" className="w-full max-w-md h-40 text-[#F5F5F5]/25" aria-hidden>
-                {/* Small nodes forming a larger network */}
-                <line x1="40" y1="50" x2="80" y2="35" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-                <line x1="80" y1="35" x2="120" y2="50" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-                <line x1="80" y1="35" x2="80" y2="65" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-                <line x1="40" y1="50" x2="80" y2="65" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-                <line x1="80" y1="65" x2="120" y2="50" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-                <line x1="40" y1="50" x2="120" y2="50" stroke="currentColor" strokeWidth="0.6" opacity="0.35" />
-                {[
-                  [40, 50], [80, 35], [120, 50], [80, 65], [100, 75], [60, 75],
-                ].map(([cx, cy], i) => (
-                  <circle key={i} cx={cx} cy={cy} r="6" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.7" />
-                ))}
-              </svg>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-8 sm:p-12 mb-14 overflow-hidden">
+              <div className="relative flex justify-center items-center min-h-[280px] sm:min-h-[320px]">
+                {/* Animated network diagram: small circles connecting into a whole */}
+                <svg
+                  viewBox="0 0 240 200"
+                  className="w-full max-w-lg h-auto text-[#F5F5F5]"
+                  aria-hidden
+                >
+                  <defs>
+                    <linearGradient id="circleNodeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(255,255,255,0.5)" />
+                      <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+                    </linearGradient>
+                    <filter id="circleGlow">
+                      <feGaussianBlur stdDeviation="1.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  {/* Connection paths (pathLength=1 for draw animation) */}
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 80 100 L 120 60" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 60 L 160 100" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 60 L 120 140" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 80 100 L 120 140" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 140 L 160 100" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1" strokeOpacity="0.35" d="M 80 100 L 160 100" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 60 L 120 100" />
+                  <path pathLength={1} className="network-circles-line" fill="none" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.5" d="M 120 100 L 120 140" />
+                  {/* Nodes */}
+                  <circle className="network-circles-node" cx="80" cy="100" r="10" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" filter="url(#circleGlow)" />
+                  <circle className="network-circles-node" cx="120" cy="60" r="12" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.5)" strokeWidth="1" filter="url(#circleGlow)" />
+                  <circle className="network-circles-node" cx="160" cy="100" r="10" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" filter="url(#circleGlow)" />
+                  <circle className="network-circles-node" cx="120" cy="140" r="10" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" filter="url(#circleGlow)" />
+                  <circle className="network-circles-node" cx="120" cy="100" r="8" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.5)" strokeWidth="1" filter="url(#circleGlow)" />
+                  <circle className="network-circles-node" cx="60" cy="70" r="6" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" filter="url(#circleGlow)" />
+                  <circle className="network-circles-node" cx="180" cy="70" r="6" fill="url(#circleNodeGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" filter="url(#circleGlow)" />
+                </svg>
+              </div>
             </div>
-            <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-6">
-              History shows that civilizations are shaped not by crowds, but by small groups of sincere individuals who share belief and purpose.
-            </p>
-            <p className="network-serif text-xl text-[#F5F5F5]/95 italic">
-              &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
-            </p>
+            <div className="text-center">
+              <p className="text-[#F5F5F5]/90 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-6">
+                History shows that civilizations are shaped not by crowds, but by small groups of sincere individuals who share belief and purpose.
+              </p>
+              <p className="network-serif text-xl text-[#F5F5F5]/95 italic">
+                &ldquo;When believers connect with trust and vision, their influence multiplies.&rdquo;
+              </p>
+            </div>
           </div>
         </FadeInSection>
       </section>
 
       {/* Benefits */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#3a3a3a] via-[#404040] to-[#454545]">
+      <section className="relative py-28 px-6 bg-gradient-to-b from-[#3a3a3a]/90 via-[#404040]/90 to-[#454545]/90">
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#F5F5F5] mb-20">
@@ -328,7 +357,7 @@ export function NetworkLanding() {
                 { text: "Create lasting impact for the community", icon: "award" },
               ].map(({ text, icon }, i) => (
                 <div key={i} className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mt-0.5">
+                  <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mt-0.5">
                     {icon === "map" && (
                       <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z" />
@@ -370,7 +399,7 @@ export function NetworkLanding() {
       </section>
 
       {/* Final CTA */}
-      <section id="request" className="relative py-32 px-6 bg-gradient-to-b from-[#2a2a2a] via-[#1a1a1a] to-[#0B0B0B]">
+      <section id="request" className="relative py-32 px-6 bg-gradient-to-b from-[#2a2a2a]/95 via-[#1a1a1a]/95 to-[#0B0B0B]/98">
         <FadeInSection>
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="network-serif text-3xl sm:text-4xl md:text-5xl font-light text-[#F5F5F5] mb-6 leading-tight">
