@@ -175,9 +175,9 @@ export function StoryBar() {
   );
   const myName = me?.fullName || me?.name || "You";
 
-  const storyRingClass = "w-[66px] h-[66px] rounded-full p-[2.5px] flex items-center justify-center";
-  const storyInnerClass = "w-full h-full rounded-full bg-[var(--ig-bg-primary)] p-[2px] flex items-center justify-center overflow-hidden box-border";
-  const storyImgClass = "w-full h-full rounded-full object-cover";
+  const storyRingClass = "w-[66px] h-[66px] rounded-lg p-[2.5px] flex items-center justify-center";
+  const storyInnerClass = "w-full h-full rounded-lg bg-[var(--ig-bg-primary)] p-[2px] flex items-center justify-center overflow-hidden box-border";
+  const storyImgClass = "w-full h-full rounded-lg object-cover";
 
   const yourStoryViewedAll = myStoryInfo?.viewedAllByMe ?? false;
   const yourStoryTile = (
@@ -214,7 +214,7 @@ export function StoryBar() {
         </div>
         {!hasOwnStory && (
           <span
-            className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[var(--ig-link)] border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-white text-sm font-bold leading-none"
+            className="absolute bottom-0 right-0 w-5 h-5 rounded-md bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-black text-sm font-bold leading-none"
             aria-hidden
           >
             +
@@ -236,7 +236,7 @@ export function StoryBar() {
             <button
               type="button"
               onClick={() => setViewerSessionIndex(0)}
-              className="flex flex-col items-center gap-1 shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] rounded-full touch-manipulation active:scale-[0.97] transition-transform"
+              className="flex flex-col items-center gap-1 shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] rounded-lg touch-manipulation active:scale-[0.97] transition-transform"
               aria-label="View your story"
             >
               {yourStoryTile}
@@ -244,7 +244,7 @@ export function StoryBar() {
           ) : (
             <Link
               href="/app/status/new"
-              className="flex flex-col items-center gap-1 shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] touch-manipulation active:scale-[0.97] transition-transform"
+              className="flex flex-col items-center gap-1 shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] touch-manipulation active:scale-[0.97] transition-transform"
               aria-label="Add to your story"
             >
               {yourStoryTile}
@@ -257,7 +257,7 @@ export function StoryBar() {
               key={userId}
               type="button"
               onClick={() => setViewerSessionIndex(info.sessionIndex)}
-              className="flex flex-col items-center gap-1 shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] rounded-full touch-manipulation active:scale-[0.97] transition-transform"
+              className="flex flex-col items-center gap-1 shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] rounded-lg touch-manipulation active:scale-[0.97] transition-transform"
             >
               <div
                 className={storyRingClass}
