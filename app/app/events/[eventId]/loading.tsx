@@ -1,5 +1,5 @@
-import { EliteEventDetailSkeleton } from "@/components/events/elite/EliteEventDetailSkeleton";
+import { EventDetailLoadingShell } from "@/components/events/elite/EliteEventDetailSkeleton";
 
 export default function EventDetailLoading() {
-  return <EliteEventDetailSkeleton />;
+  return <EventDetailLoadingShell />;
 }

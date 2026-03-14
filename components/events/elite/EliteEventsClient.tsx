@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { EliteChip, EliteSection, EliteButton } from "@/components/elite";
 import { EliteEventCard, type EliteEventCardEvent } from "./EliteEventCard";
-import { EliteEventsSkeleton, EliteEventCardSkeleton } from "./EliteEventsSkeleton";
+import { EliteEventCardSkeleton } from "./EliteEventsSkeleton";
 import { trigger as hapticTrigger } from "@/lib/haptics";
 
 const SECTION_KEYS = ["discover", "invited", "going", "spotlight", "my"] as const;
@@ -483,12 +483,11 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
     setActiveSection(key);
   }, [showSectionTabsAndPanels, initialSection]);
 
-  if (loading) {
-    return <EliteEventsSkeleton />;
-  }
+  const showTabsAndContentShell = loading || showSectionTabsAndPanels;
 
   return (
     <div className="elite-events min-h-full bg-[var(--elite-bg)] flex flex-col">
+      {/* Static header: visible instantly on nav for smooth transition */}
       <header
         className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-[var(--elite-border)] bg-[var(--elite-bg)] transition-colors duration-[var(--elite-transition)]"
         style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
@@ -591,7 +590,7 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
         </>
       )}
 
-      {showSectionTabsAndPanels && (
+      {showTabsAndContentShell && (
         <div
           className="shrink-0 flex border-b border-[var(--elite-border)] bg-[var(--elite-bg)] no-scrollbar overflow-x-auto"
           role="tablist"
@@ -605,12 +604,13 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
               aria-selected={activeSection === key}
               aria-controls={`events-panel-${key}`}
               id={`events-tab-${key}`}
-              onClick={() => scrollToSection(key)}
+              onClick={() => !loading && scrollToSection(key)}
+              disabled={loading}
               className={`elite-events shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
                 activeSection === key
                   ? "border-[var(--elite-accent)] text-[var(--elite-text)]"
                   : "border-transparent text-[var(--elite-text-muted)] hover:text-[var(--elite-text-secondary)]"
-              }`}
+              } ${loading ? "pointer-events-none" : ""}`}
             >
               {key === "discover" && (categoryFilter ? "Events" : "Discover")}
               {key === "invited" && "Invited"}
@@ -623,7 +623,14 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
       )}
 
       <div className="flex-1 flex flex-col min-h-0">
-        {error ? (
+        {loading ? (
+          <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }} aria-busy="true" aria-label="Loading events">
+            <PanelSkeleton />
+            <div className="mt-8">
+              <PanelSkeleton />
+            </div>
+          </div>
+        ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center py-16 px-4">
             <p className="text-[var(--elite-error)] text-center mb-4">{error}</p>
             <EliteButton variant="primary" onClick={() => loadEvents(true)}>
@@ -747,14 +754,15 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
           right: "calc(1rem + var(--safe-area-inset-right))",
         }}
       >
-        {showSectionTabsAndPanels && (
+        {showTabsAndContentShell && (
           <button
             type="button"
             onClick={() => {
               hapticTrigger("light");
               setFilterExpanded((v) => !v);
             }}
-            className="elite-events relative flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-black text-white border border-white/20 shadow-[var(--elite-shadow)] transition-all duration-[var(--elite-transition)] hover:scale-105 hover:bg-neutral-800 active:scale-[0.98] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-offset-2"
+            disabled={loading}
+            className="elite-events relative flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-black text-white border border-white/20 shadow-[var(--elite-shadow)] transition-all duration-[var(--elite-transition)] hover:scale-105 hover:bg-neutral-800 active:scale-[0.98] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-offset-2 disabled:opacity-70"
             aria-label={filterExpanded ? "Hide filters" : "Show filters"}
             aria-expanded={filterExpanded}
           >
