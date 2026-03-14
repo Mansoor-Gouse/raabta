@@ -748,6 +748,23 @@ textarea:focus-visible {
     opacity: 1;
     transform: none;
   }
+  /* Hero elements use arbitrary animate-[...]; ensure they still appear */
+  .network-landing .network-hero-content [class*="animate-"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Landing CTAs: focus and active states */
+.network-landing .network-cta-primary:focus-visible,
+.network-landing .network-cta-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #0B0B0B, 0 0 0 4px rgba(255, 255, 255, 0.35);
+}
+.network-landing .network-cta-primary:active,
+.network-landing .network-cta-secondary:active {
+  transform: scale(0.98);
 }
 
 /* ========== Network landing: dynamic mesh background (Vercel-style) ========== */
