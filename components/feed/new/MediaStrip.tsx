@@ -73,12 +73,12 @@ export function MediaStrip({ items, onItemsChange, onEditImage }: MediaStripProp
         onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className="flex items-center gap-2 w-full min-h-[40px] px-3 py-2 rounded-lg border border-dashed border-[var(--ig-border)] text-[var(--ig-text-secondary)] transition-all duration-200 cursor-pointer hover:border-[var(--ig-text)] hover:bg-[var(--ig-border-light)]/50 hover:text-[var(--ig-text)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)] focus:ring-offset-2"
+        className="flex items-center justify-center gap-3 w-full min-h-[56px] px-4 py-3 rounded-xl border-2 border-dashed border-[var(--ig-border)] text-[var(--ig-text-secondary)] transition-all duration-200 cursor-pointer hover:border-[var(--ig-text-tertiary)] hover:bg-[var(--ig-border-light)]/60 hover:text-[var(--ig-text)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)] focus:ring-offset-2"
       >
-        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <svg className="w-6 h-6 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <span className="text-sm font-medium">Add photos or video</span>
+        <span className="text-sm font-semibold">Add photos or video</span>
         <input
           ref={inputRef}
           type="file"
@@ -96,14 +96,14 @@ export function MediaStrip({ items, onItemsChange, onEditImage }: MediaStripProp
     <div
       ref={stripRef}
       data-media-strip
-      className="flex gap-2 overflow-x-auto no-scrollbar items-center min-h-[48px]"
+      className="flex gap-3 overflow-x-auto no-scrollbar items-center min-h-[52px]"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       {items.map((item, i) => (
         <div
           key={i}
-          className="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-[var(--ig-border-light)] group transition-transform hover:scale-105"
+          className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden bg-[var(--ig-border-light)] group transition-transform hover:scale-[1.03] ring-1 ring-[var(--ig-border)]"
           role={item.type === "video" ? "button" : undefined}
           tabIndex={item.type === "video" ? 0 : undefined}
           onClick={(e) => {
@@ -169,7 +169,7 @@ export function MediaStrip({ items, onItemsChange, onEditImage }: MediaStripProp
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="shrink-0 w-11 h-11 rounded-lg border border-dashed border-[var(--ig-border)] flex items-center justify-center text-[var(--ig-text-tertiary)] hover:border-[var(--ig-text)] hover:bg-[var(--ig-border-light)]/50 hover:text-[var(--ig-text)] transition-all duration-200 active:scale-95"
+          className="shrink-0 w-12 h-12 rounded-xl border-2 border-dashed border-[var(--ig-border)] flex items-center justify-center text-[var(--ig-text-tertiary)] hover:border-[var(--ig-text-tertiary)] hover:bg-[var(--ig-border-light)]/60 hover:text-[var(--ig-text)] transition-all duration-200 active:scale-95"
           aria-label="Add more"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

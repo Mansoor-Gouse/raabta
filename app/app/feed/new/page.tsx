@@ -103,23 +103,23 @@ export default function NewPostPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden post-flow-page min-h-0">
-      {/* Slim header */}
-      <header className="shrink-0 flex items-center justify-between px-3 py-2.5 border-b border-[var(--ig-border-light)] bg-[var(--post-flow-gradient-start)]/90 backdrop-blur-sm">
+      {/* Header: event-module style with serif title */}
+      <header className="relative shrink-0 flex items-center justify-between px-4 py-3.5 border-b border-[var(--ig-border-light)] bg-[var(--post-flow-gradient-start)]/95 backdrop-blur-md shadow-sm">
         <Link
           href="/app/feed"
-          className="p-2 -ml-2 rounded-lg text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] active:scale-95 transition-all duration-200"
+          className="p-2.5 -ml-2 rounded-xl text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] active:scale-95 transition-all duration-200 flex items-center justify-center"
           aria-label="Cancel"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
-        <span className="text-base font-semibold text-[var(--ig-text)]">New post</span>
+        <h1 className="post-flow-heading text-xl absolute left-1/2 -translate-x-1/2 pointer-events-none">New post</h1>
         <button
           type="button"
           onClick={handleShare}
           disabled={!canPost || saving}
-          className="post-flow-cta px-3 py-2 rounded-lg text-sm font-semibold hover:opacity-95 disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"
+          className="post-flow-cta min-w-[72px] px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-95 disabled:opacity-50 transition-all duration-200 active:scale-[0.98] shadow-md"
         >
           {saving ? "Posting…" : "Post"}
         </button>
@@ -144,19 +144,19 @@ export default function NewPostPage() {
       {/* Edit image modal — full-screen overlay */}
       {editModalItemIndex !== null && isEditingImage && editingItem && (
         <div className="fixed inset-0 z-50 flex flex-col bg-[var(--ig-bg)]">
-          <div className="shrink-0 flex items-center justify-between px-3 py-2 border-b border-[var(--ig-border-light)] bg-[var(--post-flow-gradient-start)]">
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--ig-border-light)] bg-[var(--post-flow-gradient-start)]/95 backdrop-blur-md">
             <button
               type="button"
               onClick={handleCropSkip}
-              className="p-2 rounded-lg text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+              className="p-2.5 rounded-xl text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] transition-colors"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <span className="text-sm font-medium text-[var(--ig-text)]">Edit photo</span>
-            <div className="w-9" aria-hidden />
+            <span className="post-flow-heading text-lg">Edit photo</span>
+            <div className="w-10" aria-hidden />
           </div>
           <div className="flex-1 min-h-0">
             <CropEditor
@@ -177,13 +177,13 @@ export default function NewPostPage() {
           aria-modal="true"
           aria-label="Video"
         >
-          <div className="bg-[var(--post-flow-card)] rounded-xl p-6 max-w-sm w-full text-center post-flow-animate-in">
-            <p className="text-sm font-medium text-[var(--ig-text)]">Videos are used as-is</p>
-            <p className="text-xs text-[var(--ig-text-secondary)] mt-1">No cropping for video clips.</p>
+          <div className="post-flow-section rounded-2xl p-6 max-w-sm w-full text-center post-flow-animate-in border-0 shadow-xl">
+            <p className="post-flow-section-title">Videos are used as-is</p>
+            <p className="post-flow-label mt-2">No cropping for video clips.</p>
             <button
               type="button"
               onClick={() => setEditModalItemIndex(null)}
-              className="post-flow-cta w-full mt-4 py-2.5 rounded-lg text-sm font-semibold"
+              className="post-flow-cta w-full mt-5 py-3 rounded-xl text-sm font-semibold shadow-md"
             >
               Done
             </button>

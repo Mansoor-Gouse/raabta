@@ -75,9 +75,10 @@ body {
   --post-flow-cta-hover: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
 }
 
-/* Post adding flow: gradient page background */
+/* Post adding flow: page container (event-module fonts + gradient bg) */
 .post-flow-page {
   background: var(--post-flow-bg);
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 @keyframes postFlowSlideIn {
@@ -232,23 +233,86 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Post flow: typography */
+/* Post flow: typography (event-module: Playfair for headings) */
+.post-flow-heading {
+  font-family: "Playfair Display", "Cormorant", Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ig-text);
+}
 .post-flow-title {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--ig-text);
+}
+.post-flow-section-title {
+  font-family: "Playfair Display", "Cormorant", Georgia, serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--ig-text);
 }
 .post-flow-label {
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--ig-text-secondary);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 .post-flow-hint {
   font-size: 0.75rem;
   color: var(--ig-text-tertiary);
   letter-spacing: 0.02em;
+}
+
+/* Post flow: section card (elevated, rounded, like event module) */
+.post-flow-section {
+  background: var(--post-flow-card);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.dark .post-flow-section {
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+.post-flow-section:focus-within {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.dark .post-flow-section:focus-within {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Post flow: chip (visibility, etc. – event-module style) */
+.post-flow-chip {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.5rem 0.875rem;
+  border-radius: 9999px;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.post-flow-chip:hover {
+  transform: translateY(-1px);
+}
+.post-flow-chip-selected {
+  background: var(--post-flow-cta);
+  color: var(--ig-bg-primary);
+  border: none;
+}
+.dark .post-flow-chip-selected {
+  color: #1a1a1a;
+}
+.post-flow-chip-unselected {
+  background: transparent;
+  color: var(--ig-text);
+  border: 1.5px solid var(--ig-border);
+}
+.post-flow-chip-unselected:hover {
+  background: var(--ig-border-light);
+  border-color: var(--ig-text-tertiary);
 }
 
 /* Add to story flow: B&W theme + subtle gradients */

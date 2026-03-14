@@ -85,52 +85,55 @@ export function ComposeView({
             <button
               type="button"
               onClick={() => setShowPreview(false)}
-              className="mt-3 w-full py-2.5 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium hover:bg-[var(--ig-border-light)] transition-all"
+              className="mt-4 w-full py-3 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-semibold hover:bg-[var(--ig-border-light)] transition-all post-flow-section"
             >
               Close preview
             </button>
           </div>
         </div>
       )}
-      <div className="flex-1 overflow-auto p-3">
-        <div className="max-w-lg mx-auto space-y-3">
-          {/* Content textarea — dominant */}
-          <div className="relative">
-            <textarea
-              id="compose-caption"
-              value={caption}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v.length <= CAPTION_MAX_LENGTH) onCaptionChange(v);
-              }}
-              rows={5}
-              placeholder="What do you want to share?"
-              maxLength={CAPTION_MAX_LENGTH}
-              className="post-flow-input w-full min-h-[120px] resize-y py-3 px-3 text-base transition-[border-color,box-shadow] duration-150"
-              aria-describedby="compose-caption-count"
-            />
-            <p
-              id="compose-caption-count"
-              className="absolute bottom-2 right-2 post-flow-hint tabular-nums post-flow-count-update"
-              key={caption.length}
-            >
-              {caption.length} / {CAPTION_MAX_LENGTH}
-            </p>
+      <div className="flex-1 overflow-auto p-4">
+        <div className="max-w-xl mx-auto space-y-5">
+          {/* Post content — elevated card with label */}
+          <div className="post-flow-section p-4">
+            <label htmlFor="compose-caption" className="post-flow-section-title block mb-3">
+              Post content
+            </label>
+            <div className="relative">
+              <textarea
+                id="compose-caption"
+                value={caption}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v.length <= CAPTION_MAX_LENGTH) onCaptionChange(v);
+                }}
+                rows={5}
+                placeholder="What do you want to share? Add a caption or start with media below."
+                maxLength={CAPTION_MAX_LENGTH}
+                className="post-flow-input w-full min-h-[128px] resize-y py-3.5 px-4 text-[0.9375rem] leading-relaxed rounded-xl border-0 bg-transparent focus:ring-0 focus:shadow-none placeholder:text-[var(--ig-text-tertiary)]"
+                aria-describedby="compose-caption-count"
+              />
+              <p
+                id="compose-caption-count"
+                className="absolute bottom-3 right-3 post-flow-hint tabular-nums post-flow-count-update"
+                key={caption.length}
+              >
+                {caption.length} / {CAPTION_MAX_LENGTH}
+              </p>
+            </div>
           </div>
 
-          {/* Visibility — slim row */}
+          {/* Visibility — chip row */}
           <div>
-            <span className="post-flow-label block mb-1.5 text-xs">Who can see this?</span>
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1" role="group" aria-label="Visibility">
+            <p className="post-flow-section-title mb-3">Who can see this?</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Visibility">
               {VISIBILITY_OPTIONS.map(({ value, label }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => onVisibilityChange(value)}
-                  className={`shrink-0 min-h-[36px] px-3 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)] focus:ring-offset-2 focus:ring-offset-[var(--post-flow-gradient-start)] ${
-                    visibility === value
-                      ? "post-flow-cta"
-                      : "border border-[var(--ig-border)] bg-transparent text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+                  className={`post-flow-chip shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)] focus:ring-offset-2 focus:ring-offset-[var(--post-flow-gradient-start)] ${
+                    visibility === value ? "post-flow-chip-selected" : "post-flow-chip-unselected"
                   }`}
                 >
                   {label}
@@ -139,25 +142,25 @@ export function ComposeView({
             </div>
           </div>
 
-          {/* Media strip */}
-          <div>
-            <span className="post-flow-label block mb-1.5 text-xs">Media (optional)</span>
+          {/* Media — optional */}
+          <div className="post-flow-section p-4">
+            <p className="post-flow-section-title mb-3">Media (optional)</p>
             <MediaStrip items={items} onItemsChange={onItemsChange} onEditImage={onEditImage} />
           </div>
 
-          {/* Preview — Post is in header */}
-          <div className="pt-2">
+          {/* Preview */}
+          <div className="pt-1">
             <button
               type="button"
               onClick={handlePreviewClick}
-              className="min-h-[40px] px-4 py-2 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-medium hover:bg-[var(--ig-border-light)] transition-all duration-200 active:scale-[0.98]"
+              className="w-full min-h-[44px] px-4 py-3 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-semibold hover:bg-[var(--ig-border-light)] transition-all duration-200 active:scale-[0.99] post-flow-section"
             >
-              Preview
+              Preview post
             </button>
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-[var(--ig-error)] font-medium">{error}</p>
+            <p role="alert" className="text-sm font-medium text-[var(--ig-error)] py-2">{error}</p>
           )}
         </div>
       </div>

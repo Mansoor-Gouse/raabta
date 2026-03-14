@@ -6,6 +6,7 @@ import { PostCard } from "@/components/feed/PostCard";
 import { FeedPostsSkeleton } from "@/components/feed/FeedSkeleton";
 import { StoryBar } from "@/components/feed/StoryBar";
 import { CommentsDrawer } from "@/components/feed/CommentsDrawer";
+import { LikesDrawer } from "@/components/feed/LikesDrawer";
 import { ShareSheet } from "@/components/feed/ShareSheet";
 
 const SEGMENTS = ["Posts", "Stories"] as const;
@@ -43,6 +44,7 @@ export function FeedClient() {
   const [me, setMe] = useState<{ _id?: string; fullName?: string; name?: string; profileImage?: string; image?: string } | null>(null);
   const [commentsDrawerPostId, setCommentsDrawerPostId] = useState<string | null>(null);
   const [commentsDrawerAuthorName, setCommentsDrawerAuthorName] = useState("");
+  const [likesDrawerPostId, setLikesDrawerPostId] = useState<string | null>(null);
   const [shareSheetPost, setShareSheetPost] = useState<FeedPost | null>(null);
   const [activeIndex, setActiveIndex] = useState<SegmentIndex>(0);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -236,8 +238,9 @@ export function FeedClient() {
                       currentUserId={currentUserId}
                       onUpdate={(upd) => updatePost(post._id, upd)}
                       onDeleted={() => removePost(post._id)}
-                      onOpenComments={openCommentsDrawer}
-                      onShare={(p) => setShareSheetPost(p)}
+                    onOpenComments={openCommentsDrawer}
+                    onOpenLikes={(id) => setLikesDrawerPostId(id)}
+                    onShare={(p) => setShareSheetPost(p)}
                     />
                   </li>
                 ))}
@@ -280,6 +283,12 @@ export function FeedClient() {
         currentUserName={me?.fullName ?? me?.name}
         onCommentAdded={commentsDrawerPostId ? () => handleCommentCountChange(commentsDrawerPostId, 1) : undefined}
         onCommentDeleted={commentsDrawerPostId ? (delta) => handleCommentCountChange(commentsDrawerPostId, -(delta ?? 1)) : undefined}
+      />
+
+      <LikesDrawer
+        open={!!likesDrawerPostId}
+        onClose={() => setLikesDrawerPostId(null)}
+        postId={likesDrawerPostId ?? ""}
       />
 
       <ShareSheet

@@ -245,13 +245,12 @@ export function CommentsDrawer({
         aria-modal="true"
         aria-label="Comments"
       >
-        {/* Header: drag handle + title (feed/event font) */}
-        <div className="shrink-0 flex flex-col items-center pt-2.5 pb-2 border-b border-[var(--ig-border-light)]">
-          <div
-            className="w-9 h-1 rounded-full bg-[var(--ig-border)] cursor-grab active:cursor-grabbing"
-            aria-hidden
-          />
-          <h2 className="feed-title-font text-lg font-semibold text-[var(--ig-text)] mt-2">Comments</h2>
+        {/* Header: drag handle, then title left (feed/event font) */}
+        <div className="shrink-0 border-b border-[var(--ig-border-light)]">
+          <div className="flex justify-center pt-2.5 pb-1" aria-hidden>
+            <div className="w-9 h-1 rounded-full bg-[var(--ig-border)] cursor-grab active:cursor-grabbing" />
+          </div>
+          <h2 className="feed-title-font text-lg font-semibold text-[var(--ig-text)] text-left px-4 pb-3">Comments</h2>
         </div>
 
         {/* Scrollable comments */}

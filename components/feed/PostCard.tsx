@@ -34,12 +34,19 @@ export type PostCardPost = {
 
 const CAPTION_LINE_HEIGHT = 1.35;
 
+function triggerHaptic() {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+}
+
 export function PostCard({
   post,
   currentUserId,
   onUpdate,
   onDeleted,
   onOpenComments,
+  onOpenLikes,
   onShare,
 }: {
   post: PostCardPost;
@@ -47,6 +54,7 @@ export function PostCard({
   onUpdate: (upd: Partial<PostCardPost>) => void;
   onDeleted?: () => void;
   onOpenComments?: (postId: string, authorName: string) => void;
+  onOpenLikes?: (postId: string) => void;
   onShare?: (post: PostCardPost) => void;
 }) {
   const [liked, setLiked] = useState(post.likedByMe);
@@ -58,16 +66,19 @@ export function PostCard({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
+  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [mediaLoaded, setMediaLoaded] = useState(false);
+  const [mediaFullScreenOpen, setMediaFullScreenOpen] = useState(false);
 
   const isAuthor = currentUserId && post.authorId === currentUserId;
 
   const isVideoUrl = (url: string) => !url.match(/\.(gif|webp|png|jpe?g|avif)$/i);
 
   const toggleLike = useCallback(async () => {
+    triggerHaptic();
     const newLiked = !liked;
     setLiked(newLiked);
     setLikeCount((c) => (newLiked ? c + 1 : c - 1));
@@ -81,27 +92,34 @@ export function PostCard({
     }
   }, [liked, likeCount, post._id, onUpdate]);
 
-  const handleMediaDoubleTap = useCallback(() => {
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) {
-      toggleLike();
-      lastTapRef.current = 0;
-      return;
-    }
-    lastTapRef.current = now;
-  }, [toggleLike]);
-
   function handleMediaClick(e: React.MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const hasMultiple = post.mediaUrls.length > 1;
-    if (!hasMultiple) {
-      handleMediaDoubleTap();
+    if (hasMultiple && x < rect.width * 0.4) {
+      setMediaIndex((i) => (i === 0 ? post.mediaUrls.length - 1 : i - 1));
       return;
     }
-    if (x < rect.width * 0.4) setMediaIndex((i) => (i === 0 ? post.mediaUrls.length - 1 : i - 1));
-    else if (x > rect.width * 0.6) setMediaIndex((i) => (i === post.mediaUrls.length - 1 ? 0 : i + 1));
-    else handleMediaDoubleTap();
+    if (hasMultiple && x > rect.width * 0.6) {
+      setMediaIndex((i) => (i === post.mediaUrls.length - 1 ? 0 : i + 1));
+      return;
+    }
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (singleTapTimeoutRef.current) {
+        clearTimeout(singleTapTimeoutRef.current);
+        singleTapTimeoutRef.current = null;
+      }
+      lastTapRef.current = 0;
+      toggleLike();
+      return;
+    }
+    lastTapRef.current = now;
+    if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
+    singleTapTimeoutRef.current = setTimeout(() => {
+      singleTapTimeoutRef.current = null;
+      setMediaFullScreenOpen(true);
+    }, 300);
   }
 
   useEffect(() => {
@@ -112,6 +130,18 @@ export function PostCard({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [moreOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mediaFullScreenOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mediaFullScreenOpen]);
 
   async function handleDelete() {
     if (!deleteConfirm) {
@@ -209,10 +239,14 @@ export function PostCard({
               ♥
             </span>
           </div>
-          <span className="text-xs text-[var(--ig-text)] flex-1 min-w-0">
+          <button
+            type="button"
+            onClick={() => onOpenLikes?.(post._id)}
+            className="text-left text-xs text-[var(--ig-text)] flex-1 min-w-0 hover:opacity-80 active:opacity-70 transition-opacity"
+          >
             <span className="font-semibold">{likedSampleName}</span>
             {likeCount > 1 ? ` and ${likeCount - 1} others like this` : " likes this"}
-          </span>
+          </button>
           <div className="relative flex items-center gap-1 shrink-0" ref={menuRef}>
             <button
               type="button"
@@ -379,11 +413,11 @@ export function PostCard({
         <div
           className="relative aspect-[16/10] w-full bg-black cursor-default"
           onClick={handleMediaClick}
-          onDoubleClick={(e) => { e.preventDefault(); toggleLike(); }}
+          onDoubleClick={(e) => e.preventDefault()}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleMediaDoubleTap(); } }}
-          aria-label="Double-tap to like"
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setMediaFullScreenOpen(true); } }}
+          aria-label="Tap to expand, double-tap to like"
         >
           {media ? (
             <>
@@ -466,20 +500,111 @@ export function PostCard({
         </div>
       )}
 
+      {/* Full-screen media overlay */}
+      {mediaFullScreenOpen && post.mediaUrls.length > 0 && (
+        <div
+          className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Media full screen"
+        >
+          <button
+            type="button"
+            onClick={() => setMediaFullScreenOpen(false)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Close"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div
+            className="absolute inset-0 flex items-center justify-center p-4"
+            onClick={() => setMediaFullScreenOpen(false)}
+            aria-hidden
+          >
+            {(() => {
+              const url = post.mediaUrls[mediaIndex];
+              const isImage = url?.match(/\.(gif|webp|png|jpe?g|avif)$/i);
+              if (isImage) {
+                return (
+                  <img
+                    src={url}
+                    alt=""
+                    className="max-w-full max-h-full object-contain"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                );
+              }
+              return (
+                <video
+                  src={url}
+                  className="max-w-full max-h-full object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                  onClick={(e) => e.stopPropagation()}
+                />
+              );
+            })()}
+          </div>
+          {post.mediaUrls.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white z-10"
+                onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i === 0 ? post.mediaUrls.length - 1 : i - 1)); }}
+                aria-label="Previous"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white z-10"
+                onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i === post.mediaUrls.length - 1 ? 0 : i + 1)); }}
+                aria-label="Next"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+              <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+                {post.mediaUrls.map((_, i) => (
+                  <span
+                    key={i}
+                    className={`block rounded-full transition-all ${i === mediaIndex ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* 5. Reaction bar — icon-only, compact (no background highlight, only icon changes) */}
       <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--ig-border-light)] text-sm">
-        <button
-          type="button"
-          onClick={toggleLike}
-          aria-pressed={liked}
-          className="p-1.5 rounded-full text-[var(--ig-text)] transition-transform hover:scale-105"
-        >
-          <IconHeart
-            className="w-5 h-5"
-            filled={liked}
-            filledGradientId={liked ? `heart-gradient-${post._id}` : undefined}
-          />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={toggleLike}
+            aria-pressed={liked}
+            className="p-1.5 rounded-full text-[var(--ig-text)] transition-transform hover:scale-105"
+          >
+            <IconHeart
+              className="w-5 h-5"
+              filled={liked}
+              filledGradientId={liked ? `heart-gradient-${post._id}` : undefined}
+            />
+          </button>
+          {likeCount > 0 && (
+            <button
+              type="button"
+              onClick={() => onOpenLikes?.(post._id)}
+              className="text-xs font-medium text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)] min-h-[28px] px-1 -ml-0.5"
+              aria-label="View who liked"
+            >
+              {likeCount}
+            </button>
+          )}
+        </div>
         {onOpenComments ? (
           <button
             type="button"

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReportButton } from "@/components/report/ReportButton";
 import { ShareSheet } from "@/components/feed/ShareSheet";
+import { LikesDrawer } from "@/components/feed/LikesDrawer";
 import { IconHeart, IconThumbsUp, IconClap, IconShare, IconBookmark, IconComment } from "@/components/layout/InstagramIcons";
 
 type Post = {
@@ -69,6 +70,7 @@ export function PostDetailClient({
   const [moreOpen, setMoreOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [likesDrawerOpen, setLikesDrawerOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
   const router = useRouter();
@@ -168,7 +170,12 @@ export function PostDetailClient({
     }
   }
 
+  function triggerHaptic() {
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(10);
+  }
+
   async function toggleLike() {
+    triggerHaptic();
     const newLiked = !liked;
     setLiked(newLiked);
     setLikeCount((c) => (newLiked ? c + 1 : c - 1));
@@ -350,16 +357,20 @@ export function PostDetailClient({
           </div>
         </div>
 
-        {/* Likes row (when likeCount > 0) */}
+        {/* Likes row (when likeCount > 0) — tap to open likes drawer */}
         {likeCount > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--ig-border-light)]">
+          <button
+            type="button"
+            onClick={() => setLikesDrawerOpen(true)}
+            className="w-full flex items-center gap-2 px-4 py-2 border-b border-[var(--ig-border-light)] hover:bg-[var(--ig-border-light)]/50 active:bg-[var(--ig-border-light)] transition-colors text-left"
+          >
             <div className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center shrink-0">
               <span className="text-xs">♥</span>
             </div>
             <span className="text-sm text-[var(--ig-text)] flex-1">
               <span className="font-semibold">{likeCount}</span> {likeCount === 1 ? "likes" : "others like"} this
             </span>
-          </div>
+          </button>
         )}
 
         {/* Author block */}
@@ -467,20 +478,32 @@ export function PostDetailClient({
           </div>
         )}
 
-        {/* Footer: reaction bar — icon-only, compact (no background highlight, only icon changes) */}
+        {/* Footer: reaction bar */}
         <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--ig-border-light)] text-sm">
-          <button
-            type="button"
-            onClick={toggleLike}
-            aria-pressed={liked}
-            className="p-1.5 rounded-full text-[var(--ig-text)] transition-transform hover:scale-105"
-          >
-            <IconHeart
-              className="w-5 h-5"
-              filled={liked}
-              filledGradientId={liked ? `heart-gradient-detail-${post._id}` : undefined}
-            />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={toggleLike}
+              aria-pressed={liked}
+              className="p-1.5 rounded-full text-[var(--ig-text)] transition-transform hover:scale-105"
+            >
+              <IconHeart
+                className="w-5 h-5"
+                filled={liked}
+                filledGradientId={liked ? `heart-gradient-detail-${post._id}` : undefined}
+              />
+            </button>
+            {likeCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setLikesDrawerOpen(true)}
+                className="text-xs font-medium text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)] min-h-[28px] px-1 -ml-0.5"
+                aria-label="View who liked"
+              >
+                {likeCount}
+              </button>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -660,6 +683,12 @@ export function PostDetailClient({
           open={shareSheetOpen}
           onClose={() => setShareSheetOpen(false)}
           post={shareSheetOpen ? post : null}
+        />
+
+        <LikesDrawer
+          open={likesDrawerOpen}
+          onClose={() => setLikesDrawerOpen(false)}
+          postId={post._id}
         />
       </div>
     </div>
