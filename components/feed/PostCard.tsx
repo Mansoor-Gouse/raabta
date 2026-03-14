@@ -12,7 +12,6 @@ import {
   IconTrusted,
   IconThumbsUp,
   IconClap,
-  IconGlobe,
 } from "@/components/layout/InstagramIcons";
 import { ReportButton } from "@/components/report/ReportButton";
 
@@ -61,6 +60,7 @@ export function PostCard({
   const lastTapRef = useRef<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
 
   const isAuthor = currentUserId && post.authorId === currentUserId;
 
@@ -160,6 +160,10 @@ export function PostCard({
     if (!currentIsVideo) setVideoPlaying(false);
     else videoRef.current?.pause();
   }, [mediaIndex, currentIsVideo]);
+
+  useEffect(() => {
+    setMediaLoaded(false);
+  }, [mediaIndex, media]);
 
   const toggleVideoPlay = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -276,24 +280,18 @@ export function PostCard({
               {post.authorName}
             </Link>
             {post.fromInnerCircle && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400" title="From your Inner Circle">
+              <span className="inline-flex items-center text-amber-600 dark:text-amber-400" title="From your Inner Circle">
                 <IconCircleInner className="w-3.5 h-3.5 shrink-0" />
-                Inner Circle
               </span>
             )}
             {post.fromTrustedCircle && !post.fromInnerCircle && (
-              <span className="inline-flex items-center gap-1 text-xs text-[var(--ig-text-secondary)]" title="From your Trusted Circle">
+              <span className="inline-flex items-center text-[var(--ig-text-secondary)]" title="From your Trusted Circle">
                 <IconTrusted className="w-3.5 h-3.5 shrink-0" />
-                Trusted Circle
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
-            <span className="truncate">Member</span>
-            <span>•</span>
+          <div className="flex items-center text-xs text-[var(--ig-text-secondary)] mt-0.5">
             <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
-            <span>•</span>
-            <IconGlobe className="w-3.5 h-3.5" aria-hidden />
           </div>
         </div>
         {likeCount === 0 && (
@@ -374,14 +372,30 @@ export function PostCard({
         >
           {media ? (
             <>
+              {/* Skeleton while media loads */}
+              <div
+                className={`absolute inset-0 bg-[var(--ig-border-light)] animate-pulse transition-opacity duration-200 ${
+                  mediaLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
+                }`}
+                aria-hidden
+              />
               {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
-                <img src={media} alt="" className="w-full h-full object-cover pointer-events-none" />
+                <img
+                  src={media}
+                  alt=""
+                  className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
+                    mediaLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  onLoad={() => setMediaLoaded(true)}
+                />
               ) : (
                 <>
                   <video
                     ref={videoRef}
                     src={media}
-                    className="w-full h-full object-cover pointer-events-none"
+                    className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
+                      mediaLoaded ? "opacity-100" : "opacity-0"
+                    }`}
                     playsInline
                     loop
                     muted={false}
@@ -389,6 +403,7 @@ export function PostCard({
                     onPlay={() => setVideoPlaying(true)}
                     onPause={() => setVideoPlaying(false)}
                     onEnded={() => setVideoPlaying(false)}
+                    onLoadedData={() => setMediaLoaded(true)}
                   />
                   <div
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"

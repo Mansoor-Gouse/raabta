@@ -1,6 +1,6 @@
 "use client";
 
-import { IconThumbsUp, IconHeart, IconClap, IconGlobe } from "@/components/layout/InstagramIcons";
+import { IconThumbsUp, IconHeart, IconClap } from "@/components/layout/InstagramIcons";
 import type { Visibility } from "./CaptionStep";
 
 type PostPreviewCardProps = {
@@ -44,12 +44,7 @@ export function PostPreviewCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm text-[var(--ig-text)] truncate">{authorName}</p>
-          <p className="text-xs text-[var(--ig-text-secondary)]">Member</p>
-          <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
-            <span>Now</span>
-            <span>•</span>
-            <IconGlobe className="w-3.5 h-3.5" aria-hidden />
-          </div>
+          <p className="text-xs text-[var(--ig-text-secondary)] mt-0.5">Now</p>
         </div>
         <span className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--ig-link)] text-white">
           Follow

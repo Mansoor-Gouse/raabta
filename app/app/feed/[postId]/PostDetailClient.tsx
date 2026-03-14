@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReportButton } from "@/components/report/ReportButton";
 import { ShareSheet } from "@/components/feed/ShareSheet";
-import { IconHeart, IconThumbsUp, IconClap, IconGlobe, IconShare, IconBookmark, IconComment } from "@/components/layout/InstagramIcons";
+import { IconHeart, IconThumbsUp, IconClap, IconShare, IconBookmark, IconComment } from "@/components/layout/InstagramIcons";
 
 type Post = {
   _id: string;
@@ -107,6 +107,14 @@ export function PostDetailClient({
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [saved, setSaved] = useState(post.savedByMe);
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+
+  const media = post.mediaUrls[mediaIndex];
+  const hasMultiple = post.mediaUrls.length > 1;
+
+  useEffect(() => {
+    setMediaLoaded(false);
+  }, [mediaIndex, media]);
 
   async function submitComment(e: React.FormEvent) {
     e.preventDefault();
@@ -254,9 +262,6 @@ export function PostDetailClient({
     });
   }
 
-  const media = post.mediaUrls[mediaIndex];
-  const hasMultiple = post.mediaUrls.length > 1;
-
   return (
     <div className="flex-1 overflow-y-auto bg-[var(--ig-bg-primary)]">
       <div className="max-w-lg mx-auto">
@@ -361,17 +366,10 @@ export function PostDetailClient({
             <Link href={`/app/members/${post.authorId}`} className="font-semibold text-[var(--ig-text)] text-sm hover:opacity-80 block truncate">
               {post.authorName}
             </Link>
-            <div className="flex items-center gap-1.5 text-xs text-[var(--ig-text-secondary)] mt-0.5">
-              <span>Member</span>
-              <span>•</span>
+            <div className="flex items-center text-xs text-[var(--ig-text-secondary)] mt-0.5">
               <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
-              <span>•</span>
-              <IconGlobe className="w-3.5 h-3.5" aria-hidden />
             </div>
           </div>
-          <Link href={`/app/members/${post.authorId}`} className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--ig-link)] text-white hover:opacity-90">
-            Follow
-          </Link>
         </header>
 
         {/* Caption */}
@@ -407,10 +405,32 @@ export function PostDetailClient({
           >
             {media && (
               <>
+                {/* Skeleton while media loads */}
+                <div
+                  className={`absolute inset-0 bg-[var(--ig-border-light)] animate-pulse transition-opacity duration-200 ${
+                    mediaLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
+                  }`}
+                  aria-hidden
+                />
                 {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
-                  <img src={media} alt="" className="w-full h-full object-cover pointer-events-none" />
+                  <img
+                    src={media}
+                    alt=""
+                    className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
+                      mediaLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                    onLoad={() => setMediaLoaded(true)}
+                  />
                 ) : (
-                  <video src={media} controls className="w-full h-full object-cover pointer-events-auto" onClick={(ev) => ev.stopPropagation()} />
+                  <video
+                    src={media}
+                    controls
+                    className={`absolute inset-0 w-full h-full object-cover pointer-events-auto transition-opacity duration-200 ${
+                      mediaLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                    onClick={(ev) => ev.stopPropagation()}
+                    onLoadedData={() => setMediaLoaded(true)}
+                  />
                 )}
                 {hasMultiple && (
                   <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
