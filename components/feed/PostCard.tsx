@@ -174,7 +174,7 @@ export function PostCard({
   }, [mediaIndex, media]);
 
   const setImgRef = useCallback((el: HTMLImageElement | null) => {
-    imgRef.current = el;
+    (imgRef as React.MutableRefObject<HTMLImageElement | null>).current = el;
     if (el?.complete && el.naturalWidth > 0) setMediaLoaded(true);
   }, []);
 
@@ -200,7 +200,7 @@ export function PostCard({
   const likedSampleName = post.likedSampleName;
 
   return (
-    <article className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] rounded-xl overflow-hidden mb-4 last:mb-0">
+    <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm">
       {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
       {likedSampleName && likeCount > 0 && (
         <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[var(--ig-border-light)]">
@@ -407,8 +407,8 @@ export function PostCard({
                 <>
                   <video
                     ref={(el) => {
-                      videoRef.current = el;
-                      if (el?.readyState >= 2) setMediaLoaded(true);
+                      (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
+                      if (el != null && el.readyState >= 2) setMediaLoaded(true);
                     }}
                     src={media}
                     className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${

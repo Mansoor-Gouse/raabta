@@ -125,7 +125,7 @@ export function PostDetailClient({
   }, [mediaIndex, media]);
 
   const setImgRef = useCallback((el: HTMLImageElement | null) => {
-    imgRef.current = el;
+    (imgRef as React.MutableRefObject<HTMLImageElement | null>).current = el;
     if (el?.complete && el.naturalWidth > 0) setMediaLoaded(true);
   }, []);
 

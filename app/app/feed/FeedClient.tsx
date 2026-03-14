@@ -106,13 +106,13 @@ export function FeedClient() {
     <div className="flex-1 overflow-y-auto bg-[var(--ig-bg)] relative">
       {/* Subsection 1: Stories */}
       <section aria-label="Stories" className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
-        <h2 className="sr-only">Stories</h2>
+        <h2 className="px-4 pt-3 pb-1 text-sm font-semibold text-[var(--ig-text-secondary)]">Stories</h2>
         <StoryBar />
       </section>
 
       {/* Subsection 2: Posts */}
-      <section aria-label="Posts feed" className="bg-[var(--ig-bg)]">
-        <h2 className="sr-only">Posts</h2>
+      <section aria-label="Posts feed" className="bg-[var(--ig-bg)] px-3 pb-4">
+        <h2 className="pt-3 pb-2 text-sm font-semibold text-[var(--ig-text-secondary)]">Posts</h2>
         {posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--ig-bg-primary)]">
             <p className="text-sm text-[var(--ig-text-secondary)] text-center mb-4">
@@ -126,7 +126,7 @@ export function FeedClient() {
             </Link>
           </div>
         ) : (
-          <ul>
+          <ul className="space-y-4">
             {posts.map((post) => (
               <li key={post._id}>
                 <PostCard
