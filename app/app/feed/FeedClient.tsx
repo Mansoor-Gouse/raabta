@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { PostCard } from "@/components/feed/PostCard";
-import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
+import { FeedPostsSkeleton } from "@/components/feed/FeedSkeleton";
 import { StoryBar } from "@/components/feed/StoryBar";
 import { CommentsDrawer } from "@/components/feed/CommentsDrawer";
 import { ShareSheet } from "@/components/feed/ShareSheet";
@@ -157,10 +157,6 @@ export function FeedClient() {
     );
   }
 
-  if (loading) {
-    return <FeedSkeleton />;
-  }
-
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
       {/* Sticky header: title + segment bar */}
@@ -208,7 +204,7 @@ export function FeedClient() {
         className="flex-1 min-h-0 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth no-scrollbar"
         style={{ scrollbarWidth: "none" }}
       >
-        {/* Panel 0: Posts (left) */}
+        {/* Panel 0: Posts (left) — static shell; only list shows skeleton while loading */}
         <section
           id="feed-panel-0"
           role="tabpanel"
@@ -216,7 +212,9 @@ export function FeedClient() {
           aria-label="Posts"
           className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg)] px-3 pb-1"
         >
-          {posts.length === 0 ? (
+          {loading ? (
+            <FeedPostsSkeleton />
+          ) : posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--ig-bg-primary)] rounded-xl">
               <p className="text-sm text-[var(--ig-text-secondary)] text-center mb-4">
                 No posts yet. Be the first to share.
@@ -229,32 +227,34 @@ export function FeedClient() {
               </Link>
             </div>
           ) : (
-            <ul className="space-y-4">
-              {posts.map((post) => (
-                <li key={post._id}>
-                  <PostCard
-                    post={post}
-                    currentUserId={currentUserId}
-                    onUpdate={(upd) => updatePost(post._id, upd)}
-                    onDeleted={() => removePost(post._id)}
-                    onOpenComments={openCommentsDrawer}
-                    onShare={(p) => setShareSheetPost(p)}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-          {nextCursor && posts.length > 0 && (
-            <div className="p-4 flex justify-center">
-              <button
-                type="button"
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="text-sm text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50"
-              >
-                {loadingMore ? "Loading…" : "Load more"}
-              </button>
-            </div>
+            <>
+              <ul className="space-y-4">
+                {posts.map((post) => (
+                  <li key={post._id}>
+                    <PostCard
+                      post={post}
+                      currentUserId={currentUserId}
+                      onUpdate={(upd) => updatePost(post._id, upd)}
+                      onDeleted={() => removePost(post._id)}
+                      onOpenComments={openCommentsDrawer}
+                      onShare={(p) => setShareSheetPost(p)}
+                    />
+                  </li>
+                ))}
+              </ul>
+              {nextCursor && (
+                <div className="p-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="text-sm text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50"
+                  >
+                    {loadingMore ? "Loading…" : "Load more"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
 

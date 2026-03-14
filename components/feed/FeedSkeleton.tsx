@@ -5,12 +5,26 @@ import { PostCardSkeleton } from "./PostCardSkeleton";
 const POST_SKELETON_COUNT = 3;
 
 /**
- * Feed loading state: sticky header (title "The Rope" + segments Posts | Stories) + one panel (Posts).
+ * Skeleton for the posts list only (no header). Use inside feed panel so static header/footer stay visible.
+ */
+export function FeedPostsSkeleton() {
+  return (
+    <ul className="space-y-4">
+      {Array.from({ length: POST_SKELETON_COUNT }).map((_, i) => (
+        <li key={i}>
+          <PostCardSkeleton />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Full-page feed loading state (legacy): header + panel skeleton. Prefer rendering static shell + FeedPostsSkeleton in panel.
  */
 export function FeedSkeleton() {
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)]">
-      {/* Sticky header: title + segment bar */}
       <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] animate-pulse">
         <div className="flex items-center px-4 py-2.5">
           <div className="h-5 w-24 rounded bg-[var(--ig-border-light)]" aria-hidden />
@@ -24,15 +38,8 @@ export function FeedSkeleton() {
           </div>
         </div>
       </div>
-      {/* Panel skeleton: Posts (default view) */}
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-1">
-        <ul className="space-y-4">
-          {Array.from({ length: POST_SKELETON_COUNT }).map((_, i) => (
-            <li key={i}>
-              <PostCardSkeleton />
-            </li>
-          ))}
-        </ul>
+        <FeedPostsSkeleton />
       </div>
     </div>
   );
