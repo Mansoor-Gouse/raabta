@@ -104,8 +104,15 @@ export function FeedClient() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[var(--ig-bg)] relative">
-      <StoryBar />
-      <div>
+      {/* Subsection 1: Stories */}
+      <section aria-label="Stories" className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+        <h2 className="sr-only">Stories</h2>
+        <StoryBar />
+      </section>
+
+      {/* Subsection 2: Posts */}
+      <section aria-label="Posts feed" className="bg-[var(--ig-bg)]">
+        <h2 className="sr-only">Posts</h2>
         {posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--ig-bg-primary)]">
             <p className="text-sm text-[var(--ig-text-secondary)] text-center mb-4">
@@ -146,7 +153,7 @@ export function FeedClient() {
             </button>
           </div>
         )}
-      </div>
+      </section>
 
       <CommentsDrawer
         open={!!commentsDrawerPostId}

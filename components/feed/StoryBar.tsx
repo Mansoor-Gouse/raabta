@@ -31,6 +31,18 @@ type RawStatusItem = {
 
 type Me = { _id: string; fullName?: string; name?: string; profileImage?: string; image?: string } | null;
 
+function timeAgo(date: string | undefined): string {
+  if (!date) return "";
+  const d = new Date(date);
+  const now = new Date();
+  const s = Math.floor((now.getTime() - d.getTime()) / 1000);
+  if (s < 60) return "Just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  if (s < 604800) return `${Math.floor(s / 86400)}d`;
+  return d.toLocaleDateString();
+}
+
 function buildSessions(
   items: RawStatusItem[],
   me: Me
@@ -146,7 +158,7 @@ export function StoryBar() {
   const byUser = useMemo(() => {
     const map = new Map<
       string,
-      { name?: string; image?: string; mediaUrl: string; sessionIndex: number; viewedAllByMe?: boolean }
+      { name?: string; image?: string; mediaUrl: string; sessionIndex: number; viewedAllByMe?: boolean; lastCreatedAt?: string }
     >();
     sessions.forEach((s, i) => {
       const lastStatus = s.statuses[s.statuses.length - 1];
@@ -155,12 +167,14 @@ export function StoryBar() {
       const viewedAllByMe =
         statusIds.size > 0 &&
         statusItems.every((it) => it.viewedByMe === true);
+      const lastRaw = lastStatus ? items.find((it) => it._id === lastStatus._id) : undefined;
       map.set(s.userId, {
         name: s.userName,
         image: s.userImage,
         mediaUrl: lastStatus?.mediaUrl || "",
         sessionIndex: i,
         viewedAllByMe: !!viewedAllByMe,
+        lastCreatedAt: lastRaw?.createdAt,
       });
     });
     return map;
@@ -168,132 +182,120 @@ export function StoryBar() {
 
   const hasOwnStory = meId != null && byUser.has(meId);
   const myStoryInfo = meId ? byUser.get(meId) : undefined;
-  const otherUsers = useMemo(
-    () =>
-      Array.from(byUser.entries()).filter(([id]) => id !== meId),
-    [byUser, meId]
-  );
+  const otherUsers = useMemo(() => {
+    const entries = Array.from(byUser.entries()).filter(([id]) => id !== meId);
+    return entries.sort((a, b) => {
+      const tA = a[1].lastCreatedAt ? new Date(a[1].lastCreatedAt).getTime() : 0;
+      const tB = b[1].lastCreatedAt ? new Date(b[1].lastCreatedAt).getTime() : 0;
+      return tB - tA;
+    });
+  }, [byUser, meId]);
   const myName = me?.fullName || me?.name || "You";
 
-  const storyRingClass = "w-[66px] h-[66px] rounded-lg p-[2.5px] flex items-center justify-center";
-  const storyInnerClass = "w-full h-full rounded-lg bg-[var(--ig-bg-primary)] p-[2px] flex items-center justify-center overflow-hidden box-border";
-  const storyImgClass = "w-full h-full rounded-lg object-cover";
+  const ringSizeClass = "w-12 h-12 rounded-lg p-[2px] flex items-center justify-center shrink-0";
+  const innerClass = "w-full h-full rounded-[6px] bg-[var(--ig-bg-primary)] flex items-center justify-center overflow-hidden";
+  const imgClass = "w-full h-full rounded-[6px] object-cover";
 
   const yourStoryViewedAll = myStoryInfo?.viewedAllByMe ?? false;
-  const yourStoryTile = (
-    <div className="flex flex-col items-center gap-1 shrink-0">
-      <div className="relative">
-        <div
-          className={storyRingClass}
-          style={{
-            background: hasOwnStory && yourStoryViewedAll
-              ? "var(--ig-border)"
-              : "var(--ig-story-ring-gradient)",
-            boxSizing: "border-box",
-          }}
-        >
-          <div className={storyInnerClass}>
-            {hasOwnStory && myStoryInfo?.mediaUrl ? (
-              <img
-                src={myStoryInfo.mediaUrl}
-                alt=""
-                className={storyImgClass}
-              />
-            ) : me?.profileImage || me?.image ? (
-              <img
-                src={me.profileImage || me.image || ""}
-                alt=""
-                className={storyImgClass}
-              />
-            ) : (
-              <span className="text-2xl font-medium text-[var(--ig-text-secondary)]">
-                {myName?.charAt(0)?.toUpperCase() || "?"}
-              </span>
-            )}
-          </div>
-        </div>
-        {!hasOwnStory && (
-          <span
-            className="absolute bottom-0 right-0 w-5 h-5 rounded-md bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-black text-sm font-bold leading-none"
-            aria-hidden
-          >
-            +
-          </span>
-        )}
-      </div>
-      <span className="text-xs text-[var(--ig-text)] max-w-[64px] truncate block text-center">
-        Your story
-      </span>
-    </div>
+
+  const renderAvatar = (
+    mediaUrl: string | undefined,
+    image: string | undefined,
+    name: string | undefined,
+    fallbackChar: string
+  ) => (
+    <>
+      {mediaUrl ? (
+        <img src={mediaUrl} alt="" className={imgClass} />
+      ) : image ? (
+        <img src={image} alt="" className={imgClass} />
+      ) : (
+        <span className="text-lg font-medium text-[var(--ig-text-secondary)]">
+          {fallbackChar}
+        </span>
+      )}
+    </>
   );
 
   return (
     <>
-      <div className="shrink-0 overflow-x-auto border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)] no-scrollbar">
-        <div className="flex gap-4 px-4 py-3 min-h-[104px] items-end">
-          {/* Your story: view own stories if any, else go to add flow */}
-          {hasOwnStory ? (
-            <button
-              type="button"
-              onClick={() => setViewerSessionIndex(0)}
-              className="flex flex-col items-center gap-1 shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] rounded-lg touch-manipulation active:scale-[0.97] transition-transform"
-              aria-label="View your story"
-            >
-              {yourStoryTile}
-            </button>
-          ) : (
-            <Link
-              href="/app/status/new"
-              className="flex flex-col items-center gap-1 shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] touch-manipulation active:scale-[0.97] transition-transform"
-              aria-label="Add to your story"
-            >
-              {yourStoryTile}
-            </Link>
-          )}
-
-          {/* Other stories - open viewer; gray ring if viewed all by me */}
-          {otherUsers.map(([userId, info]) => (
-            <button
-              key={userId}
-              type="button"
-              onClick={() => setViewerSessionIndex(info.sessionIndex)}
-              className="flex flex-col items-center gap-1 shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] rounded-lg touch-manipulation active:scale-[0.97] transition-transform"
-            >
-              <div
-                className={storyRingClass}
-                style={{
-                  background: info.viewedAllByMe
-                    ? "var(--ig-border)"
-                    : "var(--ig-story-ring-gradient)",
-                  boxSizing: "border-box",
-                }}
+      <div className="shrink-0 px-4 py-3">
+        <ul className="flex flex-col gap-0">
+          {/* Your story row */}
+          <li>
+            {hasOwnStory ? (
+              <button
+                type="button"
+                onClick={() => setViewerSessionIndex(0)}
+                className="w-full flex items-center gap-3 py-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] touch-manipulation active:bg-[var(--ig-border-light)]/50 transition-colors text-left"
+                aria-label="View your story"
               >
-                <div className={storyInnerClass}>
-                  {info.mediaUrl ? (
-                    <img
-                      src={info.mediaUrl}
-                      alt=""
-                      className={storyImgClass}
-                    />
-                  ) : info.image ? (
-                    <img
-                      src={info.image}
-                      alt=""
-                      className={storyImgClass}
-                    />
-                  ) : (
-                    <span className="text-xl font-medium text-[var(--ig-text-secondary)]">
-                      {info.name?.charAt(0)?.toUpperCase() || "?"}
-                    </span>
-                  )}
+                <div
+                  className={ringSizeClass}
+                  style={{
+                    background: yourStoryViewedAll ? "var(--ig-border)" : "var(--ig-story-ring-gradient)",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div className={innerClass}>
+                    {renderAvatar(myStoryInfo?.mediaUrl, me?.profileImage || me?.image, myName, myName?.charAt(0)?.toUpperCase() || "?")}
+                  </div>
                 </div>
-              </div>
-              <span className="text-xs text-[var(--ig-text)] max-w-[64px] truncate block text-center">
-                {info.name || "Story"}
-              </span>
-            </button>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm text-[var(--ig-text)] truncate">Your story</p>
+                  <p className="text-xs text-[var(--ig-text-secondary)]">{timeAgo(myStoryInfo?.lastCreatedAt) || "Add story"}</p>
+                </div>
+              </button>
+            ) : (
+              <Link
+                href="/app/status/new"
+                className="w-full flex items-center gap-3 py-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] touch-manipulation active:bg-[var(--ig-border-light)]/50 transition-colors text-left"
+                aria-label="Add to your story"
+              >
+                <div
+                  className={ringSizeClass}
+                  style={{ background: "var(--ig-story-ring-gradient)", boxSizing: "border-box" }}
+                >
+                  <div className={`${innerClass} relative`}>
+                    {renderAvatar(undefined, me?.profileImage || me?.image, myName, myName?.charAt(0)?.toUpperCase() || "?")}
+                    <span className="absolute bottom-0 right-0 w-4 h-4 rounded bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-black text-xs font-bold leading-none" aria-hidden>+</span>
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm text-[var(--ig-text)] truncate">Your story</p>
+                  <p className="text-xs text-[var(--ig-text-secondary)]">Add story</p>
+                </div>
+              </Link>
+            )}
+          </li>
+
+          {/* Other users' stories */}
+          {otherUsers.map(([userId, info]) => (
+            <li key={userId}>
+              <button
+                type="button"
+                onClick={() => setViewerSessionIndex(info.sessionIndex)}
+                className="w-full flex items-center gap-3 py-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-link)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ig-bg-primary)] touch-manipulation active:bg-[var(--ig-border-light)]/50 transition-colors text-left"
+              >
+                <div
+                  className={ringSizeClass}
+                  style={{
+                    background: info.viewedAllByMe ? "var(--ig-border)" : "var(--ig-story-ring-gradient)",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div className={innerClass}>
+                    {renderAvatar(info.mediaUrl, info.image, info.name, info.name?.charAt(0)?.toUpperCase() || "?")}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm text-[var(--ig-text)] truncate">{info.name || "Story"}</p>
+                  <p className="text-xs text-[var(--ig-text-secondary)]">{timeAgo(info.lastCreatedAt)}</p>
+                </div>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
       {viewerSessionIndex !== null && sessions.length > 0 && (

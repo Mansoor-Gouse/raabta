@@ -44,6 +44,10 @@ function timeAgo(date: string) {
   if (s < 2592000) return `${Math.floor(s / 604800)}w`;
   return d.toLocaleDateString();
 }
+function timeLabelAgo(date: string) {
+  const t = timeAgo(date);
+  return t === "Just now" ? t : /^\d+[mhdw]$/.test(t) ? `${t} ago` : t;
+}
 
 export function PostDetailClient({
   post,
@@ -376,7 +380,7 @@ export function PostDetailClient({
               {post.authorName}
             </Link>
             <div className="flex items-center text-xs text-[var(--ig-text-secondary)] mt-0.5">
-              <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
+              <time dateTime={post.createdAt}>{timeLabelAgo(post.createdAt)}</time>
             </div>
           </div>
         </header>

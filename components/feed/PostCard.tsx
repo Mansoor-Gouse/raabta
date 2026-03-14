@@ -152,6 +152,10 @@ export function PostCard({
     if (s < 604800) return `${Math.floor(s / 86400)}d`;
     return d.toLocaleDateString();
   };
+  const timeLabel = (() => {
+    const t = timeAgo(post.createdAt);
+    return t === "Just now" ? t : /^\d+[mhd]$/.test(t) ? `${t} ago` : t;
+  })();
 
   const media = post.mediaUrls[mediaIndex];
   const hasMultiple = post.mediaUrls.length > 1;
@@ -196,7 +200,7 @@ export function PostCard({
   const likedSampleName = post.likedSampleName;
 
   return (
-    <article className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+    <article className="bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] rounded-xl overflow-hidden mb-4 last:mb-0">
       {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
       {likedSampleName && likeCount > 0 && (
         <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[var(--ig-border-light)]">
@@ -300,7 +304,7 @@ export function PostCard({
             )}
           </div>
           <div className="flex items-center text-xs text-[var(--ig-text-secondary)] mt-0.5">
-            <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
+            <time dateTime={post.createdAt}>{timeLabel}</time>
           </div>
         </div>
         {likeCount === 0 && (
