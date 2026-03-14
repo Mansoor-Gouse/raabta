@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 /**
  * Instagram-style icons matching UI Mockup 2.0 (outline/filled where needed)
  */
@@ -195,10 +197,18 @@ export function IconFilter({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export function IconCircleInner({ className = "w-4 h-4" }: { className?: string }) {
+  const id = useId().replace(/:/g, "-");
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="4" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id={id} x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="50%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="10" fill={`url(#${id})`} fillOpacity="0.2" />
+      <circle cx="12" cy="12" r="4" fill={`url(#${id})`} />
     </svg>
   );
 }
@@ -211,11 +221,19 @@ export function IconCircleOuter({ className = "w-4 h-4" }: { className?: string 
   );
 }
 
-/** Trusted Circle – shield to distinguish from Inner (double circle) */
+/** Trusted Circle – shield, solid with sleek gradient */
 export function IconTrusted({ className = "w-4 h-4" }: { className?: string }) {
+  const id = useId().replace(/:/g, "-");
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id={id} x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#64748b" />
+          <stop offset="50%" stopColor="#475569" />
+          <stop offset="100%" stopColor="#334155" />
+        </linearGradient>
+      </defs>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill={`url(#${id})`} />
     </svg>
   );
 }

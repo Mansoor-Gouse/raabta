@@ -45,28 +45,41 @@ export function FeedClient() {
   const [commentsDrawerAuthorName, setCommentsDrawerAuthorName] = useState("");
   const [shareSheetPost, setShareSheetPost] = useState<FeedPost | null>(null);
   const [activeIndex, setActiveIndex] = useState<SegmentIndex>(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
   const prevIndexRef = useRef<SegmentIndex>(0);
 
   const scrollToIndex = useCallback((index: SegmentIndex) => {
     const el = scrollRef.current;
     if (!el) return;
     triggerHaptic();
-    const w = el.clientWidth;
-    el.scrollTo({ left: index * w, behavior: "smooth" });
+    setScrollProgress(index);
     setActiveIndex(index);
     prevIndexRef.current = index;
+    const w = el.clientWidth;
+    el.scrollTo({ left: index * w, behavior: "smooth" });
   }, []);
 
   const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const w = el.clientWidth;
+    const progress = w > 0 ? Math.max(0, Math.min(1, el.scrollLeft / w)) : 0;
+    if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      setScrollProgress(progress);
+    });
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     scrollTimeoutRef.current = setTimeout(() => {
       scrollTimeoutRef.current = null;
-      const el = scrollRef.current;
-      if (!el) return;
-      const w = el.clientWidth;
-      const index = Math.round(el.scrollLeft / w) as SegmentIndex;
+      const currentEl = scrollRef.current;
+      if (!currentEl) return;
+      const currentW = currentEl.clientWidth;
+      const currentProgress = currentW > 0 ? currentEl.scrollLeft / currentW : 0;
+      const index = Math.round(currentProgress) as SegmentIndex;
       if (index >= 0 && index <= 1 && index !== prevIndexRef.current) {
         triggerHaptic();
         prevIndexRef.current = index;
@@ -78,6 +91,7 @@ export function FeedClient() {
   useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
     };
   }, []);
 
@@ -154,30 +168,36 @@ export function FeedClient() {
         <div className="flex items-center px-4 py-2.5">
           <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
         </div>
-        {/* Segment control */}
+        {/* Segment control: sliding underline follows scroll */}
         <div
           role="tablist"
           aria-label="Feed sections"
-          className="flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
+          className="relative flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
         >
-        {SEGMENTS.map((label, i) => (
-          <button
-            key={label}
-            type="button"
-            role="tab"
-            aria-selected={activeIndex === i}
-            aria-controls={`feed-panel-${i}`}
-            id={`feed-tab-${i}`}
-            onClick={() => scrollToIndex(i as SegmentIndex)}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              activeIndex === i
-                ? "text-[var(--ig-text)] border-b-2 border-[var(--ig-text)]"
-                : "text-[var(--ig-text-secondary)] border-b-2 border-transparent hover:text-[var(--ig-text)]"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+          {SEGMENTS.map((label, i) => (
+            <button
+              key={label}
+              type="button"
+              role="tab"
+              aria-selected={activeIndex === i}
+              aria-controls={`feed-panel-${i}`}
+              id={`feed-tab-${i}`}
+              onClick={() => scrollToIndex(i as SegmentIndex)}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                activeIndex === i ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          <div
+            className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+            style={{
+              width: `${100 / SEGMENTS.length}%`,
+              left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
+            }}
+            aria-hidden
+          />
         </div>
       </div>
 
