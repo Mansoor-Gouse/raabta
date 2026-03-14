@@ -15,28 +15,25 @@ function useSmoothScroll() {
 
 function ConstellationBg() {
   const nodes = [
-    { cx: 15, cy: 20 },
-    { cx: 50, cy: 15 },
-    { cx: 85, cy: 25 },
-    { cx: 25, cy: 50 },
-    { cx: 75, cy: 45 },
-    { cx: 50, cy: 70 },
-    { cx: 35, cy: 85 },
-    { cx: 65, cy: 80 },
+    { cx: 25, cy: 35 },
+    { cx: 50, cy: 25 },
+    { cx: 75, cy: 40 },
+    { cx: 35, cy: 65 },
+    { cx: 65, cy: 70 },
   ];
   const lines = [
-    [0, 1], [1, 2], [0, 3], [1, 3], [1, 4], [2, 4], [3, 5], [4, 5], [3, 6], [5, 6], [5, 7], [4, 7],
+    [0, 1], [1, 2], [0, 3], [1, 3], [3, 4], [2, 4],
   ];
   return (
     <svg
-      className="absolute inset-0 w-full h-full opacity-40"
+      className="absolute inset-0 w-full h-full opacity-30"
       viewBox="0 0 100 100"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden
     >
       <defs>
         <linearGradient id="nodeGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(11,11,11,0.15)" />
+          <stop offset="0%" stopColor="rgba(11,11,11,0.12)" />
           <stop offset="100%" stopColor="rgba(11,11,11,0.02)" />
         </linearGradient>
       </defs>
@@ -47,18 +44,12 @@ function ConstellationBg() {
           y1={nodes[a].cy}
           x2={nodes[b].cx}
           y2={nodes[b].cy}
-          stroke="rgba(11,11,11,0.08)"
-          strokeWidth="0.35"
+          stroke="rgba(11,11,11,0.06)"
+          strokeWidth="0.3"
         />
       ))}
       {nodes.map((n, i) => (
-        <circle
-          key={i}
-          cx={n.cx}
-          cy={n.cy}
-          r="1.2"
-          fill="url(#nodeGlow)"
-        />
+        <circle key={i} cx={n.cx} cy={n.cy} r="1" fill="url(#nodeGlow)" />
       ))}
     </svg>
   );
@@ -85,7 +76,7 @@ export function NetworkLanding() {
           <h1 className="network-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-[#0B0B0B] leading-[1.1] opacity-0 animate-[network-fade-in_0.8s_ease-out_forwards]">
             The Rope
           </h1>
-          <p className="network-serif text-lg sm:text-xl md:text-2xl font-light text-[#262626] mt-4 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.15s_forwards] [font-variant:small-caps] tracking-[0.15em]">
+          <p className="network-serif text-lg sm:text-xl md:text-2xl font-light text-[#262626] mt-4 opacity-0 animate-[network-fade-in_0.8s_ease-out_0.15s_forwards] [font-variant:small-caps] tracking-[0.2em]">
             a network of faith
           </p>
           <p className="mt-8 text-lg sm:text-xl text-[#404040] font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
@@ -96,7 +87,7 @@ export function NetworkLanding() {
           </p>
           <div className="mt-14 flex max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
             <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B]" aria-hidden />
-            <blockquote className="flex-1 ml-4 px-6 py-6 rounded-2xl border border-black/10 bg-white/80 backdrop-blur-sm text-left shadow-sm">
+            <blockquote className="flex-1 ml-4 px-6 py-6 rounded-2xl border border-black/[0.08] bg-white/95 text-left">
             <p className="text-2xl sm:text-3xl text-[#171717] leading-relaxed font-arabic" dir="rtl" lang="ar">
               وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا
             </p>
@@ -123,106 +114,14 @@ export function NetworkLanding() {
         </div>
       </section>
 
-      {/* Fragmentation & Hold the Rope Together (merged) */}
-      <section id="the-idea" className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
-        <FadeInSection>
-          <div className="max-w-4xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-4">
-              Fragmentation in the Age of Connection
-            </h2>
-            <p className="network-serif text-xl sm:text-2xl font-light text-center text-[#404040] mb-16 network-heading-accent">
-              Hold the Rope Together
-            </p>
-            <div className="grid sm:grid-cols-3 gap-10 mb-20">
-              <div className="flex flex-col items-center text-center">
-                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center mb-4">
-                  <svg className="w-7 h-7 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                    <circle cx="12" cy="12" r="10" />
-                    <path strokeLinecap="round" d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                </div>
-                <p className="text-[#F5F5F5] font-medium">1.9 Billion Muslims Worldwide</p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
-                  <svg className="w-7 h-7 text-[#F5F5F5]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 0 1 2 2v1a2 2 0 0 0 2 2 2 2 0 0 1 2 2v2.945M8 3.935V5.5A2.5 2.5 0 0 0 10.5 8h.5a2 2 0 0 1 2 2 2 2 0 1 0 4 0v-1.055M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-                  </svg>
-                </div>
-                <p className="text-[#171717] font-medium">Muslims living in 190+ countries</p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="network-dynamic-icon w-14 h-14 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center mb-4">
-                  <svg className="w-7 h-7 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                </div>
-                <p className="text-[#171717] font-medium">Communities increasingly fragmented despite digital connectivity</p>
-              </div>
-            </div>
-            <div className="max-w-2xl mx-auto text-center">
-              <div className="flex justify-center mb-12">
-                <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B] min-h-[60px]" aria-hidden />
-                <div className="flex-1 ml-4 rounded-2xl border border-black/10 bg-white/90 backdrop-blur-sm px-8 py-6 shadow-sm">
-                <p className="text-xl sm:text-2xl text-[#171717] leading-relaxed font-arabic" dir="rtl" lang="ar">
-                  وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا
-                </p>
-                <p className="network-serif text-lg text-[#404040] italic mt-3">&ldquo;Hold firmly to the rope of Allah all together and do not become divided.&rdquo;</p>
-                <p className="text-sm text-[#737373] mt-2">القرآن ٣:١٠٣ / Qur&apos;an 3:103</p>
-                </div>
-              </div>
-              <p className="text-[#404040] text-lg leading-relaxed mb-10">
-                Connect through:
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                {[
-                  { icon: "lightbulb", label: "ideas" },
-                  { icon: "message", label: "dialogue" },
-                  { icon: "target", label: "shared purpose" },
-                  { icon: "users", label: "collaboration" },
-                ].map((item) => (
-                  <div key={item.label} className="flex flex-col items-center">
-                    <div className="network-dynamic-icon w-12 h-12 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center mb-2">
-                      {item.icon === "lightbulb" && (
-                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 0 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                      )}
-                      {item.icon === "message" && (
-                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      )}
-                      {item.icon === "target" && (
-                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                          <circle cx="12" cy="12" r="10" />
-                          <circle cx="12" cy="12" r="6" />
-                          <circle cx="12" cy="12" r="2" />
-                        </svg>
-                      )}
-                      {item.icon === "users" && (
-                        <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm font-medium text-[#171717] capitalize">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </FadeInSection>
-      </section>
-
       {/* Platform Features */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
+      <section id="the-idea" className="relative py-24 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <FadeInSection>
           <div className="max-w-5xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-16 network-heading-accent">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-14 network-heading-accent">
               Platform Features
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {[
                 {
                   title: "Private Circles",
@@ -268,9 +167,9 @@ export function NetworkLanding() {
               ].map((card) => (
                 <div
                   key={card.title}
-                  className="rounded-2xl border border-black/10 bg-white/90 backdrop-blur-md p-8 transition-all duration-300 hover:border-black/15 hover:shadow-md"
+                  className="network-card rounded-2xl border border-black/[0.08] bg-white/95 p-8"
                 >
-                  <div className="network-dynamic-icon w-14 h-14 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center text-[#404040] mb-5">
+                  <div className="network-dynamic-icon w-14 h-14 rounded-xl bg-black/[0.04] border border-black/[0.08] flex items-center justify-center text-[#404040] mb-5">
                     <span className="network-dynamic-icon-inner block">{card.icon}</span>
                   </div>
                   <h3 className="network-serif text-xl font-medium text-[#0B0B0B] mb-2">{card.title}</h3>
@@ -283,13 +182,13 @@ export function NetworkLanding() {
       </section>
 
       {/* The Power of Small Circles */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
+      <section className="relative py-24 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
         <FadeInSection>
           <div className="max-w-3xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-12">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-10">
               The Power of Small Circles
             </h2>
-            <div className="rounded-2xl border border-black/10 bg-white/90 backdrop-blur-sm px-8 sm:px-12 py-10 sm:py-14 shadow-sm">
+            <div className="network-card rounded-2xl border border-black/[0.08] bg-white/95 px-8 sm:px-12 py-10 sm:py-14">
               <p className="text-[#404040] text-lg sm:text-xl leading-relaxed text-center mb-10">
                 History shows that civilizations are shaped not by crowds, but by small groups of sincere individuals who share belief and purpose.
               </p>
@@ -302,13 +201,14 @@ export function NetworkLanding() {
       </section>
 
       {/* Benefits */}
-      <section className="relative py-28 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
+      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
-            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-16">
+            <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-3">
               Benefits of the Network
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <p className="text-center text-[#737373] text-sm mb-12">As a member you get:</p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 { text: "Connect with influential Muslims globally", icon: "map" },
                 { text: "Exchange ideas with like-minded believers", icon: "refresh" },
@@ -318,7 +218,7 @@ export function NetworkLanding() {
                 { text: "Create impact with leaders and change-makers", icon: "award" },
               ].map(({ text, icon }, i) => (
                 <div key={i} className="flex gap-4 items-start">
-                  <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center mt-0.5">
+                  <div className="network-dynamic-icon flex-shrink-0 w-10 h-10 rounded-xl bg-black/[0.04] border border-black/[0.08] flex items-center justify-center mt-0.5">
                     {icon === "map" && (
                       <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z" />
@@ -336,7 +236,7 @@ export function NetworkLanding() {
                       </svg>
                     )}
                     {icon === "calendar" && (
-                      <svg className="w-5 h-5 text-[#F5F5F5]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                      <svg className="w-5 h-5 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
                       </svg>
                     )}
@@ -360,14 +260,14 @@ export function NetworkLanding() {
       </section>
 
       {/* Final CTA */}
-      <section id="request" className="relative py-32 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
+      <section id="request" className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
         <FadeInSection>
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="network-serif text-3xl sm:text-4xl md:text-5xl font-light text-[#0B0B0B] mb-6 leading-tight">
+            <h2 className="network-serif text-3xl sm:text-4xl md:text-5xl font-light text-[#0B0B0B] mb-5 leading-tight">
               Great movements often begin with a few sincere people.
             </h2>
-            <p className="text-lg text-[#404040] mb-10">
-              This platform exists to connect you with affluent, influential, and powerful Muslims who share your faith and purpose.
+            <p className="text-lg text-[#404040] mb-9">
+              Connect with affluent, influential Muslims who share your faith and purpose.
             </p>
             <a
               href="/login"
@@ -386,26 +286,26 @@ export function NetworkLanding() {
       </section>
 
       {/* How it works */}
-      <section className="relative py-20 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
+      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
         <FadeInSection>
           <div className="max-w-3xl mx-auto">
-            <h2 className="network-serif text-2xl sm:text-3xl font-light text-center text-[#0B0B0B] mb-12">
+            <h2 className="network-serif text-2xl sm:text-3xl font-light text-center text-[#0B0B0B] mb-10">
               How it works
             </h2>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-8">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-10">
               <div className="flex flex-col items-center text-center">
-                <span className="w-10 h-10 rounded-full border-2 border-[#0B0B0B]/20 flex items-center justify-center text-[#171717] font-medium text-sm mb-2">1</span>
-                <p className="text-[#404040] font-medium">Apply</p>
+                <span className="w-9 h-9 rounded-full border border-black/[0.12] flex items-center justify-center text-[#171717] font-medium text-sm mb-2">1</span>
+                <p className="text-[#404040] font-medium text-sm">Apply</p>
               </div>
-              <span className="hidden sm:block text-[#737373]">→</span>
+              <span className="hidden sm:block text-black/20 text-lg" aria-hidden>→</span>
               <div className="flex flex-col items-center text-center">
-                <span className="w-10 h-10 rounded-full border-2 border-[#0B0B0B]/20 flex items-center justify-center text-[#171717] font-medium text-sm mb-2">2</span>
-                <p className="text-[#404040] font-medium">We review</p>
+                <span className="w-9 h-9 rounded-full border border-black/[0.12] flex items-center justify-center text-[#171717] font-medium text-sm mb-2">2</span>
+                <p className="text-[#404040] font-medium text-sm">We review</p>
               </div>
-              <span className="hidden sm:block text-[#737373]">→</span>
+              <span className="hidden sm:block text-black/20 text-lg" aria-hidden>→</span>
               <div className="flex flex-col items-center text-center">
-                <span className="w-10 h-10 rounded-full border-2 border-[#0B0B0B]/20 flex items-center justify-center text-[#171717] font-medium text-sm mb-2">3</span>
-                <p className="text-[#404040] font-medium">Join</p>
+                <span className="w-9 h-9 rounded-full border border-black/[0.12] flex items-center justify-center text-[#171717] font-medium text-sm mb-2">3</span>
+                <p className="text-[#404040] font-medium text-sm">Join</p>
               </div>
             </div>
           </div>
@@ -413,7 +313,7 @@ export function NetworkLanding() {
       </section>
 
       {/* Footer */}
-      <footer className="relative py-8 px-6 border-t border-black/10 bg-white">
+      <footer className="relative py-8 px-6 border-t border-black/[0.08] bg-white">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="network-serif text-[#404040] text-sm">
             The Rope — A network of faith

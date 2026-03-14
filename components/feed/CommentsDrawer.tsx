@@ -229,6 +229,9 @@ export function CommentsDrawer({
     ? `Reply to @${replyingTo.authorName.replace(/\s+/g, "").slice(0, 16)}...`
     : `Add a comment for ${postAuthorName.replace(/\s+/g, "").slice(0, 24)}...`;
 
+  const avatarOuter = "w-8 h-8 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 overflow-hidden bg-[var(--ig-border-light)]";
+  const avatarInner = "w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-[var(--ig-bg-primary)]";
+
   return (
     <>
       <div
@@ -237,24 +240,24 @@ export function CommentsDrawer({
         aria-hidden
       />
       <div
-        className="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[88vh] rounded-t-2xl bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+        className="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[88vh] rounded-t-2xl bg-[var(--ig-bg-primary)] border-t border-[var(--ig-border-light)] shadow-[0_-4px_20px_rgba(0,0,0,0.12)]"
         role="dialog"
         aria-modal="true"
         aria-label="Comments"
       >
-        {/* Drag handle + centered title only (no close button – dismiss via overlay) */}
-        <div className="shrink-0 flex flex-col items-center pt-2.5 pb-2">
+        {/* Header: drag handle + title (feed/event font) */}
+        <div className="shrink-0 flex flex-col items-center pt-2.5 pb-2 border-b border-[var(--ig-border-light)]">
           <div
             className="w-9 h-1 rounded-full bg-[var(--ig-border)] cursor-grab active:cursor-grabbing"
             aria-hidden
           />
-          <h2 className="text-base font-semibold text-[var(--ig-text)] mt-2">Comments</h2>
+          <h2 className="feed-title-font text-lg font-semibold text-[var(--ig-text)] mt-2">Comments</h2>
         </div>
 
         {/* Scrollable comments */}
         <div
           ref={listRef}
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-2"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-2 bg-[var(--ig-bg)]"
         >
           {loading ? (
             <div className="py-8 text-center text-sm text-[var(--ig-text-secondary)]">Loading comments…</div>
@@ -266,14 +269,16 @@ export function CommentsDrawer({
                 <li key={c._id} className="py-3 group">
                   <div className="flex gap-3">
                     <Link href={`/app/members/${c.authorId}`} className="shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center overflow-hidden">
-                        {c.authorImage ? (
-                          <img src={c.authorImage} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-xs font-medium text-[var(--ig-text-secondary)]">
-                            {c.authorName?.charAt(0)?.toUpperCase() || "?"}
-                          </span>
-                        )}
+                      <div className={avatarOuter}>
+                        <div className={avatarInner}>
+                          {c.authorImage ? (
+                            <img src={c.authorImage} alt="" className="w-full h-full rounded-[5px] object-cover" />
+                          ) : (
+                            <span className="text-xs font-medium text-[var(--ig-text-secondary)]">
+                              {c.authorName?.charAt(0)?.toUpperCase() || "?"}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </Link>
                     <div className="min-w-0 flex-1">
@@ -342,12 +347,14 @@ export function CommentsDrawer({
                               {(repliesByParentId[c._id] ?? []).map((r) => (
                                 <li key={r._id} className="flex gap-2 group">
                                   <Link href={`/app/members/${r.authorId}`} className="shrink-0">
-                                    <div className="w-8 h-8 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center overflow-hidden">
-                                      {r.authorImage ? (
-                                        <img src={r.authorImage} alt="" className="w-full h-full object-cover" />
-                                      ) : (
-                                        <span className="text-xs font-medium text-[var(--ig-text-secondary)]">{r.authorName?.charAt(0) || "?"}</span>
-                                      )}
+                                    <div className={avatarOuter}>
+                                      <div className={avatarInner}>
+                                        {r.authorImage ? (
+                                          <img src={r.authorImage} alt="" className="w-full h-full rounded-[5px] object-cover" />
+                                        ) : (
+                                          <span className="text-xs font-medium text-[var(--ig-text-secondary)]">{r.authorName?.charAt(0) || "?"}</span>
+                                        )}
+                                      </div>
                                     </div>
                                   </Link>
                                   <div className="min-w-0 flex-1">
@@ -405,14 +412,14 @@ export function CommentsDrawer({
         </div>
 
         {/* Sticky footer: emoji strip then [avatar, input, emoji icon] + Post when has text */}
-        <div className="shrink-0 border-t border-[var(--ig-border-light)] bg-white">
+        <div className="shrink-0 border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]">
           <div className="flex gap-1 px-3 py-2 overflow-x-auto no-scrollbar">
             {QUICK_EMOJIS.map((emoji, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => appendQuickEmoji(emoji)}
-                className="shrink-0 w-8 h-8 flex items-center justify-center text-lg rounded-full hover:bg-[var(--ig-border-light)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)]"
+                className="shrink-0 w-8 h-8 flex items-center justify-center text-lg rounded-lg border border-transparent hover:bg-[var(--ig-border-light)] hover:border-[var(--ig-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)] transition-colors"
                 aria-label={`Add ${emoji}`}
               >
                 {emoji}
@@ -420,14 +427,16 @@ export function CommentsDrawer({
             ))}
           </div>
           <form onSubmit={submitComment} className="flex items-center gap-2 px-4 pb-4 pt-0">
-            <div className="w-8 h-8 rounded-full shrink-0 overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center">
-              {currentUserImage ? (
-                <img src={currentUserImage} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs font-medium text-[var(--ig-text-secondary)]">
-                  {currentUserName?.charAt(0)?.toUpperCase() || "?"}
-                </span>
-              )}
+            <div className={avatarOuter}>
+              <div className={avatarInner}>
+                {currentUserImage ? (
+                  <img src={currentUserImage} alt="" className="w-full h-full rounded-[5px] object-cover" />
+                ) : (
+                  <span className="text-xs font-medium text-[var(--ig-text-secondary)]">
+                    {currentUserName?.charAt(0)?.toUpperCase() || "?"}
+                  </span>
+                )}
+              </div>
             </div>
             <input
               ref={inputRef}

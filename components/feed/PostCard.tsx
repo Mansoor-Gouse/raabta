@@ -274,7 +274,7 @@ export function PostCard({
       {/* 2. Author block */}
       <header className="flex items-center gap-3 px-4 py-2.5">
         <Link href={`/app/members/${post.authorId}`} className="shrink-0">
-          <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-border-light)]">
+          <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-bg-primary)]">
             <div className="w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-[var(--ig-bg-primary)]">
               {post.authorImage ? (
                 <img src={post.authorImage} alt="" className="w-full h-full rounded-[5px] object-cover" />
