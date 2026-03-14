@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReportButton } from "@/components/report/ReportButton";
@@ -108,13 +108,22 @@ export function PostDetailClient({
   const [saved, setSaved] = useState(post.savedByMe);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [mediaLoaded, setMediaLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const media = post.mediaUrls[mediaIndex];
   const hasMultiple = post.mediaUrls.length > 1;
 
+  const prevMediaKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    setMediaLoaded(false);
+    const key = `${mediaIndex}:${media ?? ""}`;
+    if (prevMediaKeyRef.current !== null && prevMediaKeyRef.current !== key) setMediaLoaded(false);
+    prevMediaKeyRef.current = key;
   }, [mediaIndex, media]);
+
+  const setImgRef = useCallback((el: HTMLImageElement | null) => {
+    imgRef.current = el;
+    if (el?.complete && el.naturalWidth > 0) setMediaLoaded(true);
+  }, []);
 
   async function submitComment(e: React.FormEvent) {
     e.preventDefault();
@@ -414,12 +423,14 @@ export function PostDetailClient({
                 />
                 {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
                   <img
+                    ref={setImgRef}
                     src={media}
                     alt=""
                     className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
                       mediaLoaded ? "opacity-100" : "opacity-0"
                     }`}
                     onLoad={() => setMediaLoaded(true)}
+                    onError={() => setMediaLoaded(true)}
                   />
                 ) : (
                   <video
@@ -430,6 +441,7 @@ export function PostDetailClient({
                     }`}
                     onClick={(ev) => ev.stopPropagation()}
                     onLoadedData={() => setMediaLoaded(true)}
+                    onError={() => setMediaLoaded(true)}
                   />
                 )}
                 {hasMultiple && (

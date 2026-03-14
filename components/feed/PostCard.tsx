@@ -59,6 +59,7 @@ export function PostCard({
   const menuRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [mediaLoaded, setMediaLoaded] = useState(false);
 
@@ -161,9 +162,17 @@ export function PostCard({
     else videoRef.current?.pause();
   }, [mediaIndex, currentIsVideo]);
 
+  const prevMediaKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    setMediaLoaded(false);
+    const key = `${mediaIndex}:${media ?? ""}`;
+    if (prevMediaKeyRef.current !== null && prevMediaKeyRef.current !== key) setMediaLoaded(false);
+    prevMediaKeyRef.current = key;
   }, [mediaIndex, media]);
+
+  const setImgRef = useCallback((el: HTMLImageElement | null) => {
+    imgRef.current = el;
+    if (el?.complete && el.naturalWidth > 0) setMediaLoaded(true);
+  }, []);
 
   const toggleVideoPlay = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -381,17 +390,22 @@ export function PostCard({
               />
               {media.match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
                 <img
+                  ref={setImgRef}
                   src={media}
                   alt=""
                   className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
                     mediaLoaded ? "opacity-100" : "opacity-0"
                   }`}
                   onLoad={() => setMediaLoaded(true)}
+                  onError={() => setMediaLoaded(true)}
                 />
               ) : (
                 <>
                   <video
-                    ref={videoRef}
+                    ref={(el) => {
+                      videoRef.current = el;
+                      if (el?.readyState >= 2) setMediaLoaded(true);
+                    }}
                     src={media}
                     className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
                       mediaLoaded ? "opacity-100" : "opacity-0"
@@ -404,6 +418,7 @@ export function PostCard({
                     onPause={() => setVideoPlaying(false)}
                     onEnded={() => setVideoPlaying(false)}
                     onLoadedData={() => setMediaLoaded(true)}
+                    onError={() => setMediaLoaded(true)}
                   />
                   <div
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
