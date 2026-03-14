@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Messaging PWA",
-    short_name: "Messaging",
-    description: "End-to-end messaging with WhatsApp-like features",
+    name: "The Rope",
+    short_name: "The Rope",
+    description: "A network of faith — connect with thoughtful, affluent, and influential Muslims.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8fafc",

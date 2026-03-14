@@ -3,8 +3,8 @@ import "./globals.css";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
 
 export const metadata: Metadata = {
-  title: "Messaging PWA",
-  description: "End-to-end messaging with WhatsApp-like features",
+  title: "The Rope",
+  description: "A network of faith — connect with thoughtful, affluent, and influential Muslims.",
 };
 
 export const viewport: Viewport = {
