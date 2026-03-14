@@ -102,7 +102,7 @@ export default async function ProfileLayout({
       <div className="px-4 pb-6 -mt-12 sm:-mt-16">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full border-4 border-[var(--elite-bg)] bg-[var(--elite-border)] overflow-hidden flex items-center justify-center">
+            <div className="w-24 h-24 rounded-[var(--elite-radius)] border-4 border-[var(--elite-bg)] bg-[var(--elite-border)] overflow-hidden flex items-center justify-center">
               {avatar ? (
                 <img src={avatar} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -128,14 +128,27 @@ export default async function ProfileLayout({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="elite-heading text-xl font-semibold text-[var(--elite-text)] truncate">
-              {displayName}
-            </h1>
-            {u.headline && (
-              <p className="elite-body text-sm text-[var(--elite-text-secondary)] mt-0.5">
-                {u.headline}
-              </p>
-            )}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="elite-heading text-xl font-semibold text-[var(--elite-text)] truncate">
+                  {displayName}
+                </h1>
+                {u.headline && (
+                  <p className="elite-body text-sm text-[var(--elite-text-secondary)] mt-0.5">
+                    {u.headline}
+                  </p>
+                )}
+              </div>
+              <Link
+                href="/app/profile/edit"
+                className="elite-events shrink-0 flex items-center justify-center w-10 h-10 rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
+                aria-label="Edit profile"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </Link>
+            </div>
             <div className="flex items-center gap-6 mt-2">
               <div className="flex flex-col items-center">
                 <span className="elite-heading font-semibold text-base text-[var(--elite-text)] tabular-nums">
@@ -153,20 +166,6 @@ export default async function ProfileLayout({
                 <span className="elite-heading font-semibold text-base text-[var(--elite-text)]">—</span>
                 <span className="elite-body text-xs text-[var(--elite-text-muted)]">groups</span>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              <Link
-                href="/app/profile/edit"
-                className="elite-events inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-[var(--elite-radius)] text-sm font-medium border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
-              >
-                Edit profile
-              </Link>
-              <Link
-                href="/app/members"
-                className="elite-events inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-[var(--elite-radius)] text-sm font-medium border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
-              >
-                Members
-              </Link>
             </div>
           </div>
         </div>

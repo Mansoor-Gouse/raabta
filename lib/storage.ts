@@ -11,7 +11,7 @@ import { put } from "@vercel/blob";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-export type StorageFolder = "posts" | "status";
+export type StorageFolder = "posts" | "status" | "profile";
 
 const IS_VERCEL = process.env.VERCEL === "1";
 

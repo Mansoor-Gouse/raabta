@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 const COMMUNITY_ROLES = [
@@ -54,6 +54,54 @@ export function ProfileEditForm({ initial }: { initial: Initial }) {
   const [tagValue, setTagValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleProfileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file?.type.startsWith("image/")) return;
+    setUploadingProfile(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
+      formData.set("type", "profile");
+      const res = await fetch("/api/me/upload-image", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setProfileImage(data.profileImage ?? profileImage);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Profile photo upload failed");
+    } finally {
+      setUploadingProfile(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file?.type.startsWith("image/")) return;
+    setUploadingBanner(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
+      formData.set("type", "banner");
+      const res = await fetch("/api/me/upload-image", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setBannerImage(data.bannerImage ?? bannerImage);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Cover photo upload failed");
+    } finally {
+      setUploadingBanner(false);
+      e.target.value = "";
+    }
+  }
 
   function addTag(
     field: "industries" | "interests" | "expertise" | "concerns" | "languages" | "destinations",
@@ -220,30 +268,82 @@ export function ProfileEditForm({ initial }: { initial: Initial }) {
         />
       </div>
       <div>
-        <label htmlFor="profileImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Profile image URL
-        </label>
-        <input
-          id="profileImage"
-          type="url"
-          value={profileImage}
-          onChange={(e) => setProfileImage(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
-          placeholder="https://..."
-        />
+        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Profile photo
+        </span>
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-full border-2 border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+            {profileImage ? (
+              <img src={profileImage} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl text-gray-400">?</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <input
+              ref={profileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfileUpload}
+              className="hidden"
+              aria-label="Upload profile photo"
+            />
+            <button
+              type="button"
+              onClick={() => profileInputRef.current?.click()}
+              disabled={uploadingProfile}
+              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+            >
+              {uploadingProfile ? "Uploading…" : "Upload photo"}
+            </button>
+            <input
+              type="url"
+              value={profileImage}
+              onChange={(e) => setProfileImage(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-1.5 text-xs"
+              placeholder="Or paste image URL"
+            />
+          </div>
+        </div>
       </div>
       <div>
-        <label htmlFor="bannerImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Banner image URL
-        </label>
-        <input
-          id="bannerImage"
-          type="url"
-          value={bannerImage}
-          onChange={(e) => setBannerImage(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
-          placeholder="https://..."
-        />
+        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Cover photo
+        </span>
+        <div className="space-y-2">
+          <div className="aspect-[3/1] max-h-32 rounded-lg border-2 border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            {bannerImage ? (
+              <img src={bannerImage} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-gray-400">No cover</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleBannerUpload}
+              className="hidden"
+              aria-label="Upload cover photo"
+            />
+            <button
+              type="button"
+              onClick={() => bannerInputRef.current?.click()}
+              disabled={uploadingBanner}
+              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+            >
+              {uploadingBanner ? "Uploading…" : "Upload cover"}
+            </button>
+            <input
+              type="url"
+              value={bannerImage}
+              onChange={(e) => setBannerImage(e.target.value)}
+              className="flex-1 min-w-[200px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-1.5 text-xs"
+              placeholder="Or paste cover image URL"
+            />
+          </div>
+        </div>
       </div>
 
       <TagField

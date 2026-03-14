@@ -17,16 +17,27 @@ export type EventCardEvent = {
 type EventCardProps = {
   event: EventCardEvent;
   compact?: boolean;
+  variant?: "default" | "elite";
 };
 
-export function EventCard({ event, compact = false }: EventCardProps) {
+export function EventCard({ event, compact = false, variant = "default" }: EventCardProps) {
+  const isElite = variant === "elite";
+  const border = isElite ? "border-[var(--elite-border)]" : "border-[var(--ig-border)]";
+  const bg = isElite ? "bg-[var(--elite-card)]" : "bg-[var(--ig-bg-primary)]";
+  const hoverBorder = isElite ? "hover:border-[var(--elite-accent-muted)]" : "hover:border-[var(--ig-text-tertiary)]";
+  const focusRing = isElite ? "focus-visible:ring-[var(--elite-accent)]" : "focus-visible:ring-[var(--ig-link)]";
+  const typeColor = isElite ? "text-[var(--elite-accent)]" : "text-[var(--ig-link)]";
+  const titleColor = isElite ? "text-[var(--elite-text)]" : "text-[var(--ig-text)]";
+  const mutedColor = isElite ? "text-[var(--elite-text-secondary)]" : "text-[var(--ig-text-secondary)]";
+  const thumbBg = isElite ? "bg-[var(--elite-border-light)]" : "bg-[var(--ig-border-light)]";
+
   return (
     <Link
       href={`/app/events/${event._id}`}
-      className="block rounded-xl border border-[var(--ig-border)] overflow-hidden bg-[var(--ig-bg-primary)] hover:border-[var(--ig-text-tertiary)] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--ig-link)]"
+      className={`block rounded-[var(--elite-radius-lg)] border overflow-hidden ${border} ${bg} ${hoverBorder} focus-visible:outline focus-visible:ring-2 ${focusRing} transition-colors duration-[var(--elite-transition)]`}
     >
       {event.coverImage ? (
-        <div className="aspect-[2/1] bg-[var(--ig-border-light)]">
+        <div className={`aspect-[2/1] ${thumbBg}`}>
           <img
             src={event.coverImage}
             alt=""
@@ -34,20 +45,20 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           />
         </div>
       ) : (
-        <div className="aspect-[2/1] bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center">
-          <span className="text-4xl text-[var(--ig-text-tertiary)]">
+        <div className="aspect-[2/1] bg-[var(--elite-border-light)] flex items-center justify-center">
+          <span className="text-4xl text-[var(--elite-text-muted)]">
             {event.type === "umrah" || event.type === "hajj" ? "🕋" : "📅"}
           </span>
         </div>
       )}
       <div className={compact ? "p-3" : "p-4"}>
-        <p className="text-xs font-medium text-[var(--ig-link)] uppercase tracking-wide">
+        <p className={`text-xs font-medium uppercase tracking-wide ${typeColor}`}>
           {event.type}
         </p>
-        <h3 className="font-semibold text-[var(--ig-text)] mt-0.5">
+        <h3 className={`font-semibold mt-0.5 ${titleColor}`}>
           {event.title}
         </h3>
-        <p className="text-sm text-[var(--ig-text-secondary)] mt-1">
+        <p className={`text-sm mt-1 ${mutedColor}`}>
           {new Date(event.startAt).toLocaleDateString(undefined, {
             weekday: "short",
             month: "short",
@@ -57,15 +68,15 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           {event.location && ` · ${event.location}`}
         </p>
         <div className="flex items-center gap-2 mt-2">
-          <div className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center overflow-hidden shrink-0">
+          <div className={`w-6 h-6 rounded-full ${thumbBg} flex items-center justify-center overflow-hidden shrink-0`}>
             {event.hostImage ? (
               <img src={event.hostImage} alt="" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-xs text-[var(--ig-text-secondary)]">{event.hostName?.charAt(0)}</span>
+              <span className={`text-xs ${mutedColor}`}>{event.hostName?.charAt(0)}</span>
             )}
           </div>
-          <span className="text-xs text-[var(--ig-text)] truncate">{event.hostName}</span>
-          <span className="text-xs text-[var(--ig-text-secondary)] shrink-0">· {event.goingCount} going</span>
+          <span className={`text-xs truncate ${titleColor}`}>{event.hostName}</span>
+          <span className={`text-xs shrink-0 ${mutedColor}`}>· {event.goingCount} going</span>
         </div>
       </div>
     </Link>

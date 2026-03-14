@@ -47,9 +47,9 @@ export default async function ProfileEditPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+    <div className="elite-events flex-1 overflow-y-auto bg-[var(--elite-bg)] no-scrollbar">
       <div className="max-w-xl mx-auto px-4 py-6">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h1 className="elite-heading text-lg font-semibold text-[var(--elite-text)] mb-4">
           Edit profile
         </h1>
         <ProfileEditForm initial={initial} />
