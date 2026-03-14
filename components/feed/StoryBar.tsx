@@ -258,7 +258,11 @@ export function StoryBar() {
                 >
                   <div className={`${innerClass} relative`}>
                     {renderAvatar(undefined, me?.profileImage || me?.image, myName, myName?.charAt(0)?.toUpperCase() || "?")}
-                    <span className="absolute bottom-0 right-0 w-4 h-4 rounded bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-black text-xs font-bold leading-none" aria-hidden>+</span>
+                    <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-white border-2 border-[var(--ig-bg-primary)] flex items-center justify-center text-black shrink-0" aria-hidden>
+                      <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                        <path d="M6 2v8M2 6h8" />
+                      </svg>
+                    </span>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">

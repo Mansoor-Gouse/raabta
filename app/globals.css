@@ -48,6 +48,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Feed page title – same font as event module heading */
+.feed-title-font {
+  font-family: "Playfair Display", "Cormorant", Georgia, serif;
+}
+
 .dark {
   --ig-bg: #000000;
   --ig-bg-primary: #000000;

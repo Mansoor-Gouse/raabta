@@ -8,8 +8,14 @@ import { StoryBar } from "@/components/feed/StoryBar";
 import { CommentsDrawer } from "@/components/feed/CommentsDrawer";
 import { ShareSheet } from "@/components/feed/ShareSheet";
 
-const SEGMENTS = ["Stories", "Posts"] as const;
+const SEGMENTS = ["Posts", "Stories"] as const;
 type SegmentIndex = 0 | 1;
+
+function triggerHaptic() {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+}
 
 export type FeedPost = {
   _id: string;
@@ -41,13 +47,16 @@ export function FeedClient() {
   const [activeIndex, setActiveIndex] = useState<SegmentIndex>(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevIndexRef = useRef<SegmentIndex>(0);
 
   const scrollToIndex = useCallback((index: SegmentIndex) => {
     const el = scrollRef.current;
     if (!el) return;
+    triggerHaptic();
     const w = el.clientWidth;
     el.scrollTo({ left: index * w, behavior: "smooth" });
     setActiveIndex(index);
+    prevIndexRef.current = index;
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -58,7 +67,11 @@ export function FeedClient() {
       if (!el) return;
       const w = el.clientWidth;
       const index = Math.round(el.scrollLeft / w) as SegmentIndex;
-      if (index >= 0 && index <= 1) setActiveIndex(index);
+      if (index >= 0 && index <= 1 && index !== prevIndexRef.current) {
+        triggerHaptic();
+        prevIndexRef.current = index;
+        setActiveIndex(index);
+      }
     }, 100);
   }, []);
 
@@ -139,7 +152,7 @@ export function FeedClient() {
       {/* Sticky header: title + segment bar */}
       <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
         <div className="flex items-center px-4 py-2.5">
-          <h1 className="text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+          <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
         </div>
         {/* Segment control */}
         <div
@@ -175,22 +188,11 @@ export function FeedClient() {
         className="flex-1 min-h-0 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth no-scrollbar"
         style={{ scrollbarWidth: "none" }}
       >
-        {/* Panel 1: Stories */}
+        {/* Panel 0: Posts (left) */}
         <section
           id="feed-panel-0"
           role="tabpanel"
           aria-labelledby="feed-tab-0"
-          aria-label="Stories"
-          className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg-primary)]"
-        >
-          <StoryBar />
-        </section>
-
-        {/* Panel 2: Posts */}
-        <section
-          id="feed-panel-1"
-          role="tabpanel"
-          aria-labelledby="feed-tab-1"
           aria-label="Posts"
           className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg)] px-3 pb-1"
         >
@@ -234,6 +236,17 @@ export function FeedClient() {
               </button>
             </div>
           )}
+        </section>
+
+        {/* Panel 1: Stories (right) */}
+        <section
+          id="feed-panel-1"
+          role="tabpanel"
+          aria-labelledby="feed-tab-1"
+          aria-label="Stories"
+          className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg-primary)]"
+        >
+          <StoryBar />
         </section>
       </div>
 
