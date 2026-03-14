@@ -29,6 +29,8 @@ type Props = {
   onUpdated?: () => void;
   /** When true, only show a single "Add to Trusted" action (e.g. in suggestions list). */
   compact?: boolean;
+  /** When true, render in one row with no margin (same row as name: message + circle actions). */
+  inline?: boolean;
 };
 
 export function AddToCircleButton({
@@ -40,6 +42,7 @@ export function AddToCircleButton({
   trustedMax = 50,
   onUpdated,
   compact = false,
+  inline = false,
 }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [targetCircle, setTargetCircle] = useState<"INNER" | "TRUSTED" | null>(null);
@@ -120,37 +123,54 @@ export function AddToCircleButton({
   const canAddInner = innerCount < innerMax;
   const canAddTrusted = trustedCount < trustedMax;
 
+  const wrapperClass = inline
+    ? "flex items-center gap-1 shrink-0"
+    : compact
+      ? "flex items-center gap-1"
+      : "mt-3 flex flex-wrap items-center gap-2";
+
+  const msgBtnClass = inline
+    ? "elite-events inline-flex items-center justify-center h-7 w-7 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors shrink-0"
+    : "elite-events inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors";
+
+  const showMessage = !compact || inline;
+
   return (
     <>
-      <div
-        className={
-          compact
-            ? "flex items-center gap-1"
-            : "mt-3 flex flex-wrap items-center gap-2"
-        }
-      >
-        {!compact && (
+      <div className={wrapperClass}>
+        {showMessage && (
           <Link
             href={`/app/new?userId=${relatedUserId}`}
-            className="elite-events inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
+            className={msgBtnClass}
             aria-label="Message"
           >
-            <IconMessenger className="w-4 h-4" />
+            <IconMessenger className={inline ? "w-3.5 h-3.5" : "w-4 h-4"} />
           </Link>
         )}
-        {currentCircle === "INNER" && !compact && (
+        {currentCircle === "INNER" && !compact && !inline && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/90 to-pink-500/90 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
             <IconCircleInner className="w-3.5 h-3.5 shrink-0" />
             Inner Circle
           </span>
         )}
-        {currentCircle === "TRUSTED" && !compact && (
+        {currentCircle === "TRUSTED" && !compact && !inline && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800/90 px-3 py-1.5 text-[11px] font-medium text-slate-100 ring-1 ring-slate-500/70">
             <IconTrusted className="w-3.5 h-3.5 shrink-0" />
             Trusted Circle
           </span>
         )}
-        {currentCircle && !compact && (
+        {currentCircle && inline && (
+          <button
+            type="button"
+            onClick={() => openChange(currentCircle)}
+            className="elite-events inline-flex items-center justify-center h-7 w-7 rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors shrink-0"
+            aria-label={currentCircle === "INNER" ? "In Inner Circle" : "In Trusted Circle"}
+            title="Change circle"
+          >
+            {currentCircle === "INNER" ? <IconCircleInner className="w-3.5 h-3.5" /> : <IconTrusted className="w-3.5 h-3.5" />}
+          </button>
+        )}
+        {currentCircle && !compact && !inline && (
           <button
             type="button"
             onClick={() => openChange(currentCircle)}
@@ -166,26 +186,36 @@ export function AddToCircleButton({
                 type="button"
                 onClick={() => openAdd("TRUSTED")}
                 className={
-                  compact
-                    ? "elite-events inline-flex items-center gap-1.5 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] px-3 py-1 text-[11px] font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
-                    : "elite-events inline-flex items-center gap-1.5 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] px-3 py-1.5 text-xs font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
+                  inline
+                    ? "elite-events inline-flex items-center justify-center h-7 w-7 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors shrink-0"
+                    : compact
+                      ? "elite-events inline-flex items-center gap-1.5 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] px-3 py-1 text-[11px] font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
+                      : "elite-events inline-flex items-center gap-1.5 rounded-full bg-[var(--elite-surface)] border border-[var(--elite-border)] px-3 py-1.5 text-xs font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
                 }
+                aria-label="Add to Trusted Circle"
+                title="Add to Trusted Circle"
               >
                 <IconTrusted className="w-3.5 h-3.5 shrink-0" />
-                {compact ? "Add to Trusted" : "Add to Trusted Circle"}
+                {!inline && (compact ? "Add to Trusted" : "Add to Trusted Circle")}
               </button>
             )}
-            {canAddInner && !compact && (
+            {canAddInner && (!compact || inline) && (
               <button
                 type="button"
                 onClick={() => openAdd("INNER")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md transition-transform hover:-translate-y-[0.5px]"
+                className={
+                  inline
+                    ? "elite-events inline-flex items-center justify-center h-7 w-7 rounded-full bg-[var(--elite-accent)] text-[var(--elite-on-accent)] hover:opacity-90 transition-opacity shrink-0"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md transition-transform hover:-translate-y-[0.5px]"
+                }
+                aria-label="Add to Inner Circle"
+                title="Add to Inner Circle"
               >
                 <IconCircleInner className="w-3.5 h-3.5 shrink-0" />
-                Add to Inner Circle
+                {!inline && "Add to Inner Circle"}
               </button>
             )}
-            {!canAddTrusted && !canAddInner && !compact && (
+            {!canAddTrusted && !canAddInner && !compact && !inline && (
               <Link
                 href="/app/profile/circles"
                 className="text-xs text-slate-300 hover:text-amber-300 transition-colors"

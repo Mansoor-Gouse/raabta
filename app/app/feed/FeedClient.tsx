@@ -48,15 +48,50 @@ export function FeedClient() {
   const [shareSheetPost, setShareSheetPost] = useState<FeedPost | null>(null);
   const [activeIndex, setActiveIndex] = useState<SegmentIndex>(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [headerVisible, setHeaderVisible] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const postsPanelRef = useRef<HTMLElement>(null);
+  const storiesPanelRef = useRef<HTMLElement>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRafRef = useRef<number | null>(null);
   const prevIndexRef = useRef<SegmentIndex>(0);
+  const lastScrollTopRef = useRef(0);
+  const activeIndexRef = useRef<SegmentIndex>(0);
+  const headerHideRafRef = useRef<number | null>(null);
+
+  const SCROLL_THRESHOLD = 60;
+
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
+
+  useEffect(() => {
+    const panel = activeIndex === 0 ? postsPanelRef.current : storiesPanelRef.current;
+    if (panel) lastScrollTopRef.current = panel.scrollTop;
+  }, [activeIndex]);
+
+  const handlePanelScroll = useCallback(() => {
+    if (headerHideRafRef.current != null) return;
+    headerHideRafRef.current = requestAnimationFrame(() => {
+      headerHideRafRef.current = null;
+      const panel = activeIndexRef.current === 0 ? postsPanelRef.current : storiesPanelRef.current;
+      if (!panel) return;
+      const scrollTop = panel.scrollTop;
+      const last = lastScrollTopRef.current;
+      lastScrollTopRef.current = scrollTop;
+      if (scrollTop > last) {
+        if (scrollTop > SCROLL_THRESHOLD) setHeaderVisible(false);
+      } else {
+        setHeaderVisible(true);
+      }
+    });
+  }, []);
 
   const scrollToIndex = useCallback((index: SegmentIndex) => {
     const el = scrollRef.current;
     if (!el) return;
     triggerHaptic();
+    setHeaderVisible(true);
     setScrollProgress(index);
     setActiveIndex(index);
     prevIndexRef.current = index;
@@ -94,6 +129,7 @@ export function FeedClient() {
     return () => {
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
+      if (headerHideRafRef.current != null) cancelAnimationFrame(headerHideRafRef.current);
     };
   }, []);
 
@@ -161,41 +197,50 @@ export function FeedClient() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
-      {/* Sticky header: title + segment bar */}
-      <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
-        <div className="flex items-center px-4 py-2.5">
-          <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
-        </div>
-        {/* Segment control: sliding underline follows scroll */}
+      {/* Subsection bar: hides on scroll down, shows on scroll up (smooth transition) */}
+      <div
+        className="overflow-hidden transition-[max-height] duration-300 ease-out shrink-0"
+        style={{ maxHeight: headerVisible ? "120px" : "0" }}
+      >
         <div
-          role="tablist"
-          aria-label="Feed sections"
-          className="relative flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
+          className={`sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] transition-transform duration-300 ease-out ${
+            headerVisible ? "translate-y-0" : "-translate-y-full"
+          }`}
         >
-          {SEGMENTS.map((label, i) => (
-            <button
-              key={label}
-              type="button"
-              role="tab"
-              aria-selected={activeIndex === i}
-              aria-controls={`feed-panel-${i}`}
-              id={`feed-tab-${i}`}
-              onClick={() => scrollToIndex(i as SegmentIndex)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-                activeIndex === i ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          <div className="flex items-center px-4 py-2.5">
+            <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+          </div>
+          {/* Segment control: sliding underline follows scroll */}
           <div
-            className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
-            style={{
-              width: `${100 / SEGMENTS.length}%`,
-              left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
-            }}
-            aria-hidden
-          />
+            role="tablist"
+            aria-label="Feed sections"
+            className="relative flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
+          >
+            {SEGMENTS.map((label, i) => (
+              <button
+                key={label}
+                type="button"
+                role="tab"
+                aria-selected={activeIndex === i}
+                aria-controls={`feed-panel-${i}`}
+                id={`feed-tab-${i}`}
+                onClick={() => scrollToIndex(i as SegmentIndex)}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                  activeIndex === i ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            <div
+              className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+              style={{
+                width: `${100 / SEGMENTS.length}%`,
+                left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
+              }}
+              aria-hidden
+            />
+          </div>
         </div>
       </div>
 
@@ -208,11 +253,13 @@ export function FeedClient() {
       >
         {/* Panel 0: Posts (left) — static shell; only list shows skeleton while loading */}
         <section
+          ref={postsPanelRef}
           id="feed-panel-0"
           role="tabpanel"
           aria-labelledby="feed-tab-0"
           aria-label="Posts"
           className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg)] px-3 pb-1"
+          onScroll={handlePanelScroll}
         >
           {loading ? (
             <FeedPostsSkeleton />
@@ -263,11 +310,13 @@ export function FeedClient() {
 
         {/* Panel 1: Stories (right) */}
         <section
+          ref={storiesPanelRef}
           id="feed-panel-1"
           role="tabpanel"
           aria-labelledby="feed-tab-1"
           aria-label="Stories"
           className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg-primary)]"
+          onScroll={handlePanelScroll}
         >
           <StoryBar />
         </section>
