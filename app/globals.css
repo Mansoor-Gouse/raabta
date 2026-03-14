@@ -683,3 +683,57 @@ textarea:focus-visible {
     transform: none !important;
   }
 }
+
+/* ========== Network of Faith – luxury landing page ========== */
+.network-landing {
+  --network-black: #0b0b0b;
+  --network-white: #f5f5f5;
+  --network-charcoal: #1a1a1a;
+  --network-muted-gold: rgba(180, 160, 120, 0.5);
+  --network-muted-gray: rgba(245, 245, 245, 0.15);
+  --network-font-serif: "Playfair Display", Georgia, serif;
+  --network-font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --network-gradient-hero: linear-gradient(180deg, #0b0b0b 0%, #151515 40%, #1a1a1a 100%);
+  --network-gradient-section: linear-gradient(180deg, #1a1a1a 0%, #242424 50%, #2a2a2a 100%);
+  --network-gradient-light: linear-gradient(180deg, #2a2a2a 0%, #e8e8e8 30%, #f5f5f5 100%);
+  --network-glass: rgba(255, 255, 255, 0.04);
+  --network-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+.network-landing {
+  font-family: var(--network-font-sans);
+  color: var(--network-white);
+  background: var(--network-black);
+}
+
+.network-landing .network-serif {
+  font-family: var(--network-font-serif);
+}
+
+@keyframes network-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.network-fade-in {
+  animation: network-fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.network-fade-in-delay-1 { animation-delay: 0.1s; }
+.network-fade-in-delay-2 { animation-delay: 0.2s; }
+.network-fade-in-delay-3 { animation-delay: 0.3s; }
+.network-fade-in-delay-4 { animation-delay: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .network-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
