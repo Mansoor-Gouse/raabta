@@ -49,9 +49,19 @@ export default async function ProfileEditPage() {
   return (
     <div className="elite-events flex-1 overflow-y-auto bg-[var(--elite-bg)] no-scrollbar">
       <div className="max-w-xl mx-auto px-4 py-6">
-        <h1 className="elite-heading text-lg font-semibold text-[var(--elite-text)] mb-4">
-          Edit profile
-        </h1>
+        <div className="flex items-center gap-3 mb-6">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--elite-surface)] border border-[var(--elite-border)] text-2xl" aria-hidden>
+            ✏️
+          </span>
+          <div>
+            <h1 className="elite-heading text-xl font-semibold text-[var(--elite-text)]">
+              Edit profile
+            </h1>
+            <p className="elite-body text-sm text-[var(--elite-text-muted)] mt-0.5">
+              Make it you — photos, bio, tags & more
+            </p>
+          </div>
+        </div>
         <ProfileEditForm initial={initial} />
       </div>
     </div>
