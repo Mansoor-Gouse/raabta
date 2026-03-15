@@ -66,22 +66,21 @@ export async function GET(
     .lean()
     .exec();
 
-  type PostRow = { _id: mongoose.Types.ObjectId; mediaUrls: string[]; caption?: string; visibility?: string };
+  type PostRow = { _id: mongoose.Types.ObjectId; mediaUrls?: string[]; caption?: string; visibility?: string };
   const postVisibility = (p: PostRow): "network" | "trusted_circle" | "inner_circle" => {
     const v = p.visibility;
     return v === "inner_circle" || v === "trusted_circle" ? v : "network";
   };
-  const filtered = (posts as PostRow[]).filter((p) =>
+  const rows = posts as unknown as PostRow[];
+  const filtered = rows.filter((p) =>
     canSeePostVisibility(postVisibility(p), viewerRelation)
   );
 
   return NextResponse.json({
-    posts: filtered.map((p) => {
-      return {
-        _id: String(p._id),
-        mediaUrls: p.mediaUrls ?? [],
-        caption: p.caption ?? undefined,
-      };
-    }),
+    posts: filtered.map((p) => ({
+      _id: String(p._id),
+      mediaUrls: p.mediaUrls ?? [],
+      caption: p.caption ?? undefined,
+    })),
   });
 }
