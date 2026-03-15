@@ -37,15 +37,29 @@ export async function sendPushToUser(
 ): Promise<void> {
   configureVapid();
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    console.warn("[pushSend] VAPID keys not set; skip push");
     return;
   }
   try {
     await connectDB();
-    const subs = await PushSubscriptionModel.find({ userId: new mongoose.Types.ObjectId(userId) })
+    let objectId: mongoose.Types.ObjectId;
+    try {
+      objectId = new mongoose.Types.ObjectId(userId);
+    } catch {
+      console.warn("[pushSend] Invalid userId for ObjectId:", userId);
+      return;
+    }
+    const subs = await PushSubscriptionModel.find({ userId: objectId })
       .lean()
       .exec();
+    const subList = subs as unknown as { _id: mongoose.Types.ObjectId; endpoint: string; keys: { p256dh: string; auth: string } }[];
+    if (subList.length === 0) {
+      console.log("[pushSend] No push subscriptions for user:", userId);
+      return;
+    }
+    console.log("[pushSend] Sending to user", userId, "subscriptions:", subList.length);
     const payloadStr = JSON.stringify(payload);
-    for (const sub of subs as unknown as { _id: mongoose.Types.ObjectId; endpoint: string; keys: { p256dh: string; auth: string } }[]) {
+    for (const sub of subList) {
       try {
         await webpush.sendNotification(
           {

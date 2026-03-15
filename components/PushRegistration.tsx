@@ -199,6 +199,8 @@ export function PushPromptBanner({ onDismiss, className = "" }: PushPromptBanner
 
 export function PushSettingsSection() {
   const [loading, setLoading] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("unsupported");
 
   const updatePermission = useCallback(() => {
@@ -211,6 +213,7 @@ export function PushSettingsSection() {
 
   const handleEnable = useCallback(async () => {
     setLoading(true);
+    setTestResult(null);
     try {
       await registerForPush();
       updatePermission();
@@ -218,6 +221,24 @@ export function PushSettingsSection() {
       setLoading(false);
     }
   }, [updatePermission]);
+
+  const handleTestPush = useCallback(async () => {
+    setTestLoading(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/push-test", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setTestResult("Test sent. Check your device for the notification.");
+      } else {
+        setTestResult(data?.error || "Failed to send test.");
+      }
+    } catch {
+      setTestResult("Request failed.");
+    } finally {
+      setTestLoading(false);
+    }
+  }, []);
 
   if (!isPushSupported()) {
     return (
@@ -261,6 +282,19 @@ export function PushSettingsSection() {
         >
           {loading ? "Enabling…" : "Enable notifications"}
         </button>
+      )}
+      {permission === "granted" && (
+        <button
+          type="button"
+          onClick={handleTestPush}
+          disabled={testLoading}
+          className="mt-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--ig-border)] text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] disabled:opacity-60"
+        >
+          {testLoading ? "Sending…" : "Send test notification"}
+        </button>
+      )}
+      {testResult && (
+        <p className="mt-2 text-sm text-[var(--ig-text-secondary)]">{testResult}</p>
       )}
     </section>
   );

@@ -16,18 +16,25 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
 
 type WebhookPayload = {
   type?: string;
+  cid?: string;
+  channel_id?: string;
+  channel_type?: string;
   message?: {
     user_id?: string;
     text?: string;
-    user?: { name?: string };
+    user?: { name?: string; id?: string };
   };
-  channel_id?: string;
-  channel_type?: string;
+  members?: { user_id?: string; user?: { id?: string } }[];
 };
 
 /**
  * Stream Chat webhook for message.new: send push notifications to channel members (except sender).
- * Configure in Stream Dashboard: Event Hooks → webhook_url = https://your-domain/api/webhooks/stream, event_types = ["message.new"].
+ *
+ * Required: In Stream Dashboard → Chat → Event Hooks (or Webhooks):
+ * - Webhook URL: https://YOUR_DOMAIN/api/webhooks/stream (must be public HTTPS)
+ * - Event type: message.new
+ * - Signing secret: same as STREAM_SECRET in env (Stream signs payload with it; we verify X-Signature header).
+ *
  * Requires STREAM_SECRET for X-Signature verification.
  */
 export async function POST(request: NextRequest) {
@@ -35,35 +42,56 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const signature = request.headers.get("x-signature");
     if (!verifySignature(rawBody, signature)) {
+      console.warn("[webhooks/stream] Invalid or missing signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const payload = JSON.parse(rawBody) as WebhookPayload;
-    if (payload.type !== "message.new" || !payload.message?.user_id || !payload.channel_id) {
+    const senderId = payload.message?.user_id ?? payload.message?.user?.id;
+    if (payload.type !== "message.new" || !senderId) {
       return NextResponse.json({ ok: true });
     }
 
-    const senderId = payload.message.user_id;
-    const channelId = payload.channel_id;
-    const channelType = payload.channel_type || "messaging";
-    const text = (payload.message.text || "").slice(0, 80);
-    const senderName = payload.message.user?.name || "Someone";
-
-    const client = getStreamServerClient();
-    if (!client) {
+    let channelId = payload.channel_id;
+    let channelType = payload.channel_type || "messaging";
+    if (!channelId && payload.cid) {
+      const [type, id] = payload.cid.split(":");
+      if (type && id) {
+        channelType = type;
+        channelId = id;
+      }
+    }
+    if (!channelId) {
       return NextResponse.json({ ok: true });
     }
 
-    const channel = client.channel(channelType, channelId);
-    const state = await channel.query();
-    const members = state.members || {};
-    const memberIds = Object.keys(members).filter((id) => id !== senderId);
+    const text = (payload.message?.text || "").slice(0, 80);
+    const senderName = payload.message?.user?.name || "Someone";
+
+    let memberIds: string[];
+    const payloadMembers = payload.members;
+    if (Array.isArray(payloadMembers) && payloadMembers.length > 0) {
+      memberIds = payloadMembers
+        .map((m) => m.user_id ?? m.user?.id)
+        .filter((id): id is string => !!id && id !== senderId);
+    } else {
+      const client = getStreamServerClient();
+      if (!client) {
+        console.warn("[webhooks/stream] No Stream server client");
+        return NextResponse.json({ ok: true });
+      }
+      const channel = client.channel(channelType, channelId);
+      const state = await channel.query();
+      const members = state.members || {};
+      memberIds = Object.keys(members).filter((id) => id !== senderId);
+    }
 
     const base =
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
     const url = base ? `${base}/app/channel/${channelId}` : `/app/channel/${channelId}`;
 
+    console.log("[webhooks/stream] message.new", { channelId, memberIds, senderName });
     for (const userId of memberIds) {
       sendPushToUserAsync(userId, {
         title: senderName,

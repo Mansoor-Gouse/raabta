@@ -660,7 +660,9 @@ export type NotificationType =
   | "circle_added"
   | "mutual_inner_circle"
   | "circle_event_invite"
-  | "circle_opportunity";
+  | "circle_opportunity"
+  | "post_like"
+  | "post_comment";
 export interface INotification {
   _id: string;
   userId: mongoose.Types.ObjectId;
@@ -687,6 +689,8 @@ const NotificationSchema = new mongoose.Schema<INotification>(
         "mutual_inner_circle",
         "circle_event_invite",
         "circle_opportunity",
+        "post_like",
+        "post_comment",
       ],
       required: true,
     },

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
-import { connectDB, PostModel, PostCommentModel, PostCommentLikeModel } from "@/lib/db";
+import { connectDB, PostModel, PostCommentModel, PostCommentLikeModel, NotificationModel } from "@/lib/db";
+import { sendPushToUserAsync } from "@/lib/pushSend";
 
 const COMMENTS_PAGE = 50;
 
@@ -160,10 +161,28 @@ export async function POST(
     createdAt: Date;
   };
   const author = c.authorId as { fullName?: string; name?: string; profileImage?: string; image?: string };
+  const actorName = author?.fullName || author?.name || "Someone";
+
+  const postAuthorId = (post as { authorId: mongoose.Types.ObjectId }).authorId;
+  if (String(postAuthorId) !== session.userId) {
+    await NotificationModel.create({
+      userId: postAuthorId,
+      type: "post_comment",
+      postId: new mongoose.Types.ObjectId(postId),
+      actorId: new mongoose.Types.ObjectId(session.userId),
+    });
+    const bodySnippet = c.text.slice(0, 80) + (c.text.length > 80 ? "…" : "");
+    sendPushToUserAsync(String(postAuthorId), {
+      title: `${actorName} commented on your post`,
+      body: bodySnippet,
+      url: `/app/feed/${postId}`,
+    });
+  }
+
   const payload: Record<string, unknown> = {
     _id: String(c._id),
     authorId: session.userId,
-    authorName: author?.fullName || author?.name || "Someone",
+    authorName: actorName,
     authorImage: author?.profileImage || author?.image,
     text: c.text,
     createdAt: c.createdAt,

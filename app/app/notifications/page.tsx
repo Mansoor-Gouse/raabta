@@ -10,6 +10,7 @@ type NotificationItem = {
   eventTitle: string | null;
   postId: string | null;
   actorId: string | null;
+  actorName: string | null;
   readAt: string | null;
   createdAt: string;
 };
@@ -24,6 +25,8 @@ const TYPE_LABELS: Record<string, string> = {
   mutual_inner_circle: "You and someone are now in each other's Inner Circle",
   circle_event_invite: "Someone from your circle invited you to",
   circle_opportunity: "New post shared with your circle",
+  post_like: "liked your post",
+  post_comment: "commented on your post",
 };
 
 export default function NotificationsPage() {
@@ -114,23 +117,31 @@ export default function NotificationsPage() {
           <ul className="divide-y divide-[var(--ig-border)]">
             {items.map((n) => {
               const href =
-                n.type === "circle_added" || n.type === "mutual_inner_circle"
-                  ? n.actorId
-                    ? `/app/members/${n.actorId}`
-                    : "/app/profile/circles"
-                  : n.type === "circle_event_invite" && n.eventId
-                    ? `/app/events/${n.eventId}`
-                    : n.type === "circle_opportunity" && n.postId
-                      ? `/app/feed/${n.postId}`
-                      : n.eventId
-                        ? `/app/events/${n.eventId}`
-                        : "#";
+                n.type === "post_like" || n.type === "post_comment"
+                  ? n.postId
+                    ? `/app/feed/${n.postId}`
+                    : "#"
+                  : n.type === "circle_added" || n.type === "mutual_inner_circle"
+                    ? n.actorId
+                      ? `/app/members/${n.actorId}`
+                      : "/app/profile/circles"
+                    : n.type === "circle_event_invite" && n.eventId
+                      ? `/app/events/${n.eventId}`
+                      : n.type === "circle_opportunity" && n.postId
+                        ? `/app/feed/${n.postId}`
+                        : n.eventId
+                          ? `/app/events/${n.eventId}`
+                          : "#";
               const label =
-                n.type === "circle_added" || n.type === "mutual_inner_circle"
-                  ? TYPE_LABELS[n.type] ?? n.type
-                  : n.eventId
-                    ? `${TYPE_LABELS[n.type] ?? n.type} ${n.eventTitle ?? "Event"}`
-                    : (TYPE_LABELS[n.type] ?? n.type);
+                n.type === "post_like"
+                  ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "liked your post"}`
+                  : n.type === "post_comment"
+                    ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "commented on your post"}`
+                    : n.type === "circle_added" || n.type === "mutual_inner_circle"
+                      ? TYPE_LABELS[n.type] ?? n.type
+                      : n.eventId
+                        ? `${TYPE_LABELS[n.type] ?? n.type} ${n.eventTitle ?? "Event"}`
+                        : (TYPE_LABELS[n.type] ?? n.type);
               return (
                 <li key={n._id}>
                   <Link
