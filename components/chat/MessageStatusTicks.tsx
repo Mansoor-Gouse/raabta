@@ -51,13 +51,14 @@ export function MessageStatusTicks() {
 
   return (
     <span
-      className="str-chat__message-simple-status str-chat__message-status ml-1 inline-flex items-center shrink-0"
+      className="str-chat__message-simple-status str-chat__message-status ml-1.5 inline-flex items-center justify-center shrink-0 self-end"
+      style={{ minHeight: 16 }}
       aria-label={isRead ? "Read" : "Sent"}
     >
       {isRead ? (
-        <TwoTicksRead className="w-4 h-4 text-[var(--ig-text)]" />
+        <TwoTicksRead className="w-5 h-[10px] text-[var(--ig-text)]" />
       ) : (
-        <OneTickSent className="w-4 h-4 text-[var(--ig-text-tertiary)]" />
+        <OneTickSent className="w-3.5 h-[10px] text-[var(--ig-text-tertiary)]" />
       )}
     </span>
   );
@@ -65,17 +66,17 @@ export function MessageStatusTicks() {
 
 function OneTickSent({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 16 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M1 6l4 4 9-9" />
+    <svg className={className} viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1 5l3.5 3.5L13 1" />
     </svg>
   );
 }
 
 function TwoTicksRead({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 20 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M1 6l4 4 4-4" />
-      <path d="M7 6l4 4 8-8" />
+    <svg className={className} viewBox="0 0 20 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1 5L4 8L9 2" />
+      <path d="M9 5L12 8L17 2" />
     </svg>
   );
 }

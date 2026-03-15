@@ -58,10 +58,12 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
     ].join(" ");
     return (
       <div className={rootClassName}>
-        <div className={`str-chat__message-inner str-chat__message-simple-inner flex items-end gap-1 ${isSender ? "flex-row-reverse" : ""}`}>
+        <div className={`str-chat__message-inner str-chat__message-simple-inner flex items-end gap-2 ${isSender ? "flex-row-reverse" : ""}`}>
           <SharedPostCard attachment={postShareAttachment} />
           {MessageStatusComponent && (
-            <MessageStatusComponent />
+            <span className="inline-flex items-center shrink-0 self-end pb-0.5">
+              <MessageStatusComponent />
+            </span>
           )}
         </div>
       </div>
