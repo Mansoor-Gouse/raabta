@@ -9,6 +9,7 @@ type NotificationItem = {
   eventId: string | null;
   eventTitle: string | null;
   postId: string | null;
+  statusId: string | null;
   actorId: string | null;
   actorName: string | null;
   readAt: string | null;
@@ -27,6 +28,9 @@ const TYPE_LABELS: Record<string, string> = {
   circle_opportunity: "New post shared with your circle",
   post_like: "liked your post",
   post_comment: "commented on your post",
+  story_reaction: "reacted to your story",
+  new_post: "posted",
+  new_story: "posted a story",
 };
 
 export default function NotificationsPage() {
@@ -117,11 +121,17 @@ export default function NotificationsPage() {
           <ul className="divide-y divide-[var(--ig-border)]">
             {items.map((n) => {
               const href =
-                n.type === "post_like" || n.type === "post_comment"
-                  ? n.postId
-                    ? `/app/feed/${n.postId}`
-                    : "#"
-                  : n.type === "circle_added" || n.type === "mutual_inner_circle"
+                n.type === "story_reaction" || n.type === "new_story"
+                  ? "/app/feed"
+                  : n.type === "new_post"
+                    ? n.postId
+                      ? `/app/feed/${n.postId}`
+                      : "#"
+                    : n.type === "post_like" || n.type === "post_comment"
+                      ? n.postId
+                        ? `/app/feed/${n.postId}`
+                        : "#"
+                      : n.type === "circle_added" || n.type === "mutual_inner_circle"
                     ? n.actorId
                       ? `/app/members/${n.actorId}`
                       : "/app/profile/circles"
@@ -133,11 +143,17 @@ export default function NotificationsPage() {
                           ? `/app/events/${n.eventId}`
                           : "#";
               const label =
-                n.type === "post_like"
-                  ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "liked your post"}`
-                  : n.type === "post_comment"
-                    ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "commented on your post"}`
-                    : n.type === "circle_added" || n.type === "mutual_inner_circle"
+                n.type === "story_reaction"
+                  ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "reacted to your story"}`
+                  : n.type === "new_post"
+                    ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "posted"}`
+                    : n.type === "new_story"
+                      ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "posted a story"}`
+                      : n.type === "post_like"
+                        ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "liked your post"}`
+                        : n.type === "post_comment"
+                          ? `${n.actorName ?? "Someone"} ${TYPE_LABELS[n.type] ?? "commented on your post"}`
+                          : n.type === "circle_added" || n.type === "mutual_inner_circle"
                       ? TYPE_LABELS[n.type] ?? n.type
                       : n.eventId
                         ? `${TYPE_LABELS[n.type] ?? n.type} ${n.eventTitle ?? "Event"}`

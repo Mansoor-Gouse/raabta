@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
-import { connectDB, StatusModel, StatusReactionModel } from "@/lib/db";
+import { connectDB, StatusModel, StatusReactionModel, NotificationModel, User } from "@/lib/db";
+import { sendPushToUserAsync } from "@/lib/pushSend";
 
 const ALLOWED_REACTIONS = ["heart", "fire", "laugh", "cry", "wow", "like"] as const;
 
@@ -45,11 +46,30 @@ export async function POST(
     }
     const userId = new mongoose.Types.ObjectId(session.userId);
     const statusIdObj = new mongoose.Types.ObjectId(statusId);
+    const statusUserId = (status as unknown as { userId: mongoose.Types.ObjectId }).userId;
+    const alreadyReacted = await StatusReactionModel.exists({ statusId: statusIdObj, userId }).exec();
     await StatusReactionModel.findOneAndUpdate(
       { statusId: statusIdObj, userId },
       { reactionType, createdAt: new Date() },
       { upsert: true, new: true }
     );
+    if (!alreadyReacted && String(statusUserId) !== session.userId) {
+      const actor = await User.findById(session.userId).select("fullName name").lean().exec();
+      const actorName = (actor as { fullName?: string; name?: string } | null)
+        ? ((actor as { fullName?: string; name?: string }).fullName || (actor as { fullName?: string; name?: string }).name || "Someone")
+        : "Someone";
+      await NotificationModel.create({
+        userId: statusUserId,
+        type: "story_reaction",
+        statusId: statusIdObj,
+        actorId: userId,
+      });
+      sendPushToUserAsync(String(statusUserId), {
+        title: `${actorName} reacted to your story`,
+        body: reactionType,
+        url: "/app/feed",
+      });
+    }
     return NextResponse.json({ ok: true, reactionType });
   } catch (e) {
     console.error("status react", e);

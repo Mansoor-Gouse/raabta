@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
-import { connectDB, StatusModel } from "@/lib/db";
+import { connectDB, StatusModel, CircleRelationshipModel, NotificationModel, User } from "@/lib/db";
+import { sendPushToUserAsync } from "@/lib/pushSend";
 import {
   MAX_OVERLAYS_PER_STATUS,
   MAX_OVERLAY_TEXT_LENGTH,
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
   const expiresAt = new Date(Date.now() + STATUS_TTL_MS);
   const userId = new mongoose.Types.ObjectId(session.userId);
 
-  await StatusModel.insertMany(
+  const inserted = await StatusModel.insertMany(
     normalized.map((it, idx) => ({
       userId,
       mediaUrl: it.mediaUrl,
@@ -129,7 +130,40 @@ export async function POST(request: NextRequest) {
     })),
     { ordered: true }
   );
-
+  const latestStatusId = inserted.length > 0 ? inserted[inserted.length - 1]._id : null;
+  if (latestStatusId) {
+    void (async () => {
+      try {
+        const rows = await CircleRelationshipModel.find({ relatedUserId: userId })
+          .select("userId")
+          .limit(100)
+          .lean()
+          .exec();
+        const recipientIds = [...new Set((rows as unknown as { userId: mongoose.Types.ObjectId }[]).map((r) => String(r.userId)))].filter(
+          (id) => id !== session.userId
+        );
+        const author = await User.findById(session.userId).select("fullName name").lean().exec();
+        const authorName = (author as { fullName?: string; name?: string } | null)
+          ? ((author as { fullName?: string; name?: string }).fullName || (author as { fullName?: string; name?: string }).name || "Someone")
+          : "Someone";
+        for (const recipientId of recipientIds) {
+          await NotificationModel.create({
+            userId: new mongoose.Types.ObjectId(recipientId),
+            type: "new_story",
+            statusId: latestStatusId,
+            actorId: userId,
+          });
+          sendPushToUserAsync(recipientId, {
+            title: `${authorName} posted a story`,
+            body: "",
+            url: "/app/feed",
+          });
+        }
+      } catch (err) {
+        console.error("[status/batch] new_story notifications", err);
+      }
+    })();
+  }
   return NextResponse.json({ ok: true, count: normalized.length });
 }
 

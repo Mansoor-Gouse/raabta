@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     .lean()
     .exec();
   const hasMore = docs.length > limit;
-  const list = (hasMore ? docs.slice(0, limit) : docs) as unknown as { _id: mongoose.Types.ObjectId; type: string; eventId?: mongoose.Types.ObjectId; postId?: mongoose.Types.ObjectId; actorId?: mongoose.Types.ObjectId; readAt?: Date; createdAt: Date }[];
+  const list = (hasMore ? docs.slice(0, limit) : docs) as unknown as { _id: mongoose.Types.ObjectId; type: string; eventId?: mongoose.Types.ObjectId; postId?: mongoose.Types.ObjectId; statusId?: mongoose.Types.ObjectId; actorId?: mongoose.Types.ObjectId; readAt?: Date; createdAt: Date }[];
   const eventIds = [...new Set(list.map((n) => n.eventId).filter(Boolean).map((id) => String(id!)))];
   const actorIds = [...new Set(list.map((n) => n.actorId).filter(Boolean).map((id) => String(id!)))];
   const [events, actors] = await Promise.all([
@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
     eventId: n.eventId ? String(n.eventId) : null,
     eventTitle: n.eventId ? (eventMap.get(String(n.eventId)) ?? null) : null,
     postId: n.postId ? String(n.postId) : null,
+    statusId: n.statusId ? String(n.statusId) : null,
     actorId: n.actorId ? String(n.actorId) : null,
     actorName: n.actorId ? (actorMap.get(String(n.actorId)) ?? null) : null,
     readAt: n.readAt?.toISOString() ?? null,

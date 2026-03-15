@@ -4,7 +4,8 @@ import React from "react";
 import { useChannelStateContext, useChatContext, useMessageContext } from "stream-chat-react";
 
 /**
- * Per-message delivery/read status: ticks for 1:1, or failed state + retry for failed messages.
+ * Per-message delivery/read status: square indicators (different colors for sent vs read) for 1:1,
+ * or failed state + retry for failed messages.
  */
 export function MessageStatusTicks() {
   const { message, isMyMessage, readBy, handleRetry } = useMessageContext();
@@ -55,28 +56,11 @@ export function MessageStatusTicks() {
       style={{ minHeight: 16 }}
       aria-label={isRead ? "Read" : "Sent"}
     >
-      {isRead ? (
-        <TwoTicksRead className="w-5 h-[10px] text-[var(--ig-text)]" />
-      ) : (
-        <OneTickSent className="w-3.5 h-[10px] text-[var(--ig-text-tertiary)]" />
-      )}
+      <span
+        className={`inline-block rounded-sm shrink-0 ${isRead ? "bg-[var(--ig-status-read)]" : "bg-[var(--ig-status-sent)]"}`}
+        style={{ width: 10, height: 10 }}
+        title={isRead ? "Read" : "Sent"}
+      />
     </span>
-  );
-}
-
-function OneTickSent({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M1 5l3.5 3.5L13 1" />
-    </svg>
-  );
-}
-
-function TwoTicksRead({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M1 5L4 8L9 2" />
-      <path d="M9 5L12 8L17 2" />
-    </svg>
   );
 }

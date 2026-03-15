@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
-import { connectDB, StatusModel, StatusViewModel, CircleRelationshipModel } from "@/lib/db";
+import { connectDB, StatusModel, StatusViewModel, CircleRelationshipModel, NotificationModel, User } from "@/lib/db";
+import { sendPushToUserAsync } from "@/lib/pushSend";
 
 const STATUS_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -115,14 +116,46 @@ export async function POST(request: NextRequest) {
         : "everyone";
     await connectDB();
     const expiresAt = new Date(Date.now() + STATUS_TTL_MS);
-    await StatusModel.create({
-      userId: new mongoose.Types.ObjectId(session.userId),
+    const authorId = new mongoose.Types.ObjectId(session.userId);
+    const created = await StatusModel.create({
+      userId: authorId,
       mediaUrl,
       type,
       visibility,
       caption: typeof caption === "string" ? caption.trim().slice(0, 500) : "",
       expiresAt,
     });
+    void (async () => {
+      try {
+        const rows = await CircleRelationshipModel.find({ relatedUserId: authorId })
+          .select("userId")
+          .limit(100)
+          .lean()
+          .exec();
+        const recipientIds = [...new Set((rows as unknown as { userId: mongoose.Types.ObjectId }[]).map((r) => String(r.userId)))].filter(
+          (id) => id !== session.userId
+        );
+        const author = await User.findById(session.userId).select("fullName name").lean().exec();
+        const authorName = (author as { fullName?: string; name?: string } | null)
+          ? ((author as { fullName?: string; name?: string }).fullName || (author as { fullName?: string; name?: string }).name || "Someone")
+          : "Someone";
+        for (const recipientId of recipientIds) {
+          await NotificationModel.create({
+            userId: new mongoose.Types.ObjectId(recipientId),
+            type: "new_story",
+            statusId: created._id,
+            actorId: authorId,
+          });
+          sendPushToUserAsync(recipientId, {
+            title: `${authorName} posted a story`,
+            body: "",
+            url: "/app/feed",
+          });
+        }
+      } catch (err) {
+        console.error("[status] new_story notifications", err);
+      }
+    })();
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("status create", e);

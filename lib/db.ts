@@ -662,13 +662,17 @@ export type NotificationType =
   | "circle_event_invite"
   | "circle_opportunity"
   | "post_like"
-  | "post_comment";
+  | "post_comment"
+  | "story_reaction"
+  | "new_post"
+  | "new_story";
 export interface INotification {
   _id: string;
   userId: mongoose.Types.ObjectId;
   type: NotificationType;
   eventId?: mongoose.Types.ObjectId;
   postId?: mongoose.Types.ObjectId;
+  statusId?: mongoose.Types.ObjectId;
   actorId?: mongoose.Types.ObjectId;
   readAt?: Date;
   createdAt: Date;
@@ -691,11 +695,15 @@ const NotificationSchema = new mongoose.Schema<INotification>(
         "circle_opportunity",
         "post_like",
         "post_comment",
+        "story_reaction",
+        "new_post",
+        "new_story",
       ],
       required: true,
     },
     eventId: { type: mongoose.Schema.Types.ObjectId, ref: "Event" },
     postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
+    statusId: { type: mongoose.Schema.Types.ObjectId, ref: "Status" },
     actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     readAt: { type: Date },
     createdAt: { type: Date, default: Date.now },

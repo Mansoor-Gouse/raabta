@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
-import { connectDB, PostModel } from "@/lib/db";
+import { connectDB, PostModel, CircleRelationshipModel, NotificationModel } from "@/lib/db";
+import { sendPushToUserAsync } from "@/lib/pushSend";
 
 export async function POST(request: Request) {
   const session = await requireAuth();
@@ -41,6 +43,39 @@ export async function POST(request: Request) {
     caption?: string;
     createdAt: Date;
   };
+  const authorName = p.authorId?.fullName || p.authorId?.name || "Someone";
+  const postIdStr = String(p._id);
+  const bodySnippet = typeof p.caption === "string" && p.caption.trim()
+    ? p.caption.trim().slice(0, 80) + (p.caption.length > 80 ? "…" : "")
+    : "";
+  void (async () => {
+    try {
+      const authorId = new mongoose.Types.ObjectId(session.userId);
+      const rows = await CircleRelationshipModel.find({ relatedUserId: authorId })
+        .select("userId")
+        .limit(100)
+        .lean()
+        .exec();
+      const recipientIds = [...new Set((rows as unknown as { userId: mongoose.Types.ObjectId }[]).map((r) => String(r.userId)))].filter(
+        (id) => id !== session.userId
+      );
+      for (const recipientId of recipientIds) {
+        await NotificationModel.create({
+          userId: new mongoose.Types.ObjectId(recipientId),
+          type: "new_post",
+          postId: post._id,
+          actorId: authorId,
+        });
+        sendPushToUserAsync(recipientId, {
+          title: `${authorName} posted`,
+          body: bodySnippet,
+          url: `/app/feed/${postIdStr}`,
+        });
+      }
+    } catch (err) {
+      console.error("[posts] new_post notifications", err);
+    }
+  })();
   return NextResponse.json({
     _id: String(p._id),
     authorId: session.userId,
