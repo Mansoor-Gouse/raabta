@@ -29,7 +29,12 @@ export function ChannelMessageLayout() {
       ? Object.keys(channel?.state?.members || {}).find((id) => id !== currentUserId)
       : undefined;
 
-  const messages = channel?.state?.messages || [];
+  const rawMessages = channel?.state?.messages || [];
+  type Msg = (typeof rawMessages)[number];
+  const messages = rawMessages.filter(
+    (m: Msg): m is Msg & { created_at: unknown } =>
+      m != null && typeof m === "object" && (m as { created_at?: unknown }).created_at != null
+  );
   const readState = (channel?.state as any)?.read || {};
   const otherRead = otherMemberId ? readState[otherMemberId] : undefined;
   const lastReadDate = otherRead?.last_read ? new Date(otherRead.last_read) : null;
@@ -95,7 +100,7 @@ export function ChannelMessageLayout() {
       <div className="channel-message-list flex-1 min-h-0 flex flex-col">
         <PinnedMessagesBar />
         <div className="flex-1 min-h-0 overflow-auto">
-          <MessageList head={<></>} headerPosition={-1} />
+          <MessageList head={<></>} headerPosition={-1} messages={messages} />
           {isOneToOne && hasSeenLastOutgoing && (
             <div className="px-3 pb-1 text-right text-xs text-[var(--ig-text-secondary)]">Seen</div>
           )}
