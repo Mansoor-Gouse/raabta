@@ -28,6 +28,8 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
 
   const [hasRevealed, setHasRevealed] = useState(false);
 
+  if (!message) return null;
+
   const customData = (message.customData || {}) as CustomData;
   const consumedBy = customData.view_once_consumed_by || [];
   const consumed = !!currentUserId && consumedBy.includes(currentUserId);

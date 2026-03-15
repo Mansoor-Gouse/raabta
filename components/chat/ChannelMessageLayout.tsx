@@ -39,12 +39,14 @@ export function ChannelMessageLayout() {
     const lastOutgoingRead = [...messages]
       .reverse()
       .find((m) => {
-        const createdAt = m.created_at ? new Date(m.created_at as string | Date) : null;
+        if (!m) return false;
+        const createdAt = m.created_at != null ? new Date(m.created_at as string | Date) : null;
         return m.user?.id === currentUserId && createdAt && createdAt <= lastReadDate;
       });
 
-    if (lastOutgoingRead) {
-      hasSeenLastOutgoing = lastOutgoingRead.id === messages[messages.length - 1].id;
+    if (lastOutgoingRead && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      hasSeenLastOutgoing = lastMsg && lastOutgoingRead.id === lastMsg.id;
     }
   }
 

@@ -11,7 +11,7 @@ export function MessageStatusTicks() {
   const { channel } = useChannelStateContext();
   const { client } = useChatContext();
 
-  if (!isMyMessage?.() || message.type === "error") return null;
+  if (!message || !isMyMessage?.() || message.type === "error") return null;
 
   const isFailed = message.status === "failed" && (message as { errorStatusCode?: number }).errorStatusCode !== 403;
   if (isFailed) {
@@ -45,7 +45,7 @@ export function MessageStatusTicks() {
     const readState = (channel?.state as { read?: Record<string, { last_read?: string }> })?.read ?? {};
     const otherRead = readState[otherMemberId];
     const lastReadDate = otherRead?.last_read ? new Date(otherRead.last_read) : null;
-    const msgDate = message.created_at ? new Date(message.created_at as string | Date) : null;
+    const msgDate = message?.created_at != null ? new Date(message.created_at as string | Date) : null;
     if (lastReadDate && msgDate && msgDate <= lastReadDate) isRead = true;
   }
 

@@ -1,49 +1,93 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useChatContext } from "stream-chat-react";
+import { useAppUser } from "@/components/layout/AppShell";
 import { ChannelList, type ChannelListRef } from "@/components/chat/ChannelList";
 
 export default function ChatsPage() {
   const listRef = useRef<ChannelListRef>(null);
+  const user = useAppUser();
   const { client } = useChatContext();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"messages" | "requests">("messages");
   const [showArchived, setShowArchived] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const streamUser = client?.user;
+  const displayName =
+    (streamUser as { name?: string })?.name ||
+    (streamUser as { id?: string })?.id ||
+    user.name ||
+    user.id ||
+    "You";
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [menuOpen]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg-primary)]">
-      {/* Header: Chats/Archived title; link to switch; actions on right */}
+      {/* Header: user name on left; three-dots menu (Archived/Back to chats), New group, New message on right */}
       <header
         className="shrink-0 flex items-center justify-between h-14 min-h-[56px] px-4 border-b border-[var(--ig-border-light)]"
         style={{ paddingTop: "var(--safe-area-inset-top)" }}
       >
-        <div className="flex-1 min-w-0 flex items-center justify-start gap-2 pl-1">
-          <h1 className="text-[var(--ig-text)] font-semibold text-lg tracking-tight">
-            {showArchived ? "Archived" : "Chats"}
-          </h1>
-          {activeTab === "messages" && (
-            showArchived ? (
-              <button
-                type="button"
-                onClick={() => setShowArchived(false)}
-                className="text-sm font-medium text-[var(--ig-link)] hover:underline"
-              >
-                Back to chats
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowArchived(true)}
-                className="text-sm text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-              >
-                Archived
-              </button>
-            )
-          )}
+        <div className="flex-1 min-w-0 flex items-center justify-start pl-1">
+          <span className="text-[var(--ig-text)] font-semibold text-lg tracking-tight truncate">
+            {displayName}
+          </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {activeTab === "messages" && (
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                className="p-2 rounded-full text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                aria-label="Chat options"
+                aria-expanded={menuOpen}
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                </svg>
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg bg-[var(--ig-bg-primary)] border border-[var(--ig-border)] min-w-[160px] z-20">
+                  {showArchived ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowArchived(false);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+                    >
+                      Back to chats
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowArchived(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+                    >
+                      Archived
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           <Link
             href="/app/new/group"
             className="p-2 rounded-full text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
