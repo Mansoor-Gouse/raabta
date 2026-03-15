@@ -4,55 +4,22 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useChatContext } from "stream-chat-react";
 import { ChannelList, type ChannelListRef } from "@/components/chat/ChannelList";
-import { useAppUser } from "@/components/layout/AppShell";
 
 export default function ChatsPage() {
   const listRef = useRef<ChannelListRef>(null);
-  const user = useAppUser();
   const { client } = useChatContext();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"messages" | "requests">("messages");
 
-  const streamUser = client?.user;
-  const displayName =
-    (streamUser as { name?: string })?.name ||
-    (streamUser as { id?: string })?.id ||
-    user.name ||
-    user.id ||
-    "You";
-  const nameReady = !!(streamUser || user.name || user.id);
-
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg-primary)]">
-      {/* Header: username + chevron (center), compose (right) - like reference */}
+      {/* Header: Chats title on left (no duplicate username; sidebar shows user), actions on right */}
       <header
         className="shrink-0 flex items-center justify-between h-14 min-h-[56px] px-4 border-b border-[var(--ig-border-light)]"
         style={{ paddingTop: "var(--safe-area-inset-top)" }}
       >
         <div className="flex-1 min-w-0 flex items-center justify-start pl-1">
-          <button
-            type="button"
-            className="flex items-center gap-1 text-[var(--ig-text)] font-semibold text-lg tracking-tight min-h-[40px] items-center justify-center"
-            aria-label="Profile menu"
-          >
-            {nameReady ? (
-              <span className="truncate max-w-[180px]">{displayName}</span>
-            ) : (
-              <span
-                className="h-5 w-24 max-w-[180px] rounded bg-[var(--ig-border-light)] animate-pulse"
-                aria-hidden
-              />
-            )}
-            <svg
-              className="w-5 h-5 shrink-0 text-[var(--ig-text-secondary)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          <h1 className="text-[var(--ig-text)] font-semibold text-lg tracking-tight">Chats</h1>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Link

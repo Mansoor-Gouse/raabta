@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   Avatar as DefaultAvatar,
   ChannelHeader as DefaultChannelHeader,
@@ -106,15 +107,24 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
         shape="rounded"
         size={channel?.type === "commerce" ? 60 : 40}
       />
-      <div className="str-chat__header-livestream-left str-chat__channel-header-end">
-        <p className="str-chat__header-livestream-left--title str-chat__channel-header-title">
-          {title}
-          {props.live && (
-            <span className="str-chat__header-livestream-left--livelabel">
-              {String(t("live"))}
-            </span>
-          )}
-        </p>
+      <div className="str-chat__header-livestream-left str-chat__channel-header-end min-w-0 flex-1">
+        {isOneToOne && otherMemberId ? (
+          <Link
+            href={`/app/members/${otherMemberId}`}
+            className="str-chat__header-livestream-left--title str-chat__channel-header-title block truncate font-semibold text-[var(--ig-text)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)] rounded"
+          >
+            {title}
+          </Link>
+        ) : (
+          <p className="str-chat__header-livestream-left--title str-chat__channel-header-title">
+            {title}
+            {props.live && (
+              <span className="str-chat__header-livestream-left--livelabel">
+                {String(t("live"))}
+              </span>
+            )}
+          </p>
+        )}
         {subtitle && (
           <p className="str-chat__header-livestream-left--subtitle">{subtitle}</p>
         )}
