@@ -9,6 +9,7 @@ export function ChannelOptionsMenu() {
   const { client } = useChatContext();
   const [open, setOpen] = useState(false);
   const [membersSheetOpen, setMembersSheetOpen] = useState(false);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +69,10 @@ export function ChannelOptionsMenu() {
     }
   }
 
+  const channelData = (channel?.data || {}) as { name?: string; image?: string };
+  const currentGroupName = channelData.name ?? "";
+  const currentGroupImage = channelData.image ?? "";
+
   return (
     <div className="relative shrink-0" ref={ref}>
       <button
@@ -93,6 +98,18 @@ export function ChannelOptionsMenu() {
               className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
             >
               View group members
+            </button>
+          )}
+          {isGroup && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setEditGroupOpen(true);
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+            >
+              Edit group
             </button>
           )}
           {isGroup && <div className="border-t border-[var(--ig-border)] my-1" />}
@@ -141,6 +158,82 @@ export function ChannelOptionsMenu() {
         </div>
       )}
       <GroupMembersSheet open={membersSheetOpen} onClose={() => setMembersSheetOpen(false)} />
+      {editGroupOpen && isGroup && channel && (
+        <EditGroupModal
+          currentName={currentGroupName}
+          currentImage={currentGroupImage}
+          channel={channel}
+          onClose={() => setEditGroupOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditGroupModal({
+  currentName,
+  currentImage,
+  channel,
+  onClose,
+}: {
+  currentName: string;
+  currentImage: string;
+  channel: { update: (data: Record<string, unknown>) => Promise<unknown> };
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(currentName);
+  const [image, setImage] = useState(currentImage);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await channel.update({ name: name.trim() || undefined, image: image.trim() || undefined } as Record<string, unknown>);
+      onClose();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog" aria-label="Edit group">
+      <div className="bg-[var(--ig-bg-primary)] rounded-xl shadow-xl border border-[var(--ig-border)] w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-lg font-semibold text-[var(--ig-text)] mb-3">Edit group</h3>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <label className="block text-sm font-medium text-[var(--ig-text-secondary)]">
+            Group name
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Group name"
+              className="mt-1 w-full px-3 py-2 rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] text-[var(--ig-text)] placeholder:text-[var(--ig-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)]"
+            />
+          </label>
+          <label className="block text-sm font-medium text-[var(--ig-text-secondary)]">
+            Image URL (optional)
+            <input
+              type="url"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="https://..."
+              className="mt-1 w-full px-3 py-2 rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] text-[var(--ig-text)] placeholder:text-[var(--ig-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-text)]"
+            />
+          </label>
+          <div className="flex gap-2 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 px-3 py-2 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving} className="flex-1 px-3 py-2 rounded-lg bg-[var(--ig-text)] text-[var(--ig-bg-primary)] font-medium disabled:opacity-50" aria-label={saving ? "Saving" : "Save changes"}>
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+      <div className="absolute inset-0" onClick={onClose} aria-hidden />
     </div>
   );
 }

@@ -11,6 +11,20 @@ import {
 } from "stream-chat-react";
 import { useEventChannelInfo } from "./EventChannelInfoContext";
 
+function formatLastSeen(isoDate: string): string {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return "Last seen just now";
+  if (diffMins < 60) return `Last seen ${diffMins}m ago`;
+  if (diffHours < 24) return `Last seen ${diffHours}h ago`;
+  if (diffDays < 7) return `Last seen ${diffDays}d ago`;
+  return "Last seen recently";
+}
+
 type ChannelHeaderProps = React.ComponentProps<typeof DefaultChannelHeader>;
 
 /**
@@ -39,6 +53,12 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
     ? memberIds.find((id) => id !== currentUserId)
     : undefined;
   const otherIsOnline = isOneToOne && otherMemberId && !!watchers[otherMemberId];
+  const otherMember = otherMemberId ? (members[otherMemberId] as { user?: { last_active?: string } }) : undefined;
+  const lastActive = otherMember?.user?.last_active;
+  const lastSeenText =
+    isOneToOne && !otherIsOnline && lastActive
+      ? formatLastSeen(lastActive)
+      : null;
 
   const channelData = (channel?.data ?? {}) as {
     member_count?: number;
@@ -98,6 +118,8 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
           {isOneToOne ? (
             otherIsOnline ? (
               String(t("Online"))
+            ) : lastSeenText ? (
+              <span className="text-[var(--ig-text-secondary)] text-xs">{lastSeenText}</span>
             ) : null
           ) : (
             <>

@@ -165,7 +165,7 @@ export function AddToCircleButton({
                 disabled={loading}
                 className={
                   inline
-                    ? "elite-events inline-flex items-center justify-center h-7 w-7 rounded-full bg-[var(--elite-accent)] text-[var(--elite-on-accent)] hover:opacity-90 transition-opacity shrink-0"
+                    ? "elite-events inline-flex items-center justify-center h-7 w-7 rounded-full bg-gradient-to-br from-white to-[var(--elite-border-light)] border border-[var(--elite-border)] text-[var(--elite-text)] shadow-sm hover:from-gray-50 hover:to-[var(--elite-border-light)] transition-all shrink-0 disabled:opacity-50"
                     : "inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md transition-transform hover:-translate-y-[0.5px]"
                 }
                 aria-label="Add to Inner Circle"

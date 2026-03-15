@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, startTransition } from "react";
 import Link from "next/link";
 import { PostCard } from "@/components/feed/PostCard";
 import { FeedPostsSkeleton } from "@/components/feed/FeedSkeleton";
@@ -58,6 +58,7 @@ export function FeedClient() {
   const lastScrollTopRef = useRef(0);
   const activeIndexRef = useRef<SegmentIndex>(0);
   const headerHideRafRef = useRef<number | null>(null);
+  const loadingMoreRef = useRef(false);
 
   const SCROLL_THRESHOLD = 60;
 
@@ -74,6 +75,7 @@ export function FeedClient() {
     if (headerHideRafRef.current != null) return;
     headerHideRafRef.current = requestAnimationFrame(() => {
       headerHideRafRef.current = null;
+      if (loadingMoreRef.current) return;
       const panel = activeIndexRef.current === 0 ? postsPanelRef.current : storiesPanelRef.current;
       if (!panel) return;
       const scrollTop = panel.scrollTop;
@@ -149,12 +151,16 @@ export function FeedClient() {
     if (!res.ok) return;
     const data = await res.json();
     const list = (data.posts || []) as FeedPost[];
+    const next = data.nextCursor ?? null;
     if (cursor) {
-      setPosts((prev) => [...prev, ...list]);
+      startTransition(() => {
+        setPosts((prev) => [...prev, ...list]);
+        setNextCursor(next);
+      });
     } else {
       setPosts(list);
+      setNextCursor(next);
     }
-    setNextCursor(data.nextCursor ?? null);
   }, []);
 
   useEffect(() => {
@@ -167,33 +173,38 @@ export function FeedClient() {
     return () => { cancelled = true; };
   }, [loadFeed]);
 
-  async function loadMore() {
-    if (!nextCursor || loadingMore) return;
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
     setLoadingMore(true);
-    await loadFeed(nextCursor);
-    setLoadingMore(false);
-  }
+    try {
+      await loadFeed(nextCursor);
+    } finally {
+      loadingMoreRef.current = false;
+      startTransition(() => setLoadingMore(false));
+    }
+  }, [nextCursor, loadFeed]);
 
-  function updatePost(postId: string, upd: Partial<FeedPost>) {
+  const updatePost = useCallback((postId: string, upd: Partial<FeedPost>) => {
     setPosts((prev) =>
       prev.map((p) => (p._id === postId ? { ...p, ...upd } : p))
     );
-  }
+  }, []);
 
-  function removePost(postId: string) {
+  const removePost = useCallback((postId: string) => {
     setPosts((prev) => prev.filter((p) => p._id !== postId));
-  }
+  }, []);
 
-  function openCommentsDrawer(postId: string, authorName: string) {
+  const openCommentsDrawer = useCallback((postId: string, authorName: string) => {
     setCommentsDrawerPostId(postId);
     setCommentsDrawerAuthorName(authorName);
-  }
+  }, []);
 
-  function handleCommentCountChange(postId: string, delta: number) {
+  const handleCommentCountChange = useCallback((postId: string, delta: number) => {
     setPosts((prev) =>
       prev.map((p) => (p._id === postId ? { ...p, commentCount: Math.max(0, p.commentCount + delta) } : p))
     );
-  }
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
@@ -293,14 +304,21 @@ export function FeedClient() {
                 ))}
               </ul>
               {nextCursor && (
-                <div className="p-4 flex justify-center">
+                <div className="p-4 flex justify-center min-h-[52px] items-center">
                   <button
                     type="button"
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="text-sm text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 text-sm text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50 min-w-[120px] min-h-[40px]"
                   >
-                    {loadingMore ? "Loading…" : "Load more"}
+                    {loadingMore ? (
+                      <>
+                        <span className="inline-block w-4 h-4 border-2 border-[var(--ig-link)] border-t-transparent rounded-full animate-spin shrink-0" aria-hidden />
+                        <span>Loading…</span>
+                      </>
+                    ) : (
+                      "Load more"
+                    )}
                   </button>
                 </div>
               )}

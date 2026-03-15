@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Channel, useChatContext } from "stream-chat-react";
 import { ChannelWithThreadLayout } from "@/components/chat/ChannelWithThreadLayout";
+import { CustomChannelHeader } from "@/components/chat/CustomChannelHeader";
+import { EmptyChannelState } from "@/components/chat/EmptyChannelState";
 import { CustomMessageInputWithRichMedia } from "@/components/chat/CustomMessageInputWithRichMedia";
+import { MessageStatusTicks } from "@/components/chat/MessageStatusTicks";
 import { EventChannelInfoProvider, type EventChannelInfo } from "@/components/chat/EventChannelInfoContext";
+import { ChannelErrorBoundary } from "@/components/chat/ChannelErrorBoundary";
 import { ViewOnceProvider } from "@/components/chat/ViewOnceContext";
 import { ViewOnceMessage } from "@/components/chat/ViewOnceMessage";
 
@@ -48,17 +52,23 @@ export default function ChannelPage() {
   }
 
   return (
-    <ViewOnceProvider>
-      <EventChannelInfoProvider value={eventInfo}>
-        <Channel
-          Input={CustomMessageInputWithRichMedia}
-          Message={ViewOnceMessage}
-          multipleUploads
-          maxNumberOfFiles={10}
-        >
-          <ChannelWithThreadLayout />
-        </Channel>
-      </EventChannelInfoProvider>
-    </ViewOnceProvider>
+    <ChannelErrorBoundary>
+      <ViewOnceProvider>
+        <EventChannelInfoProvider value={eventInfo}>
+          <Channel
+            EmptyStateIndicator={EmptyChannelState}
+            enrichURLForPreview
+            HeaderComponent={CustomChannelHeader}
+            Input={CustomMessageInputWithRichMedia}
+            Message={ViewOnceMessage}
+            MessageStatus={MessageStatusTicks}
+            multipleUploads
+            maxNumberOfFiles={10}
+          >
+            <ChannelWithThreadLayout />
+          </Channel>
+        </EventChannelInfoProvider>
+      </ViewOnceProvider>
+    </ChannelErrorBoundary>
   );
 }

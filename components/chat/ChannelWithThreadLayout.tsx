@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Thread, useChannelStateContext, Window } from "stream-chat-react";
+import { Thread, useChannelStateContext, useComponentContext, Window } from "stream-chat-react";
 import { CustomChannelHeader } from "./CustomChannelHeader";
 import { ChannelMessageLayout } from "./ChannelMessageLayout";
 import { ChannelMessageSearch } from "./ChannelMessageSearch";
 import { ChannelOptionsMenu } from "./ChannelOptionsMenu";
+import { ConnectionBanner } from "./ConnectionBanner";
 import { ViewOnceMessage } from "./ViewOnceMessage";
 
 /**
@@ -16,7 +17,9 @@ import { ViewOnceMessage } from "./ViewOnceMessage";
  */
 export function ChannelWithThreadLayout() {
   const { thread } = useChannelStateContext();
+  const { HeaderComponent } = useComponentContext();
   const [searchOpen, setSearchOpen] = useState(false);
+  const ChannelHeaderToRender = HeaderComponent ?? CustomChannelHeader;
 
   return (
     <div className="flex flex-1 min-h-0 min-w-0">
@@ -29,6 +32,7 @@ export function ChannelWithThreadLayout() {
         }
       >
         <Window>
+          <ConnectionBanner />
           <div className="flex items-center gap-1 sm:gap-2 border-b border-[var(--ig-border)] px-2 py-1 min-h-[44px] shrink-0 bg-[var(--ig-bg-primary)]">
             <Link
               href="/app/chats"
@@ -38,7 +42,7 @@ export function ChannelWithThreadLayout() {
               <BackIcon />
             </Link>
             <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
-              <CustomChannelHeader />
+              <ChannelHeaderToRender />
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"

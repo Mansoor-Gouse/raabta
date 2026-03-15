@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import mongoose from "mongoose";
 import { getSession } from "@/lib/auth";
-import { connectDB, User, PostModel, EventAttendeeModel, CircleRelationshipModel } from "@/lib/db";
+import { connectDB, User, PostModel, EventAttendeeModel, CircleRelationshipModel, BlockModel } from "@/lib/db";
 import { AddToCircleButton } from "@/components/circles/AddToCircleButton";
 import { MemberInsights } from "@/components/members/MemberInsights";
 
@@ -76,6 +76,15 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
   const canSeeEvents = isOwnProfile || canSee(u.profileVisibilityEvents, viewerRelation);
   const canSeeBio = isOwnProfile || canSee(u.profileVisibilityBio, viewerRelation);
   const canSeeCircles = isOwnProfile || canSee(u.profileVisibilityCircles, viewerRelation);
+
+  const isBlocked =
+    !isOwnProfile &&
+    (await BlockModel.exists({
+      $or: [
+        { userId: myId, blockedUserId: profileOid },
+        { userId: profileOid, blockedUserId: myId },
+      ],
+    }));
 
   const [postsCount, eventsCount, myRelationship, theyHaveMeInInner, myInnerCount, myTrustedCount, profileInner, profileTrusted] =
     await Promise.all([
@@ -234,7 +243,7 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                   currentCircle={currentCircle}
                   innerCount={myInnerCount}
                   trustedCount={myTrustedCount}
-                  showMessage={false}
+                  showMessage={!isBlocked}
                 />
               </div>
             )}

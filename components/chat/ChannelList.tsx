@@ -49,6 +49,25 @@ function getOtherMemberLastRead(channel: StreamChannel, currentUserId: string): 
   return new Date(read.last_read);
 }
 
+/** For groups: number of other members who have read up to the given message (by created_at). */
+function getGroupReadCount(
+  channel: StreamChannel,
+  lastMessage: { created_at?: string | Date } | undefined,
+  currentUserId: string
+): number {
+  if (!lastMessage?.created_at) return 0;
+  const members = channel.state?.members ?? {};
+  const read = (channel.state as unknown as { read?: Record<string, { last_read?: string }> })?.read ?? {};
+  const msgTime = new Date(lastMessage.created_at);
+  let count = 0;
+  for (const memberId of Object.keys(members)) {
+    if (memberId === currentUserId) continue;
+    const lastRead = read[memberId]?.last_read;
+    if (lastRead && new Date(lastRead) >= msgTime) count += 1;
+  }
+  return count;
+}
+
 function isLastMessageFromMe(channel: StreamChannel, currentUserId: string): boolean {
   const msg = channel.state?.messages?.[0];
   return (msg?.user_id ?? (msg?.user as { id?: string })?.id) === currentUserId;
@@ -263,12 +282,15 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
               isOneToOne && isFromMe && otherLastRead && lastMessage?.created_at
                 ? new Date(lastMessage.created_at as unknown as string | number) <= otherLastRead
                 : false;
+            const groupReadCount = !isOneToOne && isFromMe ? getGroupReadCount(channel, lastMessage, client.userID!) : 0;
             const preview = lastMessage?.text?.slice(0, 50) || "No messages";
             const previewLine = lastFromMeAndSeen
               ? `Seen ${formatRelativeTime(otherLastRead!)} ago`
-              : isFromMe
-                ? `You: ${preview}`
-                : preview;
+              : !isOneToOne && isFromMe && groupReadCount > 0
+                ? `Read by ${groupReadCount}`
+                : isFromMe
+                  ? `You: ${preview}`
+                  : preview;
             const menuOpen = menuChannelId === channel.id;
             const muted = (channel.state?.membership as { channel_muted?: boolean } | undefined)?.channel_muted ?? false;
             const time = getLastMessageTime(channel);

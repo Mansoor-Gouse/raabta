@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import { MessageList, MessageInput, useChannelStateContext, useChatContext } from "stream-chat-react";
+import { MessageList, MessageInput, useChannelActionContext, useChannelStateContext, useChatContext } from "stream-chat-react";
 import { PinnedMessagesBar } from "./PinnedMessagesBar";
 import { useViewOnce } from "./ViewOnceContext";
 
@@ -14,7 +14,12 @@ import { useViewOnce } from "./ViewOnceContext";
 export function ChannelMessageLayout() {
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const { channel } = useChannelStateContext();
+  const { markRead } = useChannelActionContext();
   const { client } = useChatContext();
+
+  useEffect(() => {
+    if (channel) markRead?.();
+  }, [channel, markRead]);
   const memberCount = channel?.state?.members ? Object.keys(channel.state.members).length : 0;
   const isOneToOne = memberCount === 2;
 
