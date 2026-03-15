@@ -73,7 +73,6 @@ export function ShareSheet({
     if (!open || !client?.userID) return;
     const base = {
       members: { $in: [client.userID] },
-      hidden: { $ne: true },
     };
     Promise.all([
       client.queryChannels({ type: "messaging", ...base }, [{ last_message_at: -1 }], { limit: 50 }),

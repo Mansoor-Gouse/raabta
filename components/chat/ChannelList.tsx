@@ -112,7 +112,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     setLoading(true);
     const base = {
       members: { $in: [client.userID] },
-      ...(showArchived ? { hidden: true } : { hidden: { $ne: true } }),
+      ...(showArchived ? { hidden: true } : {}),
     };
     Promise.all([
       client.queryChannels({ ...baseFilters, ...base }, [{ last_message_at: -1 }], { limit: 30 }),
