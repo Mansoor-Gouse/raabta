@@ -9,7 +9,6 @@ export function ProfileTabs() {
   const isEvents = pathname === "/app/profile/events";
   const isSaved = pathname === "/app/profile/saved";
   const isLiked = pathname === "/app/profile/liked";
-  const isCircles = pathname === "/app/profile/circles";
 
   return (
     <div className="border-b border-[var(--elite-border)] bg-[var(--elite-bg)] overflow-x-auto no-scrollbar">
@@ -55,19 +54,6 @@ export function ProfileTabs() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
           <span className="elite-body text-xs font-medium uppercase tracking-wide whitespace-nowrap">Liked</span>
-        </Link>
-        <Link
-          href="/app/profile/circles"
-          className={`shrink-0 flex items-center justify-center gap-1 py-3 px-4 border-b-2 min-w-[72px] elite-events ${isCircles ? "border-[var(--elite-accent)] text-[var(--elite-text)]" : "border-transparent text-[var(--elite-text-muted)]"}`}
-        >
-          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" strokeWidth={2} />
-            <circle cx="12" cy="5" r="2" strokeWidth={2} />
-            <circle cx="5" cy="12" r="2" strokeWidth={2} />
-            <circle cx="19" cy="12" r="2" strokeWidth={2} />
-            <circle cx="12" cy="19" r="2" strokeWidth={2} />
-          </svg>
-          <span className="elite-body text-xs font-medium uppercase tracking-wide whitespace-nowrap">Circles</span>
         </Link>
       </div>
     </div>
