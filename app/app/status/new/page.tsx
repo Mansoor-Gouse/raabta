@@ -70,7 +70,7 @@ export default function NewStatusPage() {
   const [editedPreviewUrl, setEditedPreviewUrl] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [primaryId, setPrimaryId] = useState<string | null>(null);
-  const [caption, setCaption] = useState("");
+  const [captionByItemId, setCaptionByItemId] = useState<Record<string, string>>({});
   const [visibility, setVisibility] = useState<Visibility>("everyone");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -131,7 +131,7 @@ export default function NewStatusPage() {
     setEditedPreviewUrl("");
     setEditedBlob(null);
     setPrimaryId(null);
-    setCaption("");
+    setCaptionByItemId({});
     setTextOverlaysByItemId({});
     setSelectedOverlayId(null);
     setError("");
@@ -331,10 +331,11 @@ export default function NewStatusPage() {
         const overlays = textOverlaysByItemId[item.id] ?? [];
         const transform = mediaTransformByItemId[item.id];
         const hasTransform = transform && (transform.scale !== 1 || transform.translateX !== 0 || transform.translateY !== 0);
+        const itemCaption = (captionByItemId[item.id] ?? "").trim().slice(0, 500);
         uploaded.push({
           mediaUrl,
           type,
-          ...(i === 0 && caption.trim() ? { caption: caption.trim().slice(0, 500) } : {}),
+          ...(itemCaption ? { caption: itemCaption } : {}),
           ...(overlays.length > 0 ? { textOverlays: overlays } : {}),
           ...(hasTransform ? { mediaTransform: transform } : {}),
         });
@@ -357,7 +358,7 @@ export default function NewStatusPage() {
     } finally {
       setSaving(false);
     }
-  }, [selectedItems, primaryId, editedBlob, caption, visibility, router, textOverlaysByItemId, mediaTransformByItemId]);
+  }, [selectedItems, primaryId, editedBlob, captionByItemId, visibility, router, textOverlaysByItemId, mediaTransformByItemId]);
 
   useEffect(() => {
     return () => {
@@ -1110,19 +1111,26 @@ export default function NewStatusPage() {
           </div>
         </div>
 
-        {/* Expanded caption */}
+        {/* Expanded caption — per segment (current primary) */}
         {detailsOpen && (
           <div className="transition-opacity duration-200">
             <input
               type="text"
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="Add a caption…"
+              value={primaryId ? (captionByItemId[primaryId] ?? "") : ""}
+              onChange={(e) => {
+                if (!primaryId) return;
+                setCaptionByItemId((prev) => ({ ...prev, [primaryId]: e.target.value }));
+              }}
+              placeholder={selectedItems.length > 1 ? "Caption for this slide…" : "Add a caption…"}
               disabled={saving}
               className="w-full px-4 py-2.5 rounded-xl bg-white/10 text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
               maxLength={500}
             />
-            <p className="text-[11px] text-white/50 mt-1">Caption applies to first segment.</p>
+            {selectedItems.length > 1 && (
+              <p className="text-[11px] text-white/50 mt-1">
+                Caption for current slide. Switch slides to edit each.
+              </p>
+            )}
           </div>
         )}
 

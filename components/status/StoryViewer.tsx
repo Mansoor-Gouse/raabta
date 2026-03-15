@@ -82,6 +82,7 @@ export function StoryViewer({
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [myReaction, setMyReaction] = useState<Record<string, string>>({});
   const [reactionSending, setReactionSending] = useState(false);
+  const [reactionJustSet, setReactionJustSet] = useState<string | null>(null);
   const [viewersDrawerOpen, setViewersDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
@@ -317,6 +318,7 @@ export function StoryViewer({
     async (reactionType: string) => {
       if (!currentStatus?._id || reactionSending) return;
       setReactionSending(true);
+      setReactionJustSet(null);
       try {
         const res = await fetch(`/api/status/${currentStatus._id}/react`, {
           method: "POST",
@@ -325,6 +327,7 @@ export function StoryViewer({
         });
         if (res.ok) {
           setMyReaction((prev) => ({ ...prev, [currentStatus._id]: reactionType }));
+          setReactionJustSet(reactionType);
         }
       } catch {
         // ignore
@@ -334,6 +337,12 @@ export function StoryViewer({
     },
     [currentStatus?._id, reactionSending]
   );
+
+  useEffect(() => {
+    if (!reactionJustSet) return;
+    const t = setTimeout(() => setReactionJustSet(null), 600);
+    return () => clearTimeout(t);
+  }, [reactionJustSet]);
 
   const content = useMemo(() => {
     if (!currentStatus) return null;
@@ -603,23 +612,25 @@ export function StoryViewer({
           style={{ paddingBottom: "calc(1rem + var(--safe-area-inset-bottom))" }}
         >
           <div
-            className="flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-sm px-3 py-2 pointer-events-auto"
+            className="flex items-center gap-2 rounded-full bg-black/50 backdrop-blur-md px-2 py-2 pointer-events-auto border border-white/10"
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
           >
             {REACTION_TYPES.map(({ type, label, emoji }) => {
               const isActive = myReaction[currentStatus._id] === type;
+              const justSet = reactionJustSet === type;
               return (
                 <button
                   key={type}
                   type="button"
                   onClick={() => handleReaction(type)}
                   disabled={reactionSending}
-                  className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-xl transition-transform active:scale-90 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                    isActive
-                      ? "bg-white/30 scale-110"
-                      : "hover:bg-white/20"
-                  }`}
+                  className={`min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full text-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black active:scale-95 hover:scale-105 touch-manipulation ${
+                    isActive ? "bg-white/25 scale-110 ring-2 ring-white/50" : "hover:bg-white/15"
+                  } ${justSet ? "animate-[reaction-pop_0.4s_ease-out]" : ""}`}
+                  style={{
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                   aria-label={`React with ${label}`}
                   title={label}
                 >

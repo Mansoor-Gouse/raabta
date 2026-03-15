@@ -352,6 +352,13 @@ body {
   80% { transform: translateX(2px); }
 }
 
+@keyframes reaction-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1.1); }
+}
+
 button,
 a,
 [role="button"] {
