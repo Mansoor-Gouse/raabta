@@ -533,6 +533,12 @@ textarea:focus-visible {
   font-family: var(--elite-font-sans);
 }
 
+/* Story viewers drawer: same font as events module */
+.story-viewers-drawer,
+.story-viewers-drawer .story-viewers-drawer-name {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 /* Trip plan page: force visible icon color on icon-only buttons (contrast with surface) */
 .elite-events .trip-plan-icon-btn:not(.trip-plan-icon-btn-filled) {
   color: var(--elite-accent);

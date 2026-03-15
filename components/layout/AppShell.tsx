@@ -11,6 +11,7 @@ import {
   IconProfile,
   IconMembers,
 } from "@/components/layout/InstagramIcons";
+import { UnreadMessagesBadge } from "@/components/chat/UnreadMessagesBadge";
 
 export type AppUser = { id: string; name?: string; image?: string | null };
 const AppUserContext = createContext<AppUser | null>(null);
@@ -105,6 +106,11 @@ export function AppShell({
               }`}
             >
               {label}
+              {href === "/app/chats" && (
+                <span className="ml-auto">
+                  <UnreadMessagesBadge variant="inline" />
+                </span>
+              )}
             </Link>
           ))}
           <div className="pt-1 mt-1 border-t border-[var(--ig-border-light)]">
@@ -169,10 +175,13 @@ export function AppShell({
           </Link>
           <Link
             href="/app/chats"
-            className="flex flex-col items-center justify-center flex-1 py-2 text-[var(--ig-text)] min-w-0"
+            className="flex flex-col items-center justify-center flex-1 py-2 text-[var(--ig-text)] min-w-0 relative"
             aria-current={isChatsActive(pathname) ? "page" : undefined}
           >
-            <IconMessage className="w-6 h-6" filled={isChatsActive(pathname)} />
+            <span className="relative inline-block">
+              <IconMessage className="w-6 h-6" filled={isChatsActive(pathname)} />
+              <UnreadMessagesBadge />
+            </span>
           </Link>
           <Link
             href="/app/members"

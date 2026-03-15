@@ -98,7 +98,7 @@ export function StoryViewersDrawer({ open, onClose, statusId, onDeleteStatus }: 
         onClick={handleClose}
       />
       <div
-        className={`fixed bottom-0 left-0 right-0 z-[60] flex flex-col max-h-[85vh] rounded-t-2xl overflow-hidden ${
+        className={`fixed bottom-0 left-0 right-0 z-[60] flex flex-col max-h-[85vh] rounded-t-2xl overflow-hidden story-viewers-drawer ${
           isClosing ? "animate-story-viewer-out" : "animate-story-viewer-in"
         }`}
         style={{
@@ -207,21 +207,21 @@ export function StoryViewersDrawer({ open, onClose, statusId, onDeleteStatus }: 
                       <img
                         src={r.userImage}
                         alt=""
-                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20"
+                        className="w-12 h-12 rounded-lg object-cover ring-2 ring-white/20"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-base ring-2 ring-white/20">
+                      <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-semibold text-base ring-2 ring-white/20">
                         {r.userName.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <span
-                      className="absolute -right-0.5 -bottom-0.5 w-6 h-6 rounded-full bg-black/80 flex items-center justify-center text-sm ring-2 ring-[#242424]"
+                      className="absolute -right-0.5 -bottom-0.5 w-6 h-6 rounded-md bg-black/80 flex items-center justify-center text-sm ring-2 ring-[#242424]"
                       aria-hidden
                     >
                       {REACTION_EMOJI[r.reactionType] ?? "👍"}
                     </span>
                   </div>
-                  <p className="text-[15px] font-medium text-white truncate flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-white truncate flex-1 min-w-0 story-viewers-drawer-name">
                     {r.userName}
                   </p>
                 </li>
@@ -233,15 +233,15 @@ export function StoryViewersDrawer({ open, onClose, statusId, onDeleteStatus }: 
                       <img
                         src={v.viewerImage}
                         alt=""
-                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20"
+                        className="w-12 h-12 rounded-lg object-cover ring-2 ring-white/20"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-base ring-2 ring-white/20">
+                      <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-semibold text-base ring-2 ring-white/20">
                         {v.viewerName.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
-                  <p className="text-[15px] font-medium text-white truncate flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-white truncate flex-1 min-w-0 story-viewers-drawer-name">
                     {v.viewerName}
                   </p>
                 </li>

@@ -354,9 +354,11 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                       </span>
                       {hasUnread && (
                         <span
-                          className="shrink-0 w-2 h-2 rounded-full bg-[var(--ig-text)]"
+                          className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--ig-text)] text-white text-[10px] font-semibold px-1.5"
                           aria-label={`${unreadCount} unread`}
-                        />
+                        >
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
                       )}
                     </div>
                   </div>
