@@ -45,10 +45,14 @@ export function EventCard({ event, compact = false, variant = "default" }: Event
           />
         </div>
       ) : (
-        <div className="aspect-[2/1] bg-[var(--elite-border-light)] flex items-center justify-center">
-          <span className="text-4xl text-[var(--elite-text-muted)]">
-            {event.type === "umrah" || event.type === "hajj" ? "🕋" : "📅"}
-          </span>
+        <div className="aspect-[2/1] w-full flex items-center justify-center bg-gradient-to-br from-neutral-400 via-neutral-500 to-neutral-600 relative">
+          <div
+            className="absolute inset-0 opacity-[0.12]"
+            aria-hidden
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L20 0 L40 20 L20 40 Z' fill='none' stroke='white' stroke-width='0.5'/%3E%3Cpath d='M20 0 L20 40 M0 20 L40 20' fill='none' stroke='white' stroke-width='0.3'/%3E%3C/svg%3E")`,
+            }}
+          />
         </div>
       )}
       <div className={compact ? "p-3" : "p-4"}>

@@ -11,6 +11,7 @@ export default async function ProfileEditPage() {
   const user = await User.findById(session.userId).lean();
   if (!user) redirect("/login");
 
+  type Visibility = "everyone" | "trusted_circle" | "inner_circle";
   const u = user as {
     fullName?: string;
     name?: string;
@@ -28,6 +29,10 @@ export default async function ProfileEditPage() {
     company?: string;
     profession?: string;
     communityRoles?: string[];
+    profileVisibilityPosts?: Visibility;
+    profileVisibilityEvents?: Visibility;
+    profileVisibilityBio?: Visibility;
+    profileVisibilityCircles?: Visibility;
   };
   const initial = {
     fullName: u.fullName ?? u.name ?? "",
@@ -45,6 +50,10 @@ export default async function ProfileEditPage() {
     company: u.company ?? "",
     profession: u.profession ?? "",
     communityRoles: u.communityRoles ?? [],
+    profileVisibilityPosts: (u.profileVisibilityPosts ?? "everyone") as "everyone" | "trusted_circle" | "inner_circle",
+    profileVisibilityEvents: (u.profileVisibilityEvents ?? "everyone") as "everyone" | "trusted_circle" | "inner_circle",
+    profileVisibilityBio: (u.profileVisibilityBio ?? "everyone") as "everyone" | "trusted_circle" | "inner_circle",
+    profileVisibilityCircles: (u.profileVisibilityCircles ?? "everyone") as "everyone" | "trusted_circle" | "inner_circle",
   };
 
   return (

@@ -12,6 +12,8 @@ const COMMUNITY_ROLES = [
   { id: "community_builder", label: "Community builder", emoji: "🧩" },
 ] as const;
 
+export type ProfileVisibility = "everyone" | "trusted_circle" | "inner_circle";
+
 type Initial = {
   fullName: string;
   headline: string;
@@ -28,6 +30,10 @@ type Initial = {
   company: string;
   profession: string;
   communityRoles: string[];
+  profileVisibilityPosts: ProfileVisibility;
+  profileVisibilityEvents: ProfileVisibility;
+  profileVisibilityBio: ProfileVisibility;
+  profileVisibilityCircles: ProfileVisibility;
 };
 
 const inputBase =
@@ -93,6 +99,10 @@ export function ProfileEditForm({ initial }: { initial: Initial }) {
   const [company, setCompany] = useState(initial.company);
   const [profession, setProfession] = useState(initial.profession);
   const [communityRoles, setCommunityRoles] = useState(initial.communityRoles);
+  const [profileVisibilityPosts, setProfileVisibilityPosts] = useState<ProfileVisibility>(initial.profileVisibilityPosts);
+  const [profileVisibilityEvents, setProfileVisibilityEvents] = useState<ProfileVisibility>(initial.profileVisibilityEvents);
+  const [profileVisibilityBio, setProfileVisibilityBio] = useState<ProfileVisibility>(initial.profileVisibilityBio);
+  const [profileVisibilityCircles, setProfileVisibilityCircles] = useState<ProfileVisibility>(initial.profileVisibilityCircles);
   const [tagInput, setTagInput] = useState<
     "industries" | "interests" | "expertise" | "concerns" | "languages" | "destinations" | null
   >(null);
@@ -211,6 +221,10 @@ export function ProfileEditForm({ initial }: { initial: Initial }) {
           company: company?.trim() || undefined,
           profession: profession?.trim() || undefined,
           communityRoles,
+          profileVisibilityPosts,
+          profileVisibilityEvents,
+          profileVisibilityBio,
+          profileVisibilityCircles,
         }),
       });
       if (!res.ok) {
@@ -528,6 +542,68 @@ export function ProfileEditForm({ initial }: { initial: Initial }) {
               {label}
             </button>
           ))}
+        </div>
+      </FormSection>
+
+      <FormSection
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        }
+        title="Profile visibility"
+        subtitle="Who can see each section when they view your profile"
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="elite-body block text-xs font-medium text-[var(--elite-text-muted)] mb-1">Posts</label>
+            <select
+              value={profileVisibilityPosts}
+              onChange={(e) => setProfileVisibilityPosts(e.target.value as ProfileVisibility)}
+              className={`${inputBase} py-2.5`}
+            >
+              <option value="everyone">Everyone</option>
+              <option value="trusted_circle">Trusted circle</option>
+              <option value="inner_circle">Inner circle only</option>
+            </select>
+          </div>
+          <div>
+            <label className="elite-body block text-xs font-medium text-[var(--elite-text-muted)] mb-1">Events</label>
+            <select
+              value={profileVisibilityEvents}
+              onChange={(e) => setProfileVisibilityEvents(e.target.value as ProfileVisibility)}
+              className={`${inputBase} py-2.5`}
+            >
+              <option value="everyone">Everyone</option>
+              <option value="trusted_circle">Trusted circle</option>
+              <option value="inner_circle">Inner circle only</option>
+            </select>
+          </div>
+          <div>
+            <label className="elite-body block text-xs font-medium text-[var(--elite-text-muted)] mb-1">Bio & tags</label>
+            <select
+              value={profileVisibilityBio}
+              onChange={(e) => setProfileVisibilityBio(e.target.value as ProfileVisibility)}
+              className={`${inputBase} py-2.5`}
+            >
+              <option value="everyone">Everyone</option>
+              <option value="trusted_circle">Trusted circle</option>
+              <option value="inner_circle">Inner circle only</option>
+            </select>
+          </div>
+          <div>
+            <label className="elite-body block text-xs font-medium text-[var(--elite-text-muted)] mb-1">Circles</label>
+            <select
+              value={profileVisibilityCircles}
+              onChange={(e) => setProfileVisibilityCircles(e.target.value as ProfileVisibility)}
+              className={`${inputBase} py-2.5`}
+            >
+              <option value="everyone">Everyone</option>
+              <option value="trusted_circle">Trusted circle</option>
+              <option value="inner_circle">Inner circle only</option>
+            </select>
+          </div>
         </div>
       </FormSection>
 

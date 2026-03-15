@@ -40,6 +40,10 @@ export async function PUT(request: Request) {
     "company",
     "profession",
     "communityRoles",
+    "profileVisibilityPosts",
+    "profileVisibilityEvents",
+    "profileVisibilityBio",
+    "profileVisibilityCircles",
   ] as const;
   const update: Record<string, unknown> = {};
   for (const key of allowed) {

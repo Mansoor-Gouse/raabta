@@ -57,6 +57,14 @@ export interface IUser {
   communityRoles?: CommunityRole[];
   isVerified?: boolean;
   verificationLevel?: "none" | "basic" | "verified" | "elite";
+  /** Who can see this profile's posts tab (default: everyone) */
+  profileVisibilityPosts?: "everyone" | "trusted_circle" | "inner_circle";
+  /** Who can see this profile's events tab (default: everyone) */
+  profileVisibilityEvents?: "everyone" | "trusted_circle" | "inner_circle";
+  /** Who can see bio, location, industries, etc. (default: everyone) */
+  profileVisibilityBio?: "everyone" | "trusted_circle" | "inner_circle";
+  /** Who can see inner/trusted circle members (default: everyone) */
+  profileVisibilityCircles?: "everyone" | "trusted_circle" | "inner_circle";
   invitedBy?: mongoose.Types.ObjectId;
   invitationCode?: string;
   createdAt: Date;
@@ -93,6 +101,26 @@ const UserSchema = new mongoose.Schema<IUser>(
       type: String,
       enum: ["none", "basic", "verified", "elite"],
       default: "none",
+    },
+    profileVisibilityPosts: {
+      type: String,
+      enum: ["everyone", "trusted_circle", "inner_circle"],
+      default: "everyone",
+    },
+    profileVisibilityEvents: {
+      type: String,
+      enum: ["everyone", "trusted_circle", "inner_circle"],
+      default: "everyone",
+    },
+    profileVisibilityBio: {
+      type: String,
+      enum: ["everyone", "trusted_circle", "inner_circle"],
+      default: "everyone",
+    },
+    profileVisibilityCircles: {
+      type: String,
+      enum: ["everyone", "trusted_circle", "inner_circle"],
+      default: "everyone",
     },
     invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     invitationCode: { type: String },
