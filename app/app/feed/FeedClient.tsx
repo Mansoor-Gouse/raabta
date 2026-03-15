@@ -367,10 +367,10 @@ export function FeedClient() {
       {/* Floating create button above bottom nav (mobile) */}
       <Link
         href="/app/feed/new"
-        className="md:hidden fixed right-4 bottom-[72px] z-40 w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-lg shadow-black/40"
+        className="md:hidden fixed right-4 bottom-[72px] z-40 w-12 h-12 rounded-full bg-gradient-to-br from-white via-gray-50 to-gray-100 text-black flex items-center justify-center shadow-lg shadow-black/15 border border-gray-200/80"
         aria-label="Create post"
       >
-        <span className="text-2xl leading-none">+</span>
+        <span className="text-2xl leading-none font-medium">+</span>
       </Link>
     </div>
   );
