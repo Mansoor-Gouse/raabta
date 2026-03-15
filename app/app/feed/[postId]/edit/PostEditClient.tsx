@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { POST_VISIBILITY_OPTIONS, type PostVisibility } from "@/lib/visibility";
 
-type Visibility = "network" | "inner_circle" | "trusted_circle";
+type Visibility = PostVisibility;
 
 export function PostEditClient({
   postId,
@@ -113,9 +114,9 @@ export function PostEditClient({
               onChange={(e) => setVisibility(e.target.value as Visibility)}
               className="w-full rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] px-3 py-2 text-sm text-[var(--ig-text)] focus:outline-none focus:ring-2 focus:ring-[var(--ig-link)]"
             >
-              <option value="network">Network</option>
-              <option value="trusted_circle">Trusted Circle</option>
-              <option value="inner_circle">Inner Circle</option>
+              {POST_VISIBILITY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
           <button

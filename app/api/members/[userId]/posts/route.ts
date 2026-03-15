@@ -2,17 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
 import { connectDB, PostModel, User, CircleRelationshipModel } from "@/lib/db";
-
-function canSeeSection(
-  visibility: "everyone" | "trusted_circle" | "inner_circle" | undefined,
-  viewerRelation: "inner" | "trusted" | null
-): boolean {
-  const v = visibility ?? "everyone";
-  if (v === "everyone") return true;
-  if (v === "trusted_circle") return viewerRelation === "trusted" || viewerRelation === "inner";
-  if (v === "inner_circle") return viewerRelation === "inner";
-  return false;
-}
+import { canSeeProfileSection, canSeePostVisibility, type ViewerRelation } from "@/lib/visibility";
 
 export async function GET(
   _request: NextRequest,
@@ -57,31 +47,40 @@ export async function GET(
     .select("circleType")
     .lean()
     .exec();
-  const viewerRelation =
+  const viewerRelation: ViewerRelation =
     rel && (rel as unknown as { circleType: string }).circleType === "INNER"
       ? "inner"
       : rel && (rel as unknown as { circleType: string }).circleType === "TRUSTED"
         ? "trusted"
         : null;
-  const visibility = (profile as unknown as { profileVisibilityPosts?: "everyone" | "trusted_circle" | "inner_circle" })
+  const profilePostsVisibility = (profile as unknown as { profileVisibilityPosts?: "everyone" | "trusted_circle" | "inner_circle" })
     .profileVisibilityPosts;
-  if (!canSeeSection(visibility, viewerRelation)) {
+  if (!canSeeProfileSection(profilePostsVisibility, viewerRelation)) {
     return NextResponse.json({ posts: [] });
   }
 
   const posts = await PostModel.find({ authorId: profileUserId })
     .sort({ createdAt: -1 })
     .limit(50)
-    .select("_id mediaUrls caption")
+    .select("_id mediaUrls caption visibility")
     .lean()
     .exec();
+
+  type PostRow = { _id: mongoose.Types.ObjectId; mediaUrls: string[]; caption?: string; visibility?: string };
+  const postVisibility = (p: PostRow): "network" | "trusted_circle" | "inner_circle" => {
+    const v = p.visibility;
+    return v === "inner_circle" || v === "trusted_circle" ? v : "network";
+  };
+  const filtered = (posts as PostRow[]).filter((p) =>
+    canSeePostVisibility(postVisibility(p), viewerRelation)
+  );
+
   return NextResponse.json({
-    posts: posts.map((p) => {
-      const row = p as unknown as { _id: unknown; mediaUrls: string[]; caption?: string };
+    posts: filtered.map((p) => {
       return {
-        _id: String(row._id),
-        mediaUrls: row.mediaUrls ?? [],
-        caption: row.caption ?? undefined,
+        _id: String(p._id),
+        mediaUrls: p.mediaUrls ?? [],
+        caption: p.caption ?? undefined,
       };
     }),
   });

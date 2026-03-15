@@ -29,7 +29,7 @@ export default function ChatsPage() {
         className="shrink-0 flex items-center justify-between h-14 min-h-[56px] px-4 border-b border-[var(--ig-border-light)]"
         style={{ paddingTop: "var(--safe-area-inset-top)" }}
       >
-        <div className="flex-1 min-w-0 flex items-center justify-center">
+        <div className="flex-1 min-w-0 flex items-center justify-start pl-1">
           <button
             type="button"
             className="flex items-center gap-1 text-[var(--ig-text)] font-semibold text-lg tracking-tight min-h-[40px] items-center justify-center"

@@ -93,7 +93,7 @@ export function ChannelMessageLayout() {
       <div className="channel-message-list flex-1 min-h-0 flex flex-col">
         <PinnedMessagesBar />
         <div className="flex-1 min-h-0 overflow-auto">
-          <MessageList />
+          <MessageList head={<></>} />
           {isOneToOne && hasSeenLastOutgoing && (
             <div className="px-3 pb-1 text-right text-xs text-[var(--ig-text-secondary)]">Seen</div>
           )}

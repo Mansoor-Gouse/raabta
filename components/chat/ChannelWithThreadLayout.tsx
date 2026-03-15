@@ -8,6 +8,8 @@ import { ChannelMessageLayout } from "./ChannelMessageLayout";
 import { ChannelMessageSearch } from "./ChannelMessageSearch";
 import { ChannelOptionsMenu } from "./ChannelOptionsMenu";
 import { ConnectionBanner } from "./ConnectionBanner";
+import { GroupMembersOpenProvider, useGroupMembersOpen } from "./GroupMembersOpenContext";
+import { GroupMembersSheet } from "./GroupMembersSheet";
 import { ViewOnceMessage } from "./ViewOnceMessage";
 
 /**
@@ -15,9 +17,10 @@ import { ViewOnceMessage } from "./ViewOnceMessage";
  * - Mobile: main panel hidden, thread full width with back button.
  * - Desktop: main and thread side by side.
  */
-export function ChannelWithThreadLayout() {
+function ChannelWithThreadLayoutInner() {
   const { thread } = useChannelStateContext();
   const { HeaderComponent } = useComponentContext();
+  const groupMembersOpen = useGroupMembersOpen();
   const [searchOpen, setSearchOpen] = useState(false);
   const ChannelHeaderToRender = HeaderComponent ?? CustomChannelHeader;
 
@@ -74,7 +77,21 @@ export function ChannelWithThreadLayout() {
           <Thread fullWidth Message={ViewOnceMessage} />
         </div>
       )}
+      {groupMembersOpen && (
+        <GroupMembersSheet
+          open={groupMembersOpen.open}
+          onClose={() => groupMembersOpen.setOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+export function ChannelWithThreadLayout() {
+  return (
+    <GroupMembersOpenProvider>
+      <ChannelWithThreadLayoutInner />
+    </GroupMembersOpenProvider>
   );
 }
 

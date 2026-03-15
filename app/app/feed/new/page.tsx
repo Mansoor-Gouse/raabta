@@ -1,18 +1,31 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { type MediaItem } from "@/components/feed/new/MediaSelector";
 import type { Visibility } from "@/components/feed/new/CaptionStep";
 import { ComposeView } from "@/components/feed/new/ComposeView";
 import { CropEditor } from "@/components/feed/new/CropEditor";
+import { profileToPostVisibility } from "@/lib/visibility";
 
 export default function NewPostPage() {
   const router = useRouter();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState<Visibility>("network");
+  const [visibilityInitialized, setVisibilityInitialized] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data: { profileVisibilityPosts?: "everyone" | "trusted_circle" | "inner_circle" }) => {
+        const profilePosts = data.profileVisibilityPosts ?? "everyone";
+        setVisibility(profileToPostVisibility(profilePosts));
+        setVisibilityInitialized(true);
+      })
+      .catch(() => setVisibilityInitialized(true));
+  }, []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editModalItemIndex, setEditModalItemIndex] = useState<number | null>(null);

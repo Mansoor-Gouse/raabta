@@ -2,6 +2,7 @@
 
 import { IconHeart, IconComment, IconShare, IconBookmark } from "@/components/layout/InstagramIcons";
 import type { Visibility } from "./CaptionStep";
+import { VISIBILITY_LABELS } from "@/lib/visibility";
 
 type PostPreviewCardProps = {
   mediaUrls: string[];
@@ -9,12 +10,6 @@ type PostPreviewCardProps = {
   visibility: Visibility;
   authorName?: string;
   authorImage?: string | null;
-};
-
-const VISIBILITY_LABELS: Record<Visibility, string> = {
-  network: "Network",
-  trusted_circle: "Trusted Circle",
-  inner_circle: "Inner Circle",
 };
 
 const CAPTION_LINE_HEIGHT = 1.35;

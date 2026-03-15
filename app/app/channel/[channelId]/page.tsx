@@ -10,6 +10,7 @@ import { CustomMessageInputWithRichMedia } from "@/components/chat/CustomMessage
 import { MessageStatusTicks } from "@/components/chat/MessageStatusTicks";
 import { EventChannelInfoProvider, type EventChannelInfo } from "@/components/chat/EventChannelInfoContext";
 import { ChannelErrorBoundary } from "@/components/chat/ChannelErrorBoundary";
+import { EventChannelMessageSystem } from "@/components/chat/EventChannelMessageSystem";
 import { ViewOnceProvider } from "@/components/chat/ViewOnceContext";
 import { ViewOnceMessage } from "@/components/chat/ViewOnceMessage";
 
@@ -62,6 +63,7 @@ export default function ChannelPage() {
             Input={CustomMessageInputWithRichMedia}
             Message={ViewOnceMessage}
             MessageStatus={MessageStatusTicks}
+            MessageSystem={EventChannelMessageSystem}
             multipleUploads
             maxNumberOfFiles={10}
           >

@@ -3,17 +3,7 @@ import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
 import { getDisplayName } from "@/lib/displayName";
 import { connectDB, EventModel, EventAttendeeModel, User, CircleRelationshipModel } from "@/lib/db";
-
-function canSeeSection(
-  visibility: "everyone" | "trusted_circle" | "inner_circle" | undefined,
-  viewerRelation: "inner" | "trusted" | null
-): boolean {
-  const v = visibility ?? "everyone";
-  if (v === "everyone") return true;
-  if (v === "trusted_circle") return viewerRelation === "trusted" || viewerRelation === "inner";
-  if (v === "inner_circle") return viewerRelation === "inner";
-  return false;
-}
+import { canSeeProfileSection, type ViewerRelation } from "@/lib/visibility";
 
 export async function GET(
   _request: Request,
@@ -41,15 +31,15 @@ export async function GET(
       .select("circleType")
       .lean()
       .exec();
-    const viewerRelation =
+    const viewerRelation: ViewerRelation =
       rel && (rel as unknown as { circleType: string }).circleType === "INNER"
         ? "inner"
         : rel && (rel as unknown as { circleType: string }).circleType === "TRUSTED"
           ? "trusted"
           : null;
-    const visibility = (profile as unknown as { profileVisibilityEvents?: "everyone" | "trusted_circle" | "inner_circle" })
+    const profileEventsVisibility = (profile as unknown as { profileVisibilityEvents?: "everyone" | "trusted_circle" | "inner_circle" })
       .profileVisibilityEvents;
-    if (!canSeeSection(visibility, viewerRelation)) {
+    if (!canSeeProfileSection(profileEventsVisibility, viewerRelation)) {
       return NextResponse.json({ events: [] });
     }
   }

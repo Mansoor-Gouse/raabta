@@ -10,6 +10,7 @@ import {
   useTranslationContext,
 } from "stream-chat-react";
 import { useEventChannelInfo } from "./EventChannelInfoContext";
+import { useGroupMembersOpen } from "./GroupMembersOpenContext";
 
 function formatLastSeen(isoDate: string): string {
   const date = new Date(isoDate);
@@ -68,9 +69,12 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
 
   const Avatar = props.Avatar ?? DefaultAvatar;
   const MenuIconComponent = props.MenuIcon;
+  const groupMembersOpen = useGroupMembersOpen();
 
   const title = displayTitle || (isEventChannel ? "Event" : "");
   const avatarName = title || " ";
+  const memberCount = memberIds.length;
+  const isGroup = memberCount > 2;
 
   return (
     <div className="str-chat__header-livestream str-chat__channel-header">
@@ -121,6 +125,15 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
             ) : lastSeenText ? (
               <span className="text-[var(--ig-text-secondary)] text-xs">{lastSeenText}</span>
             ) : null
+          ) : isGroup ? (
+            <button
+              type="button"
+              onClick={() => groupMembersOpen?.setOpen(true)}
+              className="text-left text-xs text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)] underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)] rounded"
+              aria-label={`View group members (${memberCount} members)`}
+            >
+              {memberCount} members · {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
+            </button>
           ) : (
             <>
               {!props.live &&

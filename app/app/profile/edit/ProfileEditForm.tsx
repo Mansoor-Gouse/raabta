@@ -553,7 +553,7 @@ export function ProfileEditForm({ initial }: { initial: Initial }) {
           </svg>
         }
         title="Profile visibility"
-        subtitle="Who can see each section when they view your profile"
+        subtitle="Who can see each section when they view your profile. Posts: also used as the default when you create a new post (you can change it per post)."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

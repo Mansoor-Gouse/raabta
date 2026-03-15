@@ -3,16 +3,13 @@
 import { useState, useEffect } from "react";
 import type { MediaItem } from "./MediaSelector";
 import { PostPreviewCard } from "./PostPreviewCard";
+import { POST_VISIBILITY_OPTIONS, type PostVisibility } from "@/lib/visibility";
 
 const CAPTION_MAX_LENGTH = 2200;
 
-export type Visibility = "network" | "trusted_circle" | "inner_circle";
-
-const VISIBILITY_OPTIONS: { value: Visibility; label: string }[] = [
-  { value: "network", label: "Network" },
-  { value: "trusted_circle", label: "Trusted Circle" },
-  { value: "inner_circle", label: "Inner Circle" },
-];
+/** Post visibility: same as profile "Posts" options; "network" = Everyone. */
+export type Visibility = PostVisibility;
+const VISIBILITY_OPTIONS = POST_VISIBILITY_OPTIONS;
 
 export function CaptionStep({
   items,

@@ -7,7 +7,7 @@ import { ChannelList } from "@/components/chat/ChannelList";
 import {
   IconHome,
   IconEvents,
-  IconMessenger,
+  IconMessage,
   IconProfile,
   IconMembers,
 } from "@/components/layout/InstagramIcons";
@@ -172,7 +172,7 @@ export function AppShell({
             className="flex flex-col items-center justify-center flex-1 py-2 text-[var(--ig-text)] min-w-0"
             aria-current={isChatsActive(pathname) ? "page" : undefined}
           >
-            <IconMessenger className="w-6 h-6" filled={isChatsActive(pathname)} />
+            <IconMessage className="w-6 h-6" filled={isChatsActive(pathname)} />
           </Link>
           <Link
             href="/app/members"

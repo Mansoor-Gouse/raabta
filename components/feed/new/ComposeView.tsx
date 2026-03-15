@@ -5,14 +5,10 @@ import type { MediaItem } from "./MediaSelector";
 import type { Visibility } from "./CaptionStep";
 import { PostPreviewCard } from "./PostPreviewCard";
 import { MediaStrip } from "./MediaStrip";
+import { POST_VISIBILITY_OPTIONS } from "@/lib/visibility";
 
 const CAPTION_MAX_LENGTH = 2200;
-
-const VISIBILITY_OPTIONS: { value: Visibility; label: string }[] = [
-  { value: "network", label: "Network" },
-  { value: "trusted_circle", label: "Trusted Circle" },
-  { value: "inner_circle", label: "Inner Circle" },
-];
+const VISIBILITY_OPTIONS = POST_VISIBILITY_OPTIONS;
 
 export type ComposeViewProps = {
   caption: string;

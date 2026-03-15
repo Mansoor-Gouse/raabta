@@ -2,15 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useChannelStateContext, useChatContext } from "stream-chat-react";
-import { GroupMembersSheet } from "./GroupMembersSheet";
+import { useGroupMembersOpen } from "./GroupMembersOpenContext";
 
 export function ChannelOptionsMenu() {
   const { channel } = useChannelStateContext();
   const { client } = useChatContext();
   const [open, setOpen] = useState(false);
-  const [membersSheetOpen, setMembersSheetOpen] = useState(false);
   const [editGroupOpen, setEditGroupOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const groupMembersOpen = useGroupMembersOpen();
 
   useEffect(() => {
     if (!open) return;
@@ -93,7 +93,7 @@ export function ChannelOptionsMenu() {
               type="button"
               onClick={() => {
                 setOpen(false);
-                setMembersSheetOpen(true);
+                groupMembersOpen?.setOpen(true);
               }}
               className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
             >
@@ -157,7 +157,6 @@ export function ChannelOptionsMenu() {
           </button>
         </div>
       )}
-      <GroupMembersSheet open={membersSheetOpen} onClose={() => setMembersSheetOpen(false)} />
       {editGroupOpen && isGroup && channel && (
         <EditGroupModal
           currentName={currentGroupName}
