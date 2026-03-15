@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
 import { MessageList, MessageInput, useChannelActionContext, useChannelStateContext, useChatContext } from "stream-chat-react";
 import { PinnedMessagesBar } from "./PinnedMessagesBar";
 import { useViewOnce } from "./ViewOnceContext";
@@ -29,12 +29,33 @@ export function ChannelMessageLayout() {
       ? Object.keys(channel?.state?.members || {}).find((id) => id !== currentUserId)
       : undefined;
 
-  // Use messages from context (FilteredChannelStateWrapper ensures they're safe for SDK)
-  const messages = channel?.state?.messages ?? [];
-  type MsgEl = (typeof messages)[number];
-  const safeMessages = messages.filter(
-    (m: MsgEl): m is MsgEl & { created_at: unknown } =>
-      m != null && typeof m === "object" && (m as { created_at?: unknown }).created_at != null
+  // Defensive: only pass messages that have created_at so SDK never throws on message.created_at
+  const rawMessages = Array.isArray(channel?.state?.messages) ? channel.state.messages : [];
+  type MsgEl = (typeof rawMessages)[number];
+  const safeMessages = useMemo(
+    () =>
+      rawMessages.filter(
+        (m: MsgEl): m is MsgEl & { created_at: unknown } =>
+          m != null && typeof m === "object" && (m as { created_at?: unknown }).created_at != null
+      ),
+    [rawMessages]
+  );
+
+  const reviewProcessedMessage = useCallback(
+    (params: {
+      changes: Array<{ created_at?: unknown; customType?: string }>;
+      index: number;
+      messages: unknown[];
+      processedMessages: unknown[];
+    }) => {
+      return params.changes.filter(
+        (c) =>
+          c != null &&
+          typeof c === "object" &&
+          (c.customType === "date" || (c as { created_at?: unknown }).created_at != null)
+      );
+    },
+    []
   );
   const readState = (channel?.state as any)?.read || {};
   const otherRead = otherMemberId ? readState[otherMemberId] : undefined;
@@ -103,10 +124,11 @@ export function ChannelMessageLayout() {
         <div className="flex-1 min-h-0 overflow-auto">
           <MessageList
             head={<></>}
-            headerPosition={-1}
+            headerPosition={0}
             messages={safeMessages}
             disableDateSeparator
             hideNewMessageSeparator
+            reviewProcessedMessage={reviewProcessedMessage}
           />
           {isOneToOne && hasSeenLastOutgoing && (
             <div className="px-3 pb-1 text-right text-xs text-[var(--ig-text-secondary)]">Seen</div>
