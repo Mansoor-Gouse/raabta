@@ -6,6 +6,7 @@ import { StreamChat } from "stream-chat";
 import type { User as StreamUser } from "stream-chat";
 import "stream-chat-react/dist/css/v2/index.css";
 import { ConnectionStateProvider } from "@/components/chat/ConnectionStateContext";
+import { DesktopNotificationHandler } from "@/components/chat/DesktopNotificationHandler";
 import { OfflineQueueProvider } from "@/components/chat/OfflineQueueContext";
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY || "";
@@ -64,6 +65,7 @@ export function Providers({
     <Chat client={chatClient}>
       <ConnectionStateProvider>
         <OfflineQueueProvider>
+          <DesktopNotificationHandler />
           {children}
         </OfflineQueueProvider>
       </ConnectionStateProvider>

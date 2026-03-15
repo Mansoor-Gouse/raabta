@@ -6,6 +6,12 @@ import { usePathname } from "next/navigation";
 import { useChatContext } from "stream-chat-react";
 import { useAppUser } from "@/components/layout/AppShell";
 import { ChannelList, type ChannelListRef } from "@/components/chat/ChannelList";
+import {
+  PushPromptBanner,
+  isPushSupported,
+  getPushPermission,
+  wasPushPromptDismissed,
+} from "@/components/PushRegistration";
 
 export default function ChatsPage() {
   const listRef = useRef<ChannelListRef>(null);
@@ -17,7 +23,14 @@ export default function ChatsPage() {
   const [activeTab, setActiveTab] = useState<"messages" | "requests">("messages");
   const [showArchived, setShowArchived] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showPushBanner, setShowPushBanner] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isPushSupported() && getPushPermission() === "default" && !wasPushPromptDismissed()) {
+      setShowPushBanner(true);
+    }
+  }, []);
 
   const streamUser = client?.user;
   const displayName =
@@ -131,6 +144,11 @@ export default function ChatsPage() {
           </Link>
         </div>
       </header>
+
+      {/* Push notifications prompt (dismissible) */}
+      {showPushBanner && (
+        <PushPromptBanner onDismiss={() => setShowPushBanner(false)} />
+      )}
 
       {/* Search bar - prominent, rounded, like "Search or ask Meta AI" */}
       <div className="shrink-0 px-4 py-3 border-b border-[var(--ig-border-light)]">

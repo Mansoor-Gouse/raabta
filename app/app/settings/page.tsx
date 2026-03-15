@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BlockedList } from "@/components/settings/BlockedList";
+import { PushSettingsSection } from "@/components/PushRegistration";
 
 export default function SettingsPage() {
   return (
@@ -14,6 +15,7 @@ export default function SettingsPage() {
       >
         Edit profile
       </Link>
+      <PushSettingsSection />
       <BlockedList />
     </div>
   );
