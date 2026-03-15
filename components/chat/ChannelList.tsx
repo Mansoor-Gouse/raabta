@@ -83,10 +83,13 @@ export type ChannelListProps = {
   /** Controlled search value when parent provides the search bar. */
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  /** When provided, parent controls archived view (e.g. from chats page). */
+  showArchived?: boolean;
+  onShowArchivedChange?: (show: boolean) => void;
 };
 
 export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function ChannelList(
-  { hideSearchBar, searchValue, onSearchChange },
+  { hideSearchBar, searchValue, onSearchChange, showArchived: controlledShowArchived, onShowArchivedChange },
   ref
 ) {
   const { client, setActiveChannel } = useChatContext();
@@ -96,7 +99,9 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const [internalSearch, setInternalSearch] = useState("");
   const channelSearch = searchValue !== undefined ? searchValue : internalSearch;
   const setChannelSearch = onSearchChange ?? setInternalSearch;
-  const [showArchived, setShowArchived] = useState(false);
+  const [internalShowArchived, setInternalShowArchived] = useState(false);
+  const showArchived = controlledShowArchived !== undefined ? controlledShowArchived : internalShowArchived;
+  const setShowArchived = onShowArchivedChange ?? setInternalShowArchived;
   const [menuChannelId, setMenuChannelId] = useState<string | null>(null);
   const [pullY, setPullY] = useState(0);
   const pullStartY = useRef(0);
@@ -105,7 +110,10 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const fetchChannels = useCallback(() => {
     if (!client?.userID) return;
     setLoading(true);
-    const base = { members: { $in: [client.userID] }, archived: showArchived };
+    const base = {
+      members: { $in: [client.userID] },
+      ...(showArchived ? { hidden: true } : { hidden: { $ne: true } }),
+    };
     Promise.all([
       client.queryChannels({ ...baseFilters, ...base }, [{ last_message_at: -1 }], { limit: 30 }),
       client.queryChannels({ type: "team", ...base }, [{ last_message_at: -1 }], { limit: 30 }),
@@ -267,7 +275,9 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
         <ul className="flex-1 overflow-y-auto">
           {list.length === 0 && (
             <li className="p-4 text-sm text-[var(--ig-text-secondary)] text-center">
-              No chats match your search.
+              {showArchived
+                ? "No archived chats. Archive a chat from the main list using the ⋮ menu."
+                : "No chats match your search."}
             </li>
           )}
           {list.map((channel) => {
@@ -384,7 +394,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                             e.preventDefault();
                             e.stopPropagation();
                             try {
-                              await channel.unarchive();
+                              await channel.show();
                               fetchChannels();
                               setMenuChannelId(null);
                             } catch (err) {
@@ -402,7 +412,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                             e.preventDefault();
                             e.stopPropagation();
                             try {
-                              await channel.archive();
+                              await channel.hide();
                               fetchChannels();
                               setMenuChannelId(null);
                             } catch (err) {

@@ -10,16 +10,38 @@ export default function ChatsPage() {
   const { client } = useChatContext();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"messages" | "requests">("messages");
+  const [showArchived, setShowArchived] = useState(false);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg-primary)]">
-      {/* Header: Chats title on left (no duplicate username; sidebar shows user), actions on right */}
+      {/* Header: Chats/Archived title; link to switch; actions on right */}
       <header
         className="shrink-0 flex items-center justify-between h-14 min-h-[56px] px-4 border-b border-[var(--ig-border-light)]"
         style={{ paddingTop: "var(--safe-area-inset-top)" }}
       >
-        <div className="flex-1 min-w-0 flex items-center justify-start pl-1">
-          <h1 className="text-[var(--ig-text)] font-semibold text-lg tracking-tight">Chats</h1>
+        <div className="flex-1 min-w-0 flex items-center justify-start gap-2 pl-1">
+          <h1 className="text-[var(--ig-text)] font-semibold text-lg tracking-tight">
+            {showArchived ? "Archived" : "Chats"}
+          </h1>
+          {activeTab === "messages" && (
+            showArchived ? (
+              <button
+                type="button"
+                onClick={() => setShowArchived(false)}
+                className="text-sm font-medium text-[var(--ig-link)] hover:underline"
+              >
+                Back to chats
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowArchived(true)}
+                className="text-sm text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+              >
+                Archived
+              </button>
+            )
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Link
@@ -118,6 +140,8 @@ export default function ChatsPage() {
             hideSearchBar
             searchValue={search}
             onSearchChange={setSearch}
+            showArchived={showArchived}
+            onShowArchivedChange={setShowArchived}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">

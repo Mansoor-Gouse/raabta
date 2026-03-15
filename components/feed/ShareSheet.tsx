@@ -26,6 +26,20 @@ function getOtherMember(channel: StreamChannel, currentUserId: string): OtherUse
   return { name: user.name, id: user.id, image: user.image };
 }
 
+function getChannelDisplayName(channel: StreamChannel, currentUserId: string): string {
+  const data = channel.data as { name?: string };
+  if (data?.name) return data.name;
+  const other = getOtherMember(channel, currentUserId);
+  return other?.name || other?.id || "Chat";
+}
+
+function getChannelDisplayImage(channel: StreamChannel, currentUserId: string): string | undefined {
+  const data = channel.data as { image?: string };
+  if (data?.image) return data.image;
+  const other = getOtherMember(channel, currentUserId);
+  return other?.image;
+}
+
 type RecipientChannel = { type: "channel"; channel: StreamChannel; id: string; name: string; image?: string };
 type RecipientUser = { type: "user"; userId: string; name: string; image?: string };
 type Recipient = RecipientChannel | RecipientUser;
@@ -57,14 +71,27 @@ export function ShareSheet({
 
   useEffect(() => {
     if (!open || !client?.userID) return;
-    const filters = {
-      type: "messaging" as const,
+    const base = {
       members: { $in: [client.userID] },
-      archived: false,
+      hidden: { $ne: true },
     };
-    client
-      .queryChannels(filters, [{ last_message_at: -1 }], { limit: 30 })
-      .then(setChannels)
+    Promise.all([
+      client.queryChannels({ type: "messaging", ...base }, [{ last_message_at: -1 }], { limit: 50 }),
+      client.queryChannels({ type: "team", ...base }, [{ last_message_at: -1 }], { limit: 50 }),
+    ])
+      .then(([messaging, team]) => {
+        const byId = new Map<string, StreamChannel>();
+        [...messaging, ...team].forEach((c) => byId.set(c.id, c));
+        const merged = Array.from(byId.values()).sort((a, b) => {
+          const getTime = (c: StreamChannel) => {
+            const created = c.state?.messages?.[0]?.created_at;
+            if (created == null) return 0;
+            return created instanceof Date ? created.getTime() : new Date(created).getTime();
+          };
+          return getTime(b) - getTime(a);
+        });
+        setChannels(merged);
+      })
       .catch(console.error);
   }, [open, client?.userID]);
 
@@ -98,19 +125,13 @@ export function ShareSheet({
     };
   }, [search, currentUserId]);
 
-  const channelRecipients: RecipientChannel[] = channels
-    .map((ch): RecipientChannel | null => {
-      const other = getOtherMember(ch, currentUserId!);
-      if (!other || other.id === currentUserId) return null;
-      return {
-        type: "channel" as const,
-        channel: ch,
-        id: ch.id ?? "",
-        name: other.name ?? other.id ?? "Chat",
-        image: other.image,
-      };
-    })
-    .filter((r): r is RecipientChannel => r !== null);
+  const channelRecipients: RecipientChannel[] = channels.map((ch) => ({
+    type: "channel" as const,
+    channel: ch,
+    id: ch.id ?? "",
+    name: getChannelDisplayName(ch, currentUserId!),
+    image: getChannelDisplayImage(ch, currentUserId!),
+  }));
 
   const showSearchResults = search.trim().length >= 2;
   const recipients: Recipient[] = showSearchResults

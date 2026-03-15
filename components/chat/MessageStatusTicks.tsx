@@ -65,16 +65,17 @@ export function MessageStatusTicks() {
 
 function OneTickSent({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 16 15" fill="currentColor" aria-hidden>
-      <path d="M14.7 1.3c-.4-.4-1-.4-1.4 0L5 9.6 2.7 7.3c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l3 3c.2.2.5.3.7.3s.5-.1.7-.3l9-9c.4-.4.4-1 0-1.4z" />
+    <svg className={className} viewBox="0 0 16 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1 6l4 4 9-9" />
     </svg>
   );
 }
 
 function TwoTicksRead({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 18 15" fill="currentColor" aria-hidden>
-      <path d="M17.3 1.3c-.4-.4-1-.4-1.4 0L6 11.6 2.7 8.3c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l4 4c.2.2.5.3.7.3s.5-.1.7-.3L17.3 2.7c.4-.4.4-1 0-1.4zM10.7 8.3L5 14 1.7 10.7c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l4 4c.2.2.5.3.7.3s.5-.1.7-.3l6.4-6.4c.4-.4.4-1 0-1.4s-1-.4-1.4 0z" />
+    <svg className={className} viewBox="0 0 20 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1 6l4 4 4-4" />
+      <path d="M7 6l4 4 8-8" />
     </svg>
   );
 }

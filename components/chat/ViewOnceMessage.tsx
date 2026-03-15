@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { MessageSimple, useMessageContext, useChannelActionContext, useChatContext } from "stream-chat-react";
+import { MessageSimple, useMessageContext, useChannelActionContext, useChatContext, useComponentContext } from "stream-chat-react";
 import { SharedPostCard, type PostShareAttachment } from "./SharedPostCard";
 
 type CustomData = { view_once?: boolean; view_once_consumed_by?: string[] };
@@ -23,6 +23,7 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
   const { message, isMyMessage } = useMessageContext();
   const { updateMessage } = useChannelActionContext();
   const { client } = useChatContext();
+  const { MessageStatus: MessageStatusComponent } = useComponentContext("MessageSimple");
   const currentUserId = client?.userID;
 
   const [hasRevealed, setHasRevealed] = useState(false);
@@ -46,9 +47,21 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
 
   const postShareAttachment = getPostShareAttachment(message);
   if (postShareAttachment) {
+    const isSender = isMyMessage?.() ?? false;
+    const rootClassName = [
+      "str-chat__message",
+      "str-chat__message-simple",
+      "str-chat__message--has-attachment",
+      isSender ? "str-chat__message--me str-chat__message-simple--me" : "str-chat__message--other",
+    ].join(" ");
     return (
-      <div className="str-chat__message str-chat__message-simple">
-        <SharedPostCard attachment={postShareAttachment} />
+      <div className={rootClassName}>
+        <div className={`str-chat__message-inner str-chat__message-simple-inner flex items-end gap-1 ${isSender ? "flex-row-reverse" : ""}`}>
+          <SharedPostCard attachment={postShareAttachment} />
+          {MessageStatusComponent && (
+            <MessageStatusComponent />
+          )}
+        </div>
       </div>
     );
   }

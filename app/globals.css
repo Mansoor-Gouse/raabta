@@ -364,6 +364,12 @@ a,
   display: none !important;
 }
 
+/* Hide duplicate channel header (name + last seen) when it is injected inside the message list */
+.channel-message-list .str-chat__header-livestream,
+.channel-message-list .str-chat__channel-header {
+  display: none !important;
+}
+
 /* Custom input: use single expandable attach icon; hide Stream's duplicate file button (v1 + v2) */
 .custom-message-input .str-chat__fileupload-wrapper,
 .custom-message-input .str-chat__file-input-container {
