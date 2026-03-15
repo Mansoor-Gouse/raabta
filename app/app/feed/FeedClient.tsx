@@ -48,7 +48,6 @@ export function FeedClient() {
   const [shareSheetPost, setShareSheetPost] = useState<FeedPost | null>(null);
   const [activeIndex, setActiveIndex] = useState<SegmentIndex>(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [headerVisible, setHeaderVisible] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const postsPanelRef = useRef<HTMLElement>(null);
   const storiesPanelRef = useRef<HTMLElement>(null);
@@ -57,10 +56,7 @@ export function FeedClient() {
   const prevIndexRef = useRef<SegmentIndex>(0);
   const lastScrollTopRef = useRef(0);
   const activeIndexRef = useRef<SegmentIndex>(0);
-  const headerHideRafRef = useRef<number | null>(null);
   const loadingMoreRef = useRef(false);
-
-  const SCROLL_THRESHOLD = 60;
 
   useEffect(() => {
     activeIndexRef.current = activeIndex;
@@ -72,28 +68,14 @@ export function FeedClient() {
   }, [activeIndex]);
 
   const handlePanelScroll = useCallback(() => {
-    if (headerHideRafRef.current != null) return;
-    headerHideRafRef.current = requestAnimationFrame(() => {
-      headerHideRafRef.current = null;
-      if (loadingMoreRef.current) return;
-      const panel = activeIndexRef.current === 0 ? postsPanelRef.current : storiesPanelRef.current;
-      if (!panel) return;
-      const scrollTop = panel.scrollTop;
-      const last = lastScrollTopRef.current;
-      lastScrollTopRef.current = scrollTop;
-      if (scrollTop > last) {
-        if (scrollTop > SCROLL_THRESHOLD) setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-    });
+    const panel = activeIndexRef.current === 0 ? postsPanelRef.current : storiesPanelRef.current;
+    if (panel) lastScrollTopRef.current = panel.scrollTop;
   }, []);
 
   const scrollToIndex = useCallback((index: SegmentIndex) => {
     const el = scrollRef.current;
     if (!el) return;
     triggerHaptic();
-    setHeaderVisible(true);
     setScrollProgress(index);
     setActiveIndex(index);
     prevIndexRef.current = index;
@@ -131,7 +113,6 @@ export function FeedClient() {
     return () => {
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
-      if (headerHideRafRef.current != null) cancelAnimationFrame(headerHideRafRef.current);
     };
   }, []);
 
@@ -208,16 +189,9 @@ export function FeedClient() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
-      {/* Subsection bar: hides on scroll down, shows on scroll up (smooth transition) */}
-      <div
-        className="overflow-hidden transition-[max-height] duration-300 ease-out shrink-0"
-        style={{ maxHeight: headerVisible ? "120px" : "0" }}
-      >
-        <div
-          className={`sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] transition-transform duration-300 ease-out ${
-            headerVisible ? "translate-y-0" : "-translate-y-full"
-          }`}
-        >
+      {/* Sticky header: always visible when scrolling */}
+      <div className="shrink-0">
+        <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
           <div className="flex items-center px-4 py-2.5">
             <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
           </div>

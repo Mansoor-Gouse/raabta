@@ -247,61 +247,6 @@ export function PostCard({
             <span className="font-semibold">{likedSampleName}</span>
             {likeCount > 1 ? ` and ${likeCount - 1} others like this` : " likes this"}
           </button>
-          <div className="relative flex items-center gap-1 shrink-0" ref={menuRef}>
-            <button
-              type="button"
-              onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
-              className="p-1.5 text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-              aria-label="More options"
-              aria-expanded={moreOpen}
-            >
-              <IconMore className="w-5 h-5" />
-            </button>
-            {moreOpen && (
-              <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
-                {isAuthor ? (
-                  <>
-                    <Link
-                      href={`/app/feed/${post._id}/edit`}
-                      className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-                      onClick={() => setMoreOpen(false)}
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]"
-                    >
-                      {deleteConfirm ? "Confirm delete?" : "Delete"}
-                    </button>
-                    {deleteConfirm && (
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(false)}
-                        className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
-                      <ReportButton targetType="post" targetId={post._id} />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setMoreOpen(false)}
-                      className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -343,35 +288,33 @@ export function PostCard({
             <time dateTime={post.createdAt}>{timeLabel}</time>
           </div>
         </div>
-        {likeCount === 0 && (
-          <div className="relative shrink-0" ref={menuRef}>
-            <button
-              type="button"
-              onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
-              className="p-1.5 text-[var(--ig-text)]"
-              aria-label="More options"
-              aria-expanded={moreOpen}
-            >
-              <IconMore className="w-5 h-5" />
-            </button>
-            {moreOpen && (
-              <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
-                {isAuthor ? (
-                  <>
-                    <Link href={`/app/feed/${post._id}/edit`} className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]" onClick={() => setMoreOpen(false)}>Edit</Link>
-                    <button type="button" onClick={handleDelete} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]">{deleteConfirm ? "Confirm delete?" : "Delete"}</button>
-                    {deleteConfirm && <button type="button" onClick={() => setDeleteConfirm(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>}
-                  </>
-                ) : (
-                  <>
-                    <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}><ReportButton targetType="post" targetId={post._id} /></div>
-                    <button type="button" onClick={() => setMoreOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
+            className="p-1.5 text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+            aria-label="More options"
+            aria-expanded={moreOpen}
+          >
+            <IconMore className="w-5 h-5" />
+          </button>
+          {moreOpen && (
+            <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
+              {isAuthor ? (
+                <>
+                  <Link href={`/app/feed/${post._id}/edit`} className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]" onClick={() => setMoreOpen(false)}>Edit</Link>
+                  <button type="button" onClick={handleDelete} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]">{deleteConfirm ? "Confirm delete?" : "Delete"}</button>
+                  {deleteConfirm && <button type="button" onClick={() => setDeleteConfirm(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>}
+                </>
+              ) : (
+                <>
+                  <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}><ReportButton targetType="post" targetId={post._id} /></div>
+                  <button type="button" onClick={() => setMoreOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* 3. Caption / body text */}
