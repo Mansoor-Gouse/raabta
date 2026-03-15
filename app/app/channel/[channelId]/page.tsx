@@ -13,6 +13,7 @@ import { ChannelErrorBoundary } from "@/components/chat/ChannelErrorBoundary";
 import { EventChannelMessageSystem } from "@/components/chat/EventChannelMessageSystem";
 import { ViewOnceProvider } from "@/components/chat/ViewOnceContext";
 import { ViewOnceMessage } from "@/components/chat/ViewOnceMessage";
+import { FilteredChannelStateWrapper } from "@/components/chat/FilteredChannelStateWrapper";
 
 export default function ChannelPage() {
   const params = useParams();
@@ -67,7 +68,9 @@ export default function ChannelPage() {
             multipleUploads
             maxNumberOfFiles={10}
           >
-            <ChannelWithThreadLayout />
+            <FilteredChannelStateWrapper>
+              <ChannelWithThreadLayout />
+            </FilteredChannelStateWrapper>
           </Channel>
         </EventChannelInfoProvider>
       </ViewOnceProvider>

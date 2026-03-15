@@ -29,10 +29,11 @@ export function ChannelMessageLayout() {
       ? Object.keys(channel?.state?.members || {}).find((id) => id !== currentUserId)
       : undefined;
 
-  const rawMessages = channel?.state?.messages || [];
-  type Msg = (typeof rawMessages)[number];
-  const messages = rawMessages.filter(
-    (m: Msg): m is Msg & { created_at: unknown } =>
+  // Use messages from context (FilteredChannelStateWrapper ensures they're safe for SDK)
+  const messages = channel?.state?.messages ?? [];
+  type MsgEl = (typeof messages)[number];
+  const safeMessages = messages.filter(
+    (m: MsgEl): m is MsgEl & { created_at: unknown } =>
       m != null && typeof m === "object" && (m as { created_at?: unknown }).created_at != null
   );
   const readState = (channel?.state as any)?.read || {};
@@ -40,8 +41,8 @@ export function ChannelMessageLayout() {
   const lastReadDate = otherRead?.last_read ? new Date(otherRead.last_read) : null;
 
   let hasSeenLastOutgoing = false;
-  if (lastReadDate && currentUserId && messages.length) {
-    const lastOutgoingRead = [...messages]
+  if (lastReadDate && currentUserId && safeMessages.length) {
+    const lastOutgoingRead = [...safeMessages]
       .reverse()
       .find((m) => {
         if (!m) return false;
@@ -49,8 +50,8 @@ export function ChannelMessageLayout() {
         return m.user?.id === currentUserId && createdAt && createdAt <= lastReadDate;
       });
 
-    if (lastOutgoingRead && messages.length > 0) {
-      const lastMsg = messages[messages.length - 1];
+    if (lastOutgoingRead && safeMessages.length > 0) {
+      const lastMsg = safeMessages[safeMessages.length - 1];
       hasSeenLastOutgoing = lastMsg && lastOutgoingRead.id === lastMsg.id;
     }
   }
@@ -100,7 +101,13 @@ export function ChannelMessageLayout() {
       <div className="channel-message-list flex-1 min-h-0 flex flex-col">
         <PinnedMessagesBar />
         <div className="flex-1 min-h-0 overflow-auto">
-          <MessageList head={<></>} headerPosition={-1} messages={messages} />
+          <MessageList
+            head={<></>}
+            headerPosition={-1}
+            messages={safeMessages}
+            disableDateSeparator
+            hideNewMessageSeparator
+          />
           {isOneToOne && hasSeenLastOutgoing && (
             <div className="px-3 pb-1 text-right text-xs text-[var(--ig-text-secondary)]">Seen</div>
           )}
