@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/auth";
-import { ProfileGrid } from "./ProfileGrid";
+import { ProfileGrid } from "../ProfileGrid";
 
 export default async function ProfilePage() {
   const session = await getSession();

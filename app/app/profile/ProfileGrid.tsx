@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type PostThumb = { _id: string; mediaUrls: string[] };
+type PostThumb = { _id: string; mediaUrls: string[]; caption?: string };
+
+const CAPTION_PREVIEW_LENGTH = 80;
+
+function isImageUrl(url: string): boolean {
+  return /\.(gif|webp|png|jpe?g|avif)$/i.test(url);
+}
 
 export function ProfileGrid() {
   const [posts, setPosts] = useState<PostThumb[]>([]);
@@ -34,31 +40,49 @@ export function ProfileGrid() {
 
   return (
     <div className="grid grid-cols-3 gap-0.5 bg-[var(--elite-bg)]">
-      {posts.map((post) => (
-        <Link
-          key={post._id}
-          href={`/app/feed/${post._id}`}
-          className="aspect-square bg-[var(--elite-surface)] block"
-        >
-          {post.mediaUrls[0] ? (
-            post.mediaUrls[0].match(/\.(gif|webp|png|jpe?g|avif)$/i) ? (
+      {posts.map((post) => {
+        const hasMedia = post.mediaUrls?.length > 0;
+        const firstMedia = post.mediaUrls?.[0];
+        const isImage = firstMedia && isImageUrl(firstMedia);
+        const isTextOnly = !hasMedia;
+
+        return (
+          <Link
+            key={post._id}
+            href={`/app/feed/${post._id}`}
+            className="aspect-square bg-[var(--elite-surface)] block overflow-hidden"
+          >
+            {hasMedia && isImage ? (
               <img
-                src={post.mediaUrls[0]}
+                src={firstMedia}
                 alt=""
                 className="w-full h-full object-cover"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-black text-white">
+            ) : hasMedia && firstMedia ? (
+              <div className="w-full h-full flex items-center justify-center bg-[var(--elite-border-light)] text-[var(--elite-text-muted)]">
                 <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
-            )
-          ) : (
-            <div className="w-full h-full bg-[var(--elite-border-light)]" />
-          )}
-        </Link>
-      ))}
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-[var(--elite-surface)] border border-[var(--elite-border)]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--elite-border-light)] text-[var(--elite-text-muted)] mb-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </span>
+                <p className="elite-body text-xs text-[var(--elite-text-secondary)] text-center line-clamp-3 break-words w-full">
+                  {post.caption?.trim()
+                    ? post.caption.length > CAPTION_PREVIEW_LENGTH
+                      ? `${post.caption.slice(0, CAPTION_PREVIEW_LENGTH).trim()}…`
+                      : post.caption
+                    : "Text post"}
+                </p>
+              </div>
+            )}
+          </Link>
+        );
+      })}
     </div>
   );
 }
