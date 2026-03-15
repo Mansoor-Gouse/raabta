@@ -23,7 +23,7 @@ export function ProfileEventsClient() {
         <ul className="p-4 space-y-4">
           {[1, 2, 3, 4].map((i) => (
             <li key={i}>
-              <EventCardSkeleton />
+              <EventCardSkeleton variant="elite" />
             </li>
           ))}
         </ul>
@@ -61,7 +61,7 @@ export function ProfileEventsClient() {
       <ul className="p-4 space-y-4">
         {events.map((ev) => (
           <li key={ev._id}>
-            <EventCard event={ev} />
+            <EventCard event={ev} variant="elite" />
           </li>
         ))}
       </ul>

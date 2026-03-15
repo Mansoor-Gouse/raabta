@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import mongoose from "mongoose";
 import { getSession } from "@/lib/auth";
-import { connectDB, User, PostModel, EventAttendeeModel } from "@/lib/db";
+import { connectDB, User, PostModel, EventAttendeeModel, CircleRelationshipModel } from "@/lib/db";
 import { ProfileTabs } from "../ProfileTabs";
 import { EditableProfileAvatar } from "../EditableProfileAvatar";
 import { EditableCoverImage } from "../EditableCoverImage";
@@ -22,9 +23,12 @@ export default async function ProfileViewLayout({
     .exec();
   if (!user) redirect("/login");
 
-  const [postsCount, eventsCount] = await Promise.all([
+  const userId = new mongoose.Types.ObjectId(session.userId);
+  const [postsCount, eventsCount, innerCount, trustedCount] = await Promise.all([
     PostModel.countDocuments({ authorId: session.userId }).exec(),
     EventAttendeeModel.countDocuments({ userId: session.userId, status: "going" }).exec(),
+    CircleRelationshipModel.countDocuments({ userId, circleType: "INNER" }).exec(),
+    CircleRelationshipModel.countDocuments({ userId, circleType: "TRUSTED" }).exec(),
   ]);
 
   const u = user as unknown as {
@@ -71,6 +75,11 @@ export default async function ProfileViewLayout({
                     {u.headline}
                   </p>
                 )}
+                {u.bio && (
+                  <p className="elite-body mt-2 text-sm text-[var(--elite-text-secondary)] whitespace-pre-wrap">
+                    {u.bio}
+                  </p>
+                )}
               </div>
               <Link
                 href="/app/profile/edit"
@@ -95,35 +104,29 @@ export default async function ProfileViewLayout({
                 </span>
                 <span className="elite-body text-xs text-[var(--elite-text-muted)]">events</span>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3">
               <Link
-                href="/app/members"
-                className="elite-events inline-flex items-center gap-2 rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-2 text-sm font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
+                href="/app/profile/circles#inner"
+                className="elite-events flex flex-col items-center hover:opacity-80 transition-opacity"
+                aria-label="Inner circle members"
               >
-                <svg className="w-4 h-4 shrink-0 text-[var(--elite-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Members
+                <span className="elite-heading font-semibold text-base text-[var(--elite-text)] tabular-nums">
+                  {innerCount}
+                </span>
+                <span className="elite-body text-xs text-[var(--elite-text-muted)]">inner</span>
               </Link>
               <Link
-                href="/app/profile/circles"
-                className="elite-events inline-flex items-center gap-2 rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-2 text-sm font-medium text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors duration-[var(--elite-transition)]"
+                href="/app/profile/circles#trusted"
+                className="elite-events flex flex-col items-center hover:opacity-80 transition-opacity"
+                aria-label="Trusted circle members"
               >
-                <svg className="w-4 h-4 shrink-0 text-[var(--elite-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                My circles
+                <span className="elite-heading font-semibold text-base text-[var(--elite-text)] tabular-nums">
+                  {trustedCount}
+                </span>
+                <span className="elite-body text-xs text-[var(--elite-text-muted)]">trusted</span>
               </Link>
             </div>
           </div>
         </div>
-
-        {u.bio && (
-          <p className="elite-body mt-4 text-sm text-[var(--elite-text-secondary)] whitespace-pre-wrap">
-            {u.bio}
-          </p>
-        )}
         {u.location && (
           <p className="elite-body mt-2 text-sm text-[var(--elite-text-muted)] flex items-center gap-1">
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

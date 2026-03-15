@@ -196,7 +196,7 @@ export default function CirclesPage() {
           </div>
         </header>
 
-        <section className="elite-events rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] p-4 sm:p-5">
+        <section id="inner" className="elite-events rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] p-4 sm:p-5 scroll-mt-4">
           <div className="flex items-baseline justify-between gap-2">
             <div>
               <h2 className="elite-heading text-sm font-semibold tracking-wide text-[var(--elite-text)]">
@@ -267,7 +267,7 @@ export default function CirclesPage() {
           </ul>
         </section>
 
-        <section className="elite-events rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] p-4 sm:p-5">
+        <section id="trusted" className="elite-events rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] p-4 sm:p-5 scroll-mt-4">
           <div className="flex items-baseline justify-between gap-2">
             <div>
               <h2 className="elite-heading text-sm font-semibold tracking-wide text-[var(--elite-text)]">

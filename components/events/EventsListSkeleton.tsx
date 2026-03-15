@@ -3,18 +3,23 @@
 /**
  * Skeleton loader matching EventCard layout: cover (2:1), type pill, title, date/location line, host row.
  */
-export function EventCardSkeleton() {
+export function EventCardSkeleton({ variant = "default" }: { variant?: "default" | "elite" }) {
+  const isElite = variant === "elite";
+  const border = isElite ? "border-[var(--elite-border)]" : "border-[var(--ig-border)]";
+  const bg = isElite ? "bg-[var(--elite-card)]" : "bg-[var(--ig-bg-primary)]";
+  const thumbBg = isElite ? "bg-[var(--elite-border-light)]" : "bg-[var(--ig-border-light)]";
+  const radius = isElite ? "rounded-[var(--elite-radius-lg)]" : "rounded-xl";
   return (
-    <div className="rounded-xl border border-[var(--ig-border)] overflow-hidden bg-[var(--ig-bg-primary)] animate-pulse">
-      <div className="aspect-[2/1] w-full bg-[var(--ig-border-light)]" />
+    <div className={`${radius} border ${border} overflow-hidden ${bg} animate-pulse`}>
+      <div className={`aspect-[2/1] w-full ${thumbBg}`} />
       <div className="p-4 space-y-2">
-        <div className="h-3 w-14 rounded bg-[var(--ig-border-light)]" />
-        <div className="h-4 w-48 max-w-[200px] rounded bg-[var(--ig-border-light)]" />
-        <div className="h-3.5 w-full max-w-[260px] rounded bg-[var(--ig-border-light)]" />
+        <div className={`h-3 w-14 rounded ${thumbBg}`} />
+        <div className={`h-4 w-48 max-w-[200px] rounded ${thumbBg}`} />
+        <div className={`h-3.5 w-full max-w-[260px] rounded ${thumbBg}`} />
         <div className="flex items-center gap-2 mt-2">
-          <div className="w-6 h-6 rounded-full bg-[var(--ig-border-light)] shrink-0" />
-          <div className="h-3 w-20 rounded bg-[var(--ig-border-light)]" />
-          <div className="h-3 w-14 rounded bg-[var(--ig-border-light)]" />
+          <div className={`w-6 h-6 rounded-full ${thumbBg} shrink-0`} />
+          <div className={`h-3 w-20 rounded ${thumbBg}`} />
+          <div className={`h-3 w-14 rounded ${thumbBg}`} />
         </div>
       </div>
     </div>
