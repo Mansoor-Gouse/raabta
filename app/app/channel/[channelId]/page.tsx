@@ -14,6 +14,7 @@ import { EventChannelMessageSystem } from "@/components/chat/EventChannelMessage
 import { ViewOnceProvider } from "@/components/chat/ViewOnceContext";
 import { ViewOnceMessage } from "@/components/chat/ViewOnceMessage";
 import { FilteredChannelStateWrapper } from "@/components/chat/FilteredChannelStateWrapper";
+import { getDraft } from "@/lib/draftStorage";
 
 export default function ChannelPage() {
   const params = useParams();
@@ -53,6 +54,7 @@ export default function ChannelPage() {
     );
   }
 
+  const cid = `${channelType}:${channelId}`;
   return (
     <ChannelErrorBoundary>
       <ViewOnceProvider>
@@ -67,6 +69,7 @@ export default function ChannelPage() {
             MessageSystem={EventChannelMessageSystem}
             multipleUploads
             maxNumberOfFiles={10}
+            optionalMessageInputProps={{ getDefaultValue: () => getDraft(cid) }}
           >
             <FilteredChannelStateWrapper>
               <ChannelWithThreadLayout />

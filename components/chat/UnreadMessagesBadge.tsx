@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useChatContext } from "stream-chat-react";
 import type { Channel as StreamChannel } from "stream-chat";
+
+const DEBOUNCE_MS = 300;
 
 function getUnreadCount(channel: StreamChannel): number {
   const membership = channel.state?.membership as { unread_count?: number } | undefined;
@@ -10,12 +13,16 @@ function getUnreadCount(channel: StreamChannel): number {
 }
 
 /**
- * Fetches total unread message count across all channels and re-fetches on focus.
+ * Fetches total unread message count across all channels. Re-fetches on:
+ * - Mount, window focus, leaving a channel route, and Stream events (mark_read / message.new).
  * Used for the navbar message icon badge.
  */
 export function useTotalUnreadCount(): number {
   const { client } = useChatContext();
+  const pathname = usePathname();
   const [total, setTotal] = useState(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevPathnameRef = useRef<string | null>(null);
 
   const fetchTotal = useCallback(() => {
     if (!client?.userID) {
@@ -26,12 +33,24 @@ export function useTotalUnreadCount(): number {
     Promise.all([
       client.queryChannels({ type: "messaging", ...base } as any, [], { limit: 50 }),
       client.queryChannels({ type: "team", ...base } as any, [], { limit: 50 }),
-    ]).then(([messaging, team]) => {
-      const all = [...messaging, ...team];
-      const sum = all.reduce((acc, ch) => acc + getUnreadCount(ch), 0);
-      setTotal(sum);
-    }).catch(() => setTotal(0));
+    ])
+      .then(([messaging, team]) => {
+        const all = [...messaging, ...team];
+        const sum = all.reduce((acc, ch) => acc + getUnreadCount(ch), 0);
+        setTotal(sum);
+      })
+      .catch(() => {
+        // Keep previous total on error so UI does not show a broken state
+      });
   }, [client]);
+
+  const debouncedFetchTotal = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      fetchTotal();
+    }, DEBOUNCE_MS);
+  }, [fetchTotal]);
 
   useEffect(() => {
     fetchTotal();
@@ -39,10 +58,36 @@ export function useTotalUnreadCount(): number {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const onFocus = () => fetchTotal();
+    const onFocus = () => debouncedFetchTotal();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [fetchTotal]);
+  }, [debouncedFetchTotal]);
+
+  useEffect(() => {
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname ?? null;
+    const wasOnChannel = prev?.startsWith("/app/channel/");
+    const isNowOffChannel = pathname != null && !pathname.startsWith("/app/channel/");
+    if (wasOnChannel && isNowOffChannel) debouncedFetchTotal();
+  }, [pathname, debouncedFetchTotal]);
+
+  useEffect(() => {
+    if (!client) return;
+    const onMarkRead = () => debouncedFetchTotal();
+    const onMessageNew = () => debouncedFetchTotal();
+    client.on("notification.mark_read", onMarkRead);
+    client.on("message.new", onMessageNew);
+    return () => {
+      client.off("notification.mark_read", onMarkRead);
+      client.off("message.new", onMessageNew);
+    };
+  }, [client, debouncedFetchTotal]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   return total;
 }

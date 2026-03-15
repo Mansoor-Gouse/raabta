@@ -5,6 +5,8 @@ import { Chat } from "stream-chat-react";
 import { StreamChat } from "stream-chat";
 import type { User as StreamUser } from "stream-chat";
 import "stream-chat-react/dist/css/v2/index.css";
+import { ConnectionStateProvider } from "@/components/chat/ConnectionStateContext";
+import { OfflineQueueProvider } from "@/components/chat/OfflineQueueContext";
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY || "";
 
@@ -58,5 +60,13 @@ export function Providers({
     );
   }
 
-  return <Chat client={chatClient}>{children}</Chat>;
+  return (
+    <Chat client={chatClient}>
+      <ConnectionStateProvider>
+        <OfflineQueueProvider>
+          {children}
+        </OfflineQueueProvider>
+      </ConnectionStateProvider>
+    </Chat>
+  );
 }

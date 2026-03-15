@@ -6,6 +6,7 @@ import type { Channel as StreamChannel } from "stream-chat";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { ChatListSwipeRow } from "./ChatListSwipeRow";
 
 type OtherUser = { name?: string; id?: string; image?: string };
 
@@ -103,6 +104,8 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const showArchived = controlledShowArchived !== undefined ? controlledShowArchived : internalShowArchived;
   const setShowArchived = onShowArchivedChange ?? setInternalShowArchived;
   const [menuChannelId, setMenuChannelId] = useState<string | null>(null);
+  const [swipedChannelId, setSwipedChannelId] = useState<string | null>(null);
+  const [dragState, setDragState] = useState<{ channelId: string; offset: number } | null>(null);
   const [pullY, setPullY] = useState(0);
   const pullStartY = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -136,6 +139,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     fetchChannels();
   }, [fetchChannels]);
 
+  // Parent (chats page) calls refresh() when user navigates back from a channel so unread counts stay in sync.
   useImperativeHandle(ref, () => ({ refresh: fetchChannels }), [fetchChannels]);
 
   const list = useMemo(() => {
@@ -315,70 +319,71 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
               ? (channelName ? channelName[0] : "E")
               : (other?.name || other?.id || "?")[0];
 
-            return (
-              <li
-                key={channel.id}
-                className={`relative flex items-center gap-3 px-4 py-3 min-h-[72px] border-b border-[var(--ig-border-light)] ${
-                  isActive ? "bg-[var(--ig-border-light)]" : "hover:bg-[var(--ig-border-light)]/50"
-                }`}
-              >
-                <Link
-                  href={`/app/channel/${channel.id}${channel.type === "team" ? "?type=team" : ""}`}
-                  onClick={() => setActiveChannel?.(channel)}
-                  className="flex flex-1 min-w-0 items-center gap-3 -m-3 p-3 rounded-lg"
-                  aria-label={`Chat with ${channelName}`}
+            const rowContent = (
+              <>
+                <div
+                  className={`flex flex-1 min-w-0 items-center gap-3 px-4 py-3 min-h-[72px] ${
+                    isActive ? "bg-[var(--ig-border-light)]" : "hover:bg-[var(--ig-border-light)]/50"
+                  }`}
                 >
-                  <div className="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center">
-                    {avatarImage ? (
-                      <img src={avatarImage} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-lg font-semibold text-[var(--ig-text-secondary)]">
-                        {(avatarLetter || "?").toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                    <div className="flex-1 min-w-0 pr-2">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-semibold text-[var(--ig-text)] truncate">
-                        {channelName}
-                      </span>
-                      {time && (
-                        <span className="text-xs text-[var(--ig-text-secondary)] shrink-0" title={time.toLocaleString()}>
-                          {formatRelativeTime(time)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <span className="text-sm text-[var(--ig-text-secondary)] truncate">
-                        {previewLine}
-                      </span>
-                      {hasUnread && (
-                        <span
-                          className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--ig-text)] text-white text-[10px] font-semibold px-1.5"
-                          aria-label={`${unreadCount} unread`}
-                        >
-                          {unreadCount > 99 ? "99+" : unreadCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-                <div className="flex items-center shrink-0">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setMenuChannelId((id) => (id === channel.id ? null : (channel.id ?? null)));
-                    }}
-                    className="p-2 rounded-full text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
-                    aria-label="Channel options"
-                    aria-expanded={menuOpen}
+                  <Link
+                    href={`/app/channel/${channel.id}${channel.type === "team" ? "?type=team" : ""}`}
+                    onClick={() => setActiveChannel?.(channel)}
+                    className="flex flex-1 min-w-0 items-center gap-3 -m-3 p-3 rounded-lg"
+                    aria-label={`Chat with ${channelName}`}
                   >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                    </svg>
-                  </button>
+                    <div className="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center">
+                      {avatarImage ? (
+                        <img src={avatarImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-semibold text-[var(--ig-text-secondary)]">
+                          {(avatarLetter || "?").toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-semibold text-[var(--ig-text)] truncate">
+                          {channelName}
+                        </span>
+                        {time && (
+                          <span className="text-xs text-[var(--ig-text-secondary)] shrink-0" title={time.toLocaleString()}>
+                            {formatRelativeTime(time)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <span className="text-sm text-[var(--ig-text-secondary)] truncate">
+                          {previewLine}
+                        </span>
+                        {hasUnread && (
+                          <span
+                            className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--ig-text)] text-white text-[10px] font-semibold px-1.5"
+                            aria-label={`${unreadCount} unread`}
+                          >
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                  <div className="flex items-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setMenuChannelId((id) => (id === channel.id ? null : (channel.id ?? null)));
+                      }}
+                      className="p-2 rounded-full text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                      aria-label="Channel options"
+                      aria-expanded={menuOpen}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 {menuOpen && (
                   <>
@@ -465,7 +470,68 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                     </div>
                   </>
                 )}
-              </li>
+              </>
+            );
+
+            const cid = channel.id ?? "";
+            return (
+              <ChatListSwipeRow
+                key={cid}
+                channelId={cid}
+                showArchived={showArchived}
+                muted={muted}
+                hasUnread={hasUnread}
+                swipedChannelId={swipedChannelId}
+                dragOffset={dragState && dragState.channelId === cid ? dragState.offset : 0}
+                onSwipeStart={() => {
+                  setSwipedChannelId(null);
+                }}
+                onDrag={(id, offset) => {
+                  setDragState(offset > 0 && id != null ? { channelId: id, offset } : null);
+                }}
+                onSwipedOpen={(id) => {
+                  setSwipedChannelId(id);
+                  setDragState(null);
+                }}
+                onArchive={async () => {
+                  try {
+                    await channel.hide();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                onUnarchive={async () => {
+                  try {
+                    await channel.show();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                onMute={async () => {
+                  try {
+                    await channel.mute();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                onUnmute={async () => {
+                  try {
+                    await channel.unmute();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                onMarkRead={async () => {
+                  try {
+                    await (channel as { markRead?: () => Promise<unknown> }).markRead?.();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                onActionDone={fetchChannels}
+              >
+                {rowContent}
+              </ChatListSwipeRow>
             );
           })}
         </ul>

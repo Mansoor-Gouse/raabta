@@ -2,12 +2,15 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useChatContext } from "stream-chat-react";
 import { useAppUser } from "@/components/layout/AppShell";
 import { ChannelList, type ChannelListRef } from "@/components/chat/ChannelList";
 
 export default function ChatsPage() {
   const listRef = useRef<ChannelListRef>(null);
+  const pathname = usePathname();
+  const prevPathnameRef = useRef<string | null>(null);
   const user = useAppUser();
   const { client } = useChatContext();
   const [search, setSearch] = useState("");
@@ -32,6 +35,16 @@ export default function ChatsPage() {
     document.addEventListener("mousedown", onOutside);
     return () => document.removeEventListener("mousedown", onOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname ?? null;
+    const wasOnChannel = prev?.startsWith("/app/channel/");
+    const isNowOnChats = pathname === "/app/chats";
+    if (wasOnChannel && isNowOnChats && activeTab === "messages") {
+      listRef.current?.refresh();
+    }
+  }, [pathname, activeTab]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg-primary)]">

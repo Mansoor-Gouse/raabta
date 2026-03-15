@@ -4,6 +4,11 @@ import { useRef, useEffect, useCallback, useMemo } from "react";
 import { MessageList, MessageInput, useChannelActionContext, useChannelStateContext, useChatContext } from "stream-chat-react";
 import { PinnedMessagesBar } from "./PinnedMessagesBar";
 import { useViewOnce } from "./ViewOnceContext";
+import { getDraft } from "@/lib/draftStorage";
+import { FailedMessageAutoRetry } from "./FailedMessageAutoRetry";
+import { useConnectionState } from "./ConnectionStateContext";
+import { useOfflineQueue } from "./OfflineQueueContext";
+import { OfflinePendingMessages } from "./OfflinePendingMessages";
 
 /**
  * Wraps MessageList + MessageInput so that on mobile:
@@ -16,6 +21,8 @@ export function ChannelMessageLayout() {
   const { channel } = useChannelStateContext();
   const { markRead } = useChannelActionContext();
   const { client } = useChatContext();
+  const { isOnline } = useConnectionState();
+  const { enqueue } = useOfflineQueue();
 
   useEffect(() => {
     if (channel) markRead?.();
@@ -85,14 +92,25 @@ export function ChannelMessageLayout() {
         ...((customMessageData as Record<string, unknown> | undefined)?.customData as Record<string, unknown> | undefined),
         ...(viewOnce ? { view_once: true } : {}),
       };
+      const payload = { ...customMessageData, customData };
+      if (!isOnline) {
+        enqueue({
+          cid: channel.cid ?? "",
+          message,
+          customMessageData: payload,
+          options,
+        });
+        setViewOnce(false);
+        return;
+      }
       void channel.sendMessage(
         message as Parameters<typeof channel.sendMessage>[0],
-        { ...customMessageData, customData } as Parameters<typeof channel.sendMessage>[1],
+        payload as Parameters<typeof channel.sendMessage>[1],
         options as Parameters<typeof channel.sendMessage>[2]
       );
       setViewOnce(false);
     },
-    [channel, viewOnce, setViewOnce]
+    [channel, viewOnce, setViewOnce, isOnline, enqueue]
   );
 
   useEffect(() => {
@@ -119,6 +137,7 @@ export function ChannelMessageLayout() {
       className="channel-message-root flex flex-1 flex-col min-h-0"
       data-dm={isOneToOne ? "true" : undefined}
     >
+      <FailedMessageAutoRetry />
       <div className="channel-message-list flex-1 min-h-0 flex flex-col">
         <PinnedMessagesBar />
         <div className="flex-1 min-h-0 overflow-auto">
@@ -133,13 +152,17 @@ export function ChannelMessageLayout() {
           {isOneToOne && hasSeenLastOutgoing && (
             <div className="px-3 pb-1 text-right text-xs text-[var(--ig-text-secondary)]">Seen</div>
           )}
+          <OfflinePendingMessages />
         </div>
       </div>
       <div
         ref={inputWrapRef}
         className="channel-message-input-wrap border-t border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shrink-0"
       >
-        <MessageInput overrideSubmitHandler={overrideSubmitHandler} />
+        <MessageInput
+          getDefaultValue={() => getDraft(channel?.cid ?? "")}
+          overrideSubmitHandler={overrideSubmitHandler}
+        />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import {
 } from "stream-chat-react";
 import { RichMediaBar } from "./RichMediaBar";
 import { useViewOnce } from "./ViewOnceContext";
+import { DraftPersistence } from "./DraftPersistence";
 
 /**
  * Custom input: RichMediaBar (photo/file), voice button, view-once toggle, and message input.
@@ -29,6 +30,7 @@ export function CustomMessageInputWithRichMedia() {
 
   return (
     <div className="custom-message-input flex items-end gap-1 w-full">
+      <DraftPersistence />
       <RichMediaBar />
       {recordingEnabled && (
         <StartRecordingAudioButton
