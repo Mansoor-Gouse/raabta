@@ -11,14 +11,14 @@ import {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: memberId } = await params;
+  const { userId: memberId } = await params;
   if (!memberId) {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
