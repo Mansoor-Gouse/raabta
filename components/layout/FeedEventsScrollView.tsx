@@ -78,7 +78,7 @@ export function FeedEventsScrollView() {
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--ig-bg)]">
       {/* Global sticky title header: stays fixed across sections */}
-      <div className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+      <div className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)]">
         <div className="flex items-center px-4 py-2.5">
           <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
         </div>
