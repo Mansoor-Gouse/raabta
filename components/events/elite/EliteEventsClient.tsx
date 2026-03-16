@@ -294,11 +294,17 @@ function MyEventsSection({ myEvents, currentUserId }: { myEvents: EliteEventCard
 type EliteEventsClientProps = {
   currentUserId?: string | null;
   initialSection?: string;
+  /** When false, hide floating actions so they do not bleed into other panels */
+  isActive?: boolean;
 };
 
 const VALID_SECTIONS: SectionKey[] = ["discover", "invited", "going", "spotlight", "my"];
 
-export function EliteEventsClient({ currentUserId = null, initialSection }: EliteEventsClientProps) {
+export function EliteEventsClient({
+  currentUserId = null,
+  initialSection,
+  isActive = true,
+}: EliteEventsClientProps) {
   const [events, setEvents] = useState<EliteEventCardEvent[]>([]);
   const [discoverOrder, setDiscoverOrder] = useState<string[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -492,8 +498,8 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
         className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-[var(--elite-border)] bg-[var(--elite-bg)] transition-colors duration-[var(--elite-transition)]"
         style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
       >
-        <h1 className="elite-heading text-xl font-semibold text-[var(--elite-text)]">
-          Events
+        <h1 className="feed-title-font text-lg font-semibold text-[var(--elite-text)]">
+          The Rope
         </h1>
       </header>
 
@@ -747,44 +753,46 @@ export function EliteEventsClient({ currentUserId = null, initialSection }: Elit
         )}
       </div>
 
-      <div
-        className="elite-events fixed bottom-0 right-0 z-20 flex flex-col items-center gap-2"
-        style={{
-          bottom: "calc(1rem + var(--safe-area-inset-bottom))",
-          right: "calc(1rem + var(--safe-area-inset-right))",
-        }}
-      >
-        {showTabsAndContentShell && (
-          <button
-            type="button"
-            onClick={() => {
-              hapticTrigger("light");
-              setFilterExpanded((v) => !v);
-            }}
-            disabled={loading}
-            className="elite-events relative flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-black text-white border border-white/20 shadow-[var(--elite-shadow)] transition-all duration-[var(--elite-transition)] hover:scale-105 hover:bg-neutral-800 active:scale-[0.98] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-offset-2 disabled:opacity-70"
-            aria-label={filterExpanded ? "Hide filters" : "Show filters"}
-            aria-expanded={filterExpanded}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            {hasActiveFilter && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white" aria-hidden />
-            )}
-          </button>
-        )}
-        <Link
-          href="/app/events/new"
-          onClick={() => hapticTrigger("medium")}
-          className="elite-events flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-black text-white border border-white/20 shadow-[var(--elite-shadow)] transition-all duration-[var(--elite-transition)] hover:scale-105 hover:bg-neutral-800 active:scale-[0.98] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-offset-2"
-          aria-label="Create Event"
+      {isActive && (
+        <div
+          className="elite-events fixed bottom-0 right-0 z-20 flex flex-col items-center gap-2"
+          style={{
+            bottom: "calc(1rem + var(--safe-area-inset-bottom))",
+            right: "calc(1rem + var(--safe-area-inset-right))",
+          }}
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </Link>
-      </div>
+          {showTabsAndContentShell && (
+            <button
+              type="button"
+              onClick={() => {
+                hapticTrigger("light");
+                setFilterExpanded((v) => !v);
+              }}
+              disabled={loading}
+              className="elite-events relative flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-black text-white border border-white/20 shadow-[var(--elite-shadow)] transition-all duration-[var(--elite-transition)] hover:scale-105 hover:bg-neutral-800 active:scale-[0.98] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-offset-2 disabled:opacity-70"
+              aria-label={filterExpanded ? "Hide filters" : "Show filters"}
+              aria-expanded={filterExpanded}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              {hasActiveFilter && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white" aria-hidden />
+              )}
+            </button>
+          )}
+          <Link
+            href="/app/events/new"
+            onClick={() => hapticTrigger("medium")}
+            className="elite-events flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-black text-white border border-white/20 shadow-[var(--elite-shadow)] transition-all duration-[var(--elite-transition)] hover:scale-105 hover:bg-neutral-800 active:scale-[0.98] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-offset-2"
+            aria-label="Create Event"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

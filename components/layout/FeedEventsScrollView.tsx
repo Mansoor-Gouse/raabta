@@ -4,10 +4,13 @@ import { useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FeedClient } from "@/app/app/feed/FeedClient";
 import { EliteEventsClient } from "@/components/events/elite/EliteEventsClient";
+import ChatsPage from "@/app/app/chats/page";
+import MembersPage from "@/app/app/members/page";
+import { ProfileGrid } from "@/app/app/profile/ProfileGrid";
 import { useAppUser } from "@/components/layout/AppShell";
 
-const FEED_PATH = "/app/feed";
-const EVENTS_PATH = "/app/events";
+const ROUTES = ["/app/feed", "/app/events", "/app/chats", "/app/members", "/app/profile"] as const;
+type PanelIndex = 0 | 1 | 2 | 3 | 4;
 
 export function FeedEventsScrollView() {
   const pathname = usePathname();
@@ -18,7 +21,8 @@ export function FeedEventsScrollView() {
   const isSyncingRef = useRef(false);
   const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const panelIndex = pathname === EVENTS_PATH ? 1 : 0;
+  const currentIndex = ROUTES.indexOf(pathname as (typeof ROUTES)[number]);
+  const panelIndex: PanelIndex = (currentIndex >= 0 ? currentIndex : 0) as PanelIndex;
 
   // Scroll to the correct panel when pathname changes (e.g. user tapped nav)
   useEffect(() => {
@@ -45,7 +49,8 @@ export function FeedEventsScrollView() {
       const w = el.clientWidth;
       if (w <= 0) return;
       const index = Math.round(el.scrollLeft / w);
-      const path = index >= 1 ? EVENTS_PATH : FEED_PATH;
+      const clamped = Math.max(0, Math.min(ROUTES.length - 1, index)) as PanelIndex;
+      const path = ROUTES[clamped];
       if (pathname !== path) {
         isSyncingRef.current = true;
         router.replace(path);
@@ -71,17 +76,48 @@ export function FeedEventsScrollView() {
       className="flex-1 min-h-0 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth no-scrollbar"
       style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
     >
+      {/* Panel 0: Feed */}
       <section
         aria-label="Feed"
         className="min-w-full w-full flex-shrink-0 snap-start overflow-y-auto overflow-x-hidden bg-[var(--ig-bg)]"
       >
-        <FeedClient />
+        <FeedClient isActive={panelIndex === 0} />
       </section>
+
+      {/* Panel 1: Events */}
       <section
         aria-label="Events"
         className="min-w-full w-full flex-shrink-0 snap-start overflow-y-auto overflow-x-hidden bg-[var(--ig-bg)]"
       >
-        <EliteEventsClient currentUserId={user?.id ?? null} initialSection={initialSection} />
+        <EliteEventsClient
+          currentUserId={user?.id ?? null}
+          initialSection={initialSection}
+          isActive={panelIndex === 1}
+        />
+      </section>
+
+      {/* Panel 2: Messages */}
+      <section
+        aria-label="Messages"
+        className="min-w-full w-full flex-shrink-0 snap-start overflow-y-auto overflow-x-hidden bg-[var(--ig-bg-primary)]"
+      >
+        <ChatsPage />
+      </section>
+
+      {/* Panel 3: Members */}
+      <section
+        aria-label="Members"
+        className="min-w-full w-full flex-shrink-0 snap-start overflow-y-auto overflow-x-hidden bg-[var(--elite-bg)]"
+      >
+        <MembersPage />
+      </section>
+
+      {/* Panel 4: Profile */}
+      <section
+        aria-label="Profile"
+        className="min-w-full w-full flex-shrink-0 snap-start overflow-y-auto overflow-x-hidden bg-[var(--elite-bg)]"
+      >
+        <ProfileGrid />
       </section>
     </div>
   );
