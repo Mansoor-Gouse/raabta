@@ -189,8 +189,8 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
-      {/* Sticky header: title (optional) + segment tabs */}
-      <div className="shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+      {/* Sticky header inside feed panel: title (optional) + segment tabs */}
+      <div className="sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
         {showTitle && (
           <div className="flex items-center px-4 py-2.5">
             <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>

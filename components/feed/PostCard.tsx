@@ -228,26 +228,32 @@ export function PostCard({
   const captionNeedsExpand = caption.length > 120;
   const showCaptionPreview = captionNeedsExpand && !captionExpanded;
   const likedSampleName = post.likedSampleName;
+  const likedSampleInitial = likedSampleName?.charAt(0)?.toUpperCase() || "?";
 
   return (
     <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm">
       {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
       {likedSampleName && likeCount > 0 && (
-        <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[var(--ig-border-light)]">
-          <div className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center bg-[var(--ig-border-light)] shrink-0">
-            <span className="text-[10px] font-semibold text-[var(--ig-text-secondary)]">
-              ♥
-            </span>
+        <button
+          type="button"
+          onClick={() => onOpenLikes?.(post._id)}
+          className="w-full flex items-center gap-2 px-4 py-1.5 border-b border-[var(--ig-border-light)] hover:bg-[var(--ig-border-light)]/40 transition-colors"
+        >
+          <div className="flex -space-x-2">
+            <div className="w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-border-light)] flex items-center justify-center text-[10px] font-semibold text-[var(--ig-text-secondary)]">
+              {likedSampleInitial}
+            </div>
+            {likeCount > 1 && (
+              <div className="w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-bg-primary)] flex items-center justify-center text-[10px] font-semibold text-[var(--ig-text-secondary)]">
+                +{likeCount - 1}
+              </div>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenLikes?.(post._id)}
-            className="text-left text-xs text-[var(--ig-text)] flex-1 min-w-0 hover:opacity-80 active:opacity-70 transition-opacity"
-          >
+          <div className="flex-1 min-w-0 text-left text-xs text-[var(--ig-text)]">
             <span className="font-semibold">{likedSampleName}</span>
-            {likeCount > 1 ? ` and ${likeCount - 1} others like this` : " likes this"}
-          </button>
-        </div>
+            {likeCount > 1 ? ` and ${likeCount - 1} others` : " likes this"}
+          </div>
+        </button>
       )}
 
       {/* 2. Author block */}

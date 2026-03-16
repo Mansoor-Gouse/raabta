@@ -525,8 +525,8 @@ export function EliteEventsClient({
 
   return (
     <div className="elite-events min-h-full bg-[var(--ig-bg)] flex flex-col">
-      {/* Section tabs under shell title */}
-      <div className="shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+      {/* Section tabs under shell title; sticky within events panel */}
+      <div className="sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
         {showTabsAndContentShell && (
           <div
             className="no-scrollbar overflow-x-auto"
