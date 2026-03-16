@@ -48,8 +48,15 @@ export function FeedEventsScrollView() {
       scrollEndTimeoutRef.current = null;
       const w = el.clientWidth;
       if (w <= 0) return;
-      const index = Math.round(el.scrollLeft / w);
-      const clamped = Math.max(0, Math.min(ROUTES.length - 1, index)) as PanelIndex;
+      const raw = el.scrollLeft / w;
+      let targetIndex = Math.round(raw) as PanelIndex;
+      // Do not jump more than one panel at a time
+      const maxStep = 1;
+      const delta = targetIndex - panelIndex;
+      if (Math.abs(delta) > maxStep) {
+        targetIndex = (panelIndex + (delta > 0 ? 1 : -1)) as PanelIndex;
+      }
+      const clamped = Math.max(0, Math.min(ROUTES.length - 1, targetIndex)) as PanelIndex;
       const path = ROUTES[clamped];
       if (pathname !== path) {
         isSyncingRef.current = true;
