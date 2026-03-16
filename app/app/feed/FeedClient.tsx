@@ -200,7 +200,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
         <div
           role="tablist"
           aria-label="Feed sections"
-          className="relative flex border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
+          className="relative flex bg-[var(--ig-bg-primary)]"
         >
           {SEGMENTS.map((label, i) => (
             <button

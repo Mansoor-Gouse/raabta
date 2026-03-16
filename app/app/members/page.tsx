@@ -209,16 +209,7 @@ export default function MembersPage() {
 
   return (
     <div className="elite-events flex-1 flex flex-col min-h-full bg-[var(--elite-bg)] overflow-y-auto">
-      <header
-        className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-[var(--elite-border)] bg-[var(--elite-bg)] transition-colors duration-[var(--elite-transition)]"
-        style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
-      >
-        <h1 className="elite-heading text-xl font-semibold text-[var(--elite-text)]">
-          Members
-        </h1>
-      </header>
-
-      <div className="flex-1 px-4 py-4 space-y-6">
+      <div className="flex-1 px-4 py-4 space-y-6" style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}>
         <section className="elite-events rounded-[var(--elite-radius-lg)] border border-[var(--elite-border)] bg-[var(--elite-card)] p-4 transition-all duration-[var(--elite-transition)]">
           <p className="elite-body text-sm text-[var(--elite-text-secondary)] mb-4">
             Discover people · Build your circles
