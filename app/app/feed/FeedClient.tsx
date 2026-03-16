@@ -243,7 +243,7 @@ export function FeedClient({ isActive = true }: { isActive?: boolean }) {
           role="tabpanel"
           aria-labelledby="feed-tab-0"
           aria-label="Posts"
-          className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg)] px-3 pb-1"
+          className="min-w-full flex-shrink-0 snap-start overflow-y-auto no-scrollbar bg-[var(--ig-bg)] px-3 pb-1"
           onScroll={handlePanelScroll}
         >
           {loading ? (
@@ -307,7 +307,7 @@ export function FeedClient({ isActive = true }: { isActive?: boolean }) {
           role="tabpanel"
           aria-labelledby="feed-tab-1"
           aria-label="Stories"
-          className="min-w-full flex-shrink-0 snap-start overflow-y-auto bg-[var(--ig-bg-primary)]"
+          className="min-w-full flex-shrink-0 snap-start overflow-y-auto no-scrollbar bg-[var(--ig-bg-primary)]"
           onScroll={handlePanelScroll}
         >
           <StoryBar />

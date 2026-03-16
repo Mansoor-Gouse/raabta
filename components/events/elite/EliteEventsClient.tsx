@@ -516,7 +516,7 @@ export function EliteEventsClient({
 
   return (
     <div className="elite-events min-h-full bg-[var(--ig-bg)] flex flex-col">
-      {/* Static header: match home feed header exactly for alignment */}
+      {/* Static header + section tabs: match home feed shell exactly */}
       <div className="shrink-0">
         <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
           <div
@@ -525,6 +525,47 @@ export function EliteEventsClient({
           >
             <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
           </div>
+          {showTabsAndContentShell && (
+            <div
+              className="border-t border-[var(--ig-border-light)] no-scrollbar overflow-x-auto"
+              role="tablist"
+              aria-label="Event sections"
+            >
+              <div className="relative flex min-w-full">
+                {SECTION_KEYS.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeSection === key}
+                    aria-controls={`events-panel-${key}`}
+                    id={`events-tab-${key}`}
+                    onClick={() => !loading && scrollToSection(key)}
+                    disabled={loading}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
+                      activeSection === key
+                        ? "text-[var(--ig-text)]"
+                        : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+                    } ${loading ? "pointer-events-none" : ""}`}
+                  >
+                    {key === "discover" && (categoryFilter ? "Events" : "Discover")}
+                    {key === "invited" && "Invited"}
+                    {key === "going" && "Going to"}
+                    {key === "spotlight" && "Spotlight"}
+                    {key === "my" && "My events"}
+                  </button>
+                ))}
+                <div
+                  className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+                  style={{
+                    width: `${100 / SECTION_KEYS.length}%`,
+                    left: `${scrollProgress * (100 / SECTION_KEYS.length)}%`,
+                  }}
+                  aria-hidden
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -619,48 +660,6 @@ export function EliteEventsClient({
             </div>
           </div>
         </>
-      )}
-
-      {showTabsAndContentShell && (
-        <div
-          className="shrink-0 border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)] no-scrollbar overflow-x-auto"
-          role="tablist"
-          aria-label="Event sections"
-        >
-          <div className="relative flex min-w-full">
-            {SECTION_KEYS.map((key) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={activeSection === key}
-                aria-controls={`events-panel-${key}`}
-                id={`events-tab-${key}`}
-                onClick={() => !loading && scrollToSection(key)}
-                disabled={loading}
-                className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
-                  activeSection === key
-                    ? "text-[var(--ig-text)]"
-                    : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-                } ${loading ? "pointer-events-none" : ""}`}
-              >
-                {key === "discover" && (categoryFilter ? "Events" : "Discover")}
-                {key === "invited" && "Invited"}
-                {key === "going" && "Going to"}
-                {key === "spotlight" && "Spotlight"}
-                {key === "my" && "My events"}
-              </button>
-            ))}
-            <div
-              className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
-              style={{
-                width: `${100 / SECTION_KEYS.length}%`,
-                left: `${scrollProgress * (100 / SECTION_KEYS.length)}%`,
-              }}
-              aria-hidden
-            />
-          </div>
-        </div>
       )}
 
       <div className="flex-1 flex flex-col min-h-0">
