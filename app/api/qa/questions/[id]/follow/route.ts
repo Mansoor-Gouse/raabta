@@ -3,13 +3,14 @@ import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
 import { connectDB, QuestionModel, QuestionFollowModel } from "@/lib/db";
 
-type Params = { params: { id: string } };
-
-export async function POST(request: NextRequest, { params }: Params) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await requireAuth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = params;
+  const { id } = await params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
