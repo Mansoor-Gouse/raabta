@@ -333,8 +333,8 @@ export function EliteEventsClient({
     const index = SECTION_KEYS.indexOf(key);
     if (index < 0 || !scrollContainerRef.current) return;
     const pageWidth = scrollContainerRef.current.offsetWidth;
-    scrollContainerRef.current.scrollTo({ left: index * pageWidth, behavior: "smooth" });
     setActiveSection(key);
+    scrollContainerRef.current.scrollTo({ left: index * pageWidth, behavior: "smooth" });
   }, []);
 
   function loadEvents(reset = true, skipOverride?: number) {
@@ -476,9 +476,10 @@ export function EliteEventsClient({
       const rawProgress = w > 0 ? el.scrollLeft / w : 0;
       const clamped = Math.max(0, Math.min(rawProgress, maxIndex));
       if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
+      // We only use scroll position to decide which tab is active (below);
+      // underline position is driven from activeSection to avoid desync.
       scrollRafRef.current = requestAnimationFrame(() => {
         scrollRafRef.current = null;
-        setScrollProgress(clamped);
       });
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
@@ -498,6 +499,12 @@ export function EliteEventsClient({
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
     };
+  }, [activeSection]);
+
+  // Keep underline position strictly in sync with the active tab index
+  useEffect(() => {
+    const idx = SECTION_KEYS.indexOf(activeSection);
+    if (idx >= 0) setScrollProgress(idx);
   }, [activeSection]);
 
   useEffect(() => {
