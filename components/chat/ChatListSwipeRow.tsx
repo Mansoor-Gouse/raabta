@@ -185,7 +185,7 @@ export function ChatListSwipeRow({
             ) : (
               <ActionButton
                 label="Archive"
-                iconPath="M5 8h14v12H5V8zm2 2v8h10V10H7zm4-6h2v2h-2V4z"
+                iconPath="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM11.65 7.65L10 9.29V13h4v-3.71l-1.65-1.64L12 7l-.35.65z"
                 onClick={() => runAction(onArchive)}
                 className="text-[var(--ig-text)]"
               />

@@ -103,7 +103,6 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const [internalShowArchived, setInternalShowArchived] = useState(false);
   const showArchived = controlledShowArchived !== undefined ? controlledShowArchived : internalShowArchived;
   const setShowArchived = onShowArchivedChange ?? setInternalShowArchived;
-  const [menuChannelId, setMenuChannelId] = useState<string | null>(null);
   const [swipedChannelId, setSwipedChannelId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<{ channelId: string; offset: number } | null>(null);
   const [pullY, setPullY] = useState(0);
@@ -280,7 +279,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
           {list.length === 0 && (
             <li className="p-4 text-sm text-[var(--ig-text-secondary)] text-center">
               {showArchived
-                ? "No archived chats. Archive a chat from the main list using the ⋮ menu."
+                ? "No archived chats. Swipe left on a chat to archive it."
                 : "No chats match your search."}
             </li>
           )}
@@ -305,7 +304,6 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                 : isFromMe
                   ? `You: ${preview}`
                   : preview;
-            const menuOpen = menuChannelId === channel.id;
             const muted = (channel.state?.membership as { channel_muted?: boolean } | undefined)?.channel_muted ?? false;
             const time = getLastMessageTime(channel);
             const unreadCount = (channel.state?.membership as { unread_count?: number } | undefined)?.unread_count ?? 0;
@@ -367,109 +365,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                       </div>
                     </div>
                   </Link>
-                  <div className="flex items-center shrink-0">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setMenuChannelId((id) => (id === channel.id ? null : (channel.id ?? null)));
-                      }}
-                      className="p-2 rounded-full text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
-                      aria-label="Channel options"
-                      aria-expanded={menuOpen}
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
-                {menuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-30"
-                      aria-hidden
-                      onClick={() => setMenuChannelId(null)}
-                    />
-                    <div className="absolute right-4 top-full mt-1 z-40 py-1 rounded-lg shadow-lg bg-[var(--ig-bg-primary)] border border-[var(--ig-border)] min-w-[160px]">
-                      {showArchived ? (
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            try {
-                              await channel.show();
-                              fetchChannels();
-                              setMenuChannelId(null);
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Unarchive
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            try {
-                              await channel.hide();
-                              fetchChannels();
-                              setMenuChannelId(null);
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Archive
-                        </button>
-                      )}
-                      {muted ? (
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            try {
-                              await channel.unmute();
-                              fetchChannels();
-                              setMenuChannelId(null);
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Unmute
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            try {
-                              await channel.mute();
-                              fetchChannels();
-                              setMenuChannelId(null);
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Mute
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
               </>
             );
 

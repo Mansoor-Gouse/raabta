@@ -68,21 +68,18 @@ export function ChannelMessageLayout() {
   const otherRead = otherMemberId ? readState[otherMemberId] : undefined;
   const lastReadDate = otherRead?.last_read ? new Date(otherRead.last_read) : null;
 
-  let hasSeenLastOutgoing = false;
-  if (lastReadDate && currentUserId && safeMessages.length) {
-    const lastOutgoingRead = [...safeMessages]
-      .reverse()
-      .find((m) => {
-        if (!m) return false;
-        const createdAt = m.created_at != null ? new Date(m.created_at as string | Date) : null;
-        return m.user?.id === currentUserId && createdAt && createdAt <= lastReadDate;
-      });
+  const lastMessageFromMe = useMemo(() => {
+    if (!currentUserId || safeMessages.length === 0) return null;
+    const fromMe = [...safeMessages].reverse().find((m) => m?.user?.id === currentUserId || (m as { user_id?: string }).user_id === currentUserId);
+    return fromMe ?? null;
+  }, [safeMessages, currentUserId]);
 
-    if (lastOutgoingRead && safeMessages.length > 0) {
-      const lastMsg = safeMessages[safeMessages.length - 1];
-      hasSeenLastOutgoing = lastMsg && lastOutgoingRead.id === lastMsg.id;
-    }
-  }
+  const lastFromMeIsRead = Boolean(
+    lastMessageFromMe &&
+      lastReadDate &&
+      lastMessageFromMe.created_at != null &&
+      new Date(lastMessageFromMe.created_at as string | Date) <= lastReadDate
+  );
 
   const { viewOnce, setViewOnce } = useViewOnce();
   const overrideSubmitHandler = useCallback(
@@ -149,8 +146,15 @@ export function ChannelMessageLayout() {
             hideNewMessageSeparator
             reviewProcessedMessage={reviewProcessedMessage}
           />
-          {isOneToOne && hasSeenLastOutgoing && (
-            <div className="px-3 pb-1 text-right text-xs text-[var(--ig-text-secondary)]">Seen</div>
+          {isOneToOne && lastMessageFromMe && (
+            <div className="px-3 pb-1 flex items-center justify-end gap-1.5" aria-label={lastFromMeIsRead ? "Read" : "Sent"}>
+              <span
+                className={`inline-block rounded-sm shrink-0 ${lastFromMeIsRead ? "bg-[var(--ig-status-read)]" : "bg-[var(--ig-status-sent)]"}`}
+                style={{ width: 10, height: 10 }}
+                title={lastFromMeIsRead ? "Read" : "Sent"}
+              />
+              {lastFromMeIsRead && <span className="text-xs text-[var(--ig-text-secondary)]">Seen</span>}
+            </div>
           )}
           <OfflinePendingMessages />
         </div>
