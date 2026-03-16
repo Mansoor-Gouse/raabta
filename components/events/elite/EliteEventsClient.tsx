@@ -600,33 +600,35 @@ export function EliteEventsClient({
 
       {showTabsAndContentShell && (
         <div
-          className="shrink-0 flex border-b border-[var(--elite-border)] bg-[var(--elite-bg)] no-scrollbar overflow-x-auto"
+          className="shrink-0 border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)] no-scrollbar overflow-x-auto"
           role="tablist"
           aria-label="Event sections"
         >
-          {SECTION_KEYS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={activeSection === key}
-              aria-controls={`events-panel-${key}`}
-              id={`events-tab-${key}`}
-              onClick={() => !loading && scrollToSection(key)}
-              disabled={loading}
-              className={`elite-events shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
-                activeSection === key
-                  ? "border-[var(--elite-accent)] text-[var(--elite-text)]"
-                  : "border-transparent text-[var(--elite-text-muted)] hover:text-[var(--elite-text-secondary)]"
-              } ${loading ? "pointer-events-none" : ""}`}
-            >
-              {key === "discover" && (categoryFilter ? "Events" : "Discover")}
-              {key === "invited" && "Invited"}
-              {key === "going" && "Going to"}
-              {key === "spotlight" && "Spotlight"}
-              {key === "my" && "My events"}
-            </button>
-          ))}
+          <div className="relative flex min-w-full">
+            {SECTION_KEYS.map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={activeSection === key}
+                aria-controls={`events-panel-${key}`}
+                id={`events-tab-${key}`}
+                onClick={() => !loading && scrollToSection(key)}
+                disabled={loading}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
+                  activeSection === key
+                    ? "text-[var(--ig-text)]"
+                    : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+                } ${loading ? "pointer-events-none" : ""}`}
+              >
+                {key === "discover" && (categoryFilter ? "Events" : "Discover")}
+                {key === "invited" && "Invited"}
+                {key === "going" && "Going to"}
+                {key === "spotlight" && "Spotlight"}
+                {key === "my" && "My events"}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

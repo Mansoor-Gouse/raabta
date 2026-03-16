@@ -52,7 +52,7 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
       style={{ width: CARD_WIDTH, minHeight: MEDIA_SIZE + PADDING * 2 }}
     >
       <div
-        className="flex gap-3 flex-1"
+        className="flex gap-3 flex-1 pr-3"
         style={{ padding: PADDING }}
       >
         {/* Fixed-size left media: image or placeholder */}
@@ -69,9 +69,9 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
           )}
         </div>
         {/* Right: author + caption — same layout for both cases */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <div className="flex-1 min-w-0 flex flex-col justify-center pr-1">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-5 h-5 rounded-full overflow-hidden bg-[var(--ig-border-light)] shrink-0">
+            <div className="w-5 h-5 rounded-sm overflow-hidden bg-[var(--ig-border-light)] shrink-0">
               {authorImage ? (
                 <img src={authorImage} alt="" className="w-full h-full object-cover" />
               ) : (
