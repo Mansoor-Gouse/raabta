@@ -15,10 +15,15 @@ type SharedPostCardProps = {
   attachment: PostShareAttachment;
 };
 
+/** Fixed dimensions so card size is consistent with or without image */
+const CARD_WIDTH = 280;
+const MEDIA_SIZE = 72;
+const PADDING = 12;
+
 /**
  * Compact post preview shown when a post is shared in chat.
- * Flexible layout: with image (thumbnail + meta), or text-only when no image.
- * Whole card is clickable and navigates to the post (no separate "View post" link).
+ * Single layout with fixed left media area (image or placeholder) so size stays consistent.
+ * Whole card is clickable and navigates to the post.
  */
 export function SharedPostCard({ attachment }: SharedPostCardProps) {
   const postId = attachment.postId ?? "";
@@ -31,8 +36,11 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
 
   if (!postId) {
     return (
-      <div className="rounded-xl border border-[var(--ig-border)] bg-[var(--ig-border-light)] p-3 max-w-[280px]">
-        <p className="text-sm text-[var(--ig-text-secondary)]">Shared post</p>
+      <div
+        className="rounded-xl border border-[var(--ig-border)] bg-[var(--ig-border-light)] flex items-center justify-center"
+        style={{ width: CARD_WIDTH, minHeight: MEDIA_SIZE + PADDING * 2 }}
+      >
+        <p className="text-sm text-[var(--ig-text-secondary)] p-3">Shared post</p>
       </div>
     );
   }
@@ -40,42 +48,34 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
   return (
     <Link
       href={`/app/feed/${postId}`}
-      className="block rounded-xl border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] overflow-hidden max-w-[280px] hover:opacity-95 active:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)] transition-opacity"
+      className="block rounded-xl border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] overflow-hidden hover:opacity-95 active:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)] transition-opacity"
+      style={{ width: CARD_WIDTH, minHeight: MEDIA_SIZE + PADDING * 2 }}
     >
-      {hasImage ? (
-        <div className="flex gap-3 p-3">
-          <div className="shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-[var(--ig-border-light)]">
+      <div
+        className="flex gap-3 flex-1"
+        style={{ padding: PADDING }}
+      >
+        {/* Fixed-size left media: image or placeholder */}
+        <div
+          className="shrink-0 rounded-lg overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center"
+          style={{ width: MEDIA_SIZE, height: MEDIA_SIZE }}
+        >
+          {hasImage ? (
             <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-6 h-6 rounded-full overflow-hidden bg-[var(--ig-border-light)] shrink-0">
-                {authorImage ? (
-                  <img src={authorImage} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="w-full h-full flex items-center justify-center text-xs font-medium text-[var(--ig-text-secondary)]">
-                    {(authorName || "?")[0].toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-semibold text-[var(--ig-text)] truncate">{authorName}</span>
-            </div>
-            {captionSnippet && (
-              <p className="text-xs text-[var(--ig-text-secondary)] line-clamp-2">
-                {captionSnippet}
-                {hasMore ? "…" : ""}
-              </p>
-            )}
-          </div>
+          ) : (
+            <span className="text-2xl font-medium text-[var(--ig-text-tertiary)]">
+              {(authorName || "?")[0].toUpperCase()}
+            </span>
+          )}
         </div>
-      ) : (
-        <div className="p-3 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--ig-border-light)] shrink-0">
+        {/* Right: author + caption — same layout for both cases */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-5 h-5 rounded-full overflow-hidden bg-[var(--ig-border-light)] shrink-0">
               {authorImage ? (
                 <img src={authorImage} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="w-full h-full flex items-center justify-center text-xs font-medium text-[var(--ig-text-secondary)]">
+                <span className="w-full h-full flex items-center justify-center text-[10px] font-medium text-[var(--ig-text-secondary)]">
                   {(authorName || "?")[0].toUpperCase()}
                 </span>
               )}
@@ -83,7 +83,7 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
             <span className="text-sm font-semibold text-[var(--ig-text)] truncate">{authorName}</span>
           </div>
           {captionSnippet ? (
-            <p className="text-sm text-[var(--ig-text-secondary)] line-clamp-3">
+            <p className="text-xs text-[var(--ig-text-secondary)] line-clamp-2">
               {captionSnippet}
               {hasMore ? "…" : ""}
             </p>
@@ -91,7 +91,7 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
             <p className="text-xs text-[var(--ig-text-tertiary)]">Post</p>
           )}
         </div>
-      )}
+      </div>
     </Link>
   );
 }
