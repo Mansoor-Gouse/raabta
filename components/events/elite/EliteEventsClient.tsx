@@ -527,7 +527,7 @@ export function EliteEventsClient({
           </div>
           {showTabsAndContentShell && (
             <div
-              className="border-t border-[var(--ig-border-light)] no-scrollbar overflow-x-auto"
+              className="no-scrollbar overflow-x-auto"
               role="tablist"
               aria-label="Event sections"
             >
