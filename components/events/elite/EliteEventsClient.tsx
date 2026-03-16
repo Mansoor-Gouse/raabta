@@ -320,6 +320,9 @@ export function EliteEventsClient({
     initialSection && VALID_SECTIONS.includes(initialSection as SectionKey) ? (initialSection as SectionKey) : "discover"
   );
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const initialSectionHandled = useRef(false);
   const hasLoadedOnce = useRef(false);
 
@@ -465,15 +468,35 @@ export function EliteEventsClient({
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
-    const onScroll = () => {
-      const pageWidth = el.offsetWidth;
-      const index = Math.round(el.scrollLeft / pageWidth);
-      const key = SECTION_KEYS[Math.max(0, Math.min(index, SECTION_KEYS.length - 1))];
-      setActiveSection(key);
+    const handleScroll = () => {
+      const w = el.clientWidth;
+      const maxIndex = SECTION_KEYS.length - 1;
+      const rawProgress = w > 0 ? el.scrollLeft / w : 0;
+      const clamped = Math.max(0, Math.min(rawProgress, maxIndex));
+      if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
+      scrollRafRef.current = requestAnimationFrame(() => {
+        scrollRafRef.current = null;
+        setScrollProgress(clamped);
+      });
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        scrollTimeoutRef.current = null;
+        const currentEl = scrollContainerRef.current;
+        if (!currentEl) return;
+        const currentW = currentEl.clientWidth;
+        const currentRaw = currentW > 0 ? currentEl.scrollLeft / currentW : 0;
+        const index = Math.round(Math.max(0, Math.min(currentRaw, maxIndex)));
+        const key = SECTION_KEYS[index];
+        if (key !== activeSection) setActiveSection(key);
+      }, 120);
     };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [showSectionTabsAndPanels]);
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", handleScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
+    };
+  }, [activeSection]);
 
   useEffect(() => {
     if (!showSectionTabsAndPanels || initialSectionHandled.current || !initialSection) return;
@@ -628,6 +651,14 @@ export function EliteEventsClient({
                 {key === "my" && "My events"}
               </button>
             ))}
+            <div
+              className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+              style={{
+                width: `${100 / SECTION_KEYS.length}%`,
+                left: `${scrollProgress * (100 / SECTION_KEYS.length)}%`,
+              }}
+              aria-hidden
+            />
           </div>
         </div>
       )}
@@ -761,7 +792,8 @@ export function EliteEventsClient({
         <div
           className="elite-events fixed bottom-0 right-0 z-20 flex flex-col items-center gap-2"
           style={{
-            bottom: "calc(1rem + var(--safe-area-inset-bottom))",
+            // Lift actions above bottom navbar (50px) while keeping safe-area padding
+            bottom: "calc(4.5rem + var(--safe-area-inset-bottom))",
             right: "calc(1rem + var(--safe-area-inset-right))",
           }}
         >
