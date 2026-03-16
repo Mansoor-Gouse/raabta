@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef, startTransition } from "react
 import Link from "next/link";
 import { PostCard } from "@/components/feed/PostCard";
 import { FeedPostsSkeleton } from "@/components/feed/FeedSkeleton";
+import { PostCardSkeleton } from "@/components/feed/PostCardSkeleton";
 import { StoryBar } from "@/components/feed/StoryBar";
 import { CommentsDrawer } from "@/components/feed/CommentsDrawer";
 import { LikesDrawer } from "@/components/feed/LikesDrawer";
@@ -40,6 +41,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [me, setMe] = useState<{ _id?: string; fullName?: string; name?: string; profileImage?: string; image?: string } | null>(null);
   const [commentsDrawerPostId, setCommentsDrawerPostId] = useState<string | null>(null);
@@ -127,20 +129,34 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
   }, []);
 
   const loadFeed = useCallback(async (cursor?: string | null) => {
-    const url = cursor ? `/api/feed?cursor=${encodeURIComponent(cursor)}` : "/api/feed";
-    const res = await fetch(url);
-    if (!res.ok) return;
-    const data = await res.json();
-    const list = (data.posts || []) as FeedPost[];
-    const next = data.nextCursor ?? null;
-    if (cursor) {
-      startTransition(() => {
-        setPosts((prev) => [...prev, ...list]);
+    const isLoadMore = !!cursor;
+    try {
+      const url = cursor ? `/api/feed?cursor=${encodeURIComponent(cursor)}` : "/api/feed";
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(isLoadMore ? "Could not load more posts." : "Could not load your feed.");
+      }
+      const data = await res.json();
+      const list = (data.posts || []) as FeedPost[];
+      const next = data.nextCursor ?? null;
+      if (cursor) {
+        startTransition(() => {
+          setPosts((prev) => [...prev, ...list]);
+          setNextCursor(next);
+        });
+      } else {
+        setPosts(list);
         setNextCursor(next);
-      });
-    } else {
-      setPosts(list);
-      setNextCursor(next);
+      }
+      setError(null);
+    } catch (err) {
+      if (!isLoadMore) {
+        setPosts([]);
+        setNextCursor(null);
+      }
+      const message =
+        err instanceof Error ? err.message : "Something went wrong while loading your feed.";
+      setError(message);
     }
   }, []);
 
@@ -152,6 +168,13 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
+  }, [loadFeed]);
+
+  const handleRetryInitial = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    await loadFeed(null);
+    setLoading(false);
   }, [loadFeed]);
 
   const loadMore = useCallback(async () => {
@@ -250,18 +273,50 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
             <FeedPostsSkeleton />
           ) : posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--ig-bg-primary)] rounded-xl">
-              <p className="text-sm text-[var(--ig-text-secondary)] text-center mb-4">
-                No posts yet. Be the first to share.
+              {error && (
+                <div className="mb-4 w-full max-w-sm rounded-lg bg-red-50 text-red-700 px-3 py-2 text-xs flex items-center justify-between gap-2">
+                  <span className="truncate">{error}</span>
+                  <button
+                    type="button"
+                    onClick={handleRetryInitial}
+                    className="shrink-0 rounded-md border border-red-200 bg-white/80 px-2 py-1 text-[11px] font-semibold hover:bg-white"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              <p className="text-sm text-[var(--ig-text-secondary)] text-center mb-3">
+                There&apos;s nothing here yet. Start the conversation with your first post.
               </p>
-              <Link
-                href="/app/feed/new"
-                className="rounded-lg bg-[var(--ig-link)] text-white px-4 py-2 text-sm font-semibold hover:opacity-90"
-              >
-                Create post
-              </Link>
+              <div className="flex flex-col items-center gap-2">
+                <Link
+                  href="/app/feed/new"
+                  className="rounded-lg bg-[var(--ig-link)] text-white px-4 py-2 text-sm font-semibold hover:opacity-90"
+                >
+                  Create post
+                </Link>
+                <Link
+                  href="/app/events"
+                  className="text-xs text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+                >
+                  Or explore events instead
+                </Link>
+              </div>
             </div>
           ) : (
             <>
+              {error && (
+                <div className="mb-3 mx-0 rounded-lg bg-red-50 text-red-700 px-3 py-2 text-xs flex items-center justify-between gap-2">
+                  <span className="truncate">{error}</span>
+                  <button
+                    type="button"
+                    onClick={handleRetryInitial}
+                    className="shrink-0 rounded-md border border-red-200 bg-white/80 px-2 py-1 text-[11px] font-semibold hover:bg-white"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
               <ul className="space-y-4">
                 {posts.map((post) => (
                   <li key={post._id}>
@@ -279,21 +334,21 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
               </ul>
               {nextCursor && (
                 <div className="p-4 flex justify-center min-h-[52px] items-center">
-                  <button
-                    type="button"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                    className="inline-flex items-center justify-center gap-2 text-sm text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50 min-w-[120px] min-h-[40px]"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <span className="inline-block w-4 h-4 border-2 border-[var(--ig-link)] border-t-transparent rounded-full animate-spin shrink-0" aria-hidden />
-                        <span>Loading…</span>
-                      </>
-                    ) : (
-                      "Load more"
-                    )}
-                  </button>
+                  {loadingMore ? (
+                    <div className="w-full max-w-xl space-y-4">
+                      <PostCardSkeleton />
+                      <PostCardSkeleton />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="inline-flex items-center justify-center gap-2 text-sm text-[var(--ig-link)] hover:opacity-80 disabled:opacity-50 min-w-[120px] min-h-[40px]"
+                    >
+                      Load more
+                    </button>
+                  )}
                 </div>
               )}
             </>
