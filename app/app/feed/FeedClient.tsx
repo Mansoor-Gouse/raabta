@@ -35,7 +35,7 @@ export type FeedPost = {
   likedSampleName?: string;
 };
 
-export function FeedClient({ isActive = true }: { isActive?: boolean }) {
+export function FeedClient({ isActive = true, showTitle = true }: { isActive?: boolean; showTitle?: boolean }) {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -189,43 +189,43 @@ export function FeedClient({ isActive = true }: { isActive?: boolean }) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
-      {/* Sticky header: always visible when scrolling */}
-      <div className="shrink-0">
-        <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+      {/* Sticky header: title (optional) + segment tabs */}
+      <div className="shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+        {showTitle && (
           <div className="flex items-center px-4 py-2.5">
             <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
           </div>
-          {/* Segment control: sliding underline follows scroll */}
+        )}
+        {/* Segment control: sliding underline follows scroll */}
+        <div
+          role="tablist"
+          aria-label="Feed sections"
+          className="relative flex border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
+        >
+          {SEGMENTS.map((label, i) => (
+            <button
+              key={label}
+              type="button"
+              role="tab"
+              aria-selected={activeIndex === i}
+              aria-controls={`feed-panel-${i}`}
+              id={`feed-tab-${i}`}
+              onClick={() => scrollToIndex(i as SegmentIndex)}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                activeIndex === i ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
           <div
-            role="tablist"
-            aria-label="Feed sections"
-            className="relative flex border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
-          >
-            {SEGMENTS.map((label, i) => (
-              <button
-                key={label}
-                type="button"
-                role="tab"
-                aria-selected={activeIndex === i}
-                aria-controls={`feed-panel-${i}`}
-                id={`feed-tab-${i}`}
-                onClick={() => scrollToIndex(i as SegmentIndex)}
-                className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-                  activeIndex === i ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-            <div
-              className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
-              style={{
-                width: `${100 / SEGMENTS.length}%`,
-                left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
-              }}
-              aria-hidden
-            />
-          </div>
+            className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+            style={{
+              width: `${100 / SEGMENTS.length}%`,
+              left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
+            }}
+            aria-hidden
+          />
         </div>
       </div>
 

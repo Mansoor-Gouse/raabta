@@ -296,6 +296,8 @@ type EliteEventsClientProps = {
   initialSection?: string;
   /** When false, hide floating actions so they do not bleed into other panels */
   isActive?: boolean;
+  /** When false, hide top title row (used when global shell already renders it) */
+  showTitle?: boolean;
 };
 
 const VALID_SECTIONS: SectionKey[] = ["discover", "invited", "going", "spotlight", "my"];
@@ -516,57 +518,49 @@ export function EliteEventsClient({
 
   return (
     <div className="elite-events min-h-full bg-[var(--ig-bg)] flex flex-col">
-      {/* Static header + section tabs: match home feed shell exactly */}
-      <div className="shrink-0">
-        <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+      {/* Section tabs under shell title */}
+      <div className="shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+        {showTabsAndContentShell && (
           <div
-            className="flex items-center px-4 py-2.5"
-            style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
+            className="no-scrollbar overflow-x-auto"
+            role="tablist"
+            aria-label="Event sections"
           >
-            <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
-          </div>
-          {showTabsAndContentShell && (
-            <div
-              className="no-scrollbar overflow-x-auto"
-              role="tablist"
-              aria-label="Event sections"
-            >
-              <div className="relative flex min-w-full">
-                {SECTION_KEYS.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeSection === key}
-                    aria-controls={`events-panel-${key}`}
-                    id={`events-tab-${key}`}
-                    onClick={() => !loading && scrollToSection(key)}
-                    disabled={loading}
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
-                      activeSection === key
-                        ? "text-[var(--ig-text)]"
-                        : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-                    } ${loading ? "pointer-events-none" : ""}`}
-                  >
-                    {key === "discover" && (categoryFilter ? "Events" : "Discover")}
-                    {key === "invited" && "Invited"}
-                    {key === "going" && "Going to"}
-                    {key === "spotlight" && "Spotlight"}
-                    {key === "my" && "My events"}
-                  </button>
-                ))}
-                <div
-                  className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
-                  style={{
-                    width: `${100 / SECTION_KEYS.length}%`,
-                    left: `${scrollProgress * (100 / SECTION_KEYS.length)}%`,
-                  }}
-                  aria-hidden
-                />
-              </div>
+            <div className="relative flex min-w-full">
+              {SECTION_KEYS.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSection === key}
+                  aria-controls={`events-panel-${key}`}
+                  id={`events-tab-${key}`}
+                  onClick={() => !loading && scrollToSection(key)}
+                  disabled={loading}
+                  className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
+                    activeSection === key
+                      ? "text-[var(--ig-text)]"
+                      : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+                  } ${loading ? "pointer-events-none" : ""}`}
+                >
+                  {key === "discover" && (categoryFilter ? "Events" : "Discover")}
+                  {key === "invited" && "Invited"}
+                  {key === "going" && "Going to"}
+                  {key === "spotlight" && "Spotlight"}
+                  {key === "my" && "My events"}
+                </button>
+              ))}
+              <div
+                className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+                style={{
+                  width: `${100 / SECTION_KEYS.length}%`,
+                  left: `${scrollProgress * (100 / SECTION_KEYS.length)}%`,
+                }}
+                aria-hidden
+              />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Filter drawer: slide-up from bottom */}
