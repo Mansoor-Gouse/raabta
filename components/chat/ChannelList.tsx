@@ -417,13 +417,6 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                     console.error(err);
                   }
                 }}
-                onMarkRead={async () => {
-                  try {
-                    await (channel as { markRead?: () => Promise<unknown> }).markRead?.();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
                 onActionDone={fetchChannels}
               >
                 {rowContent}

@@ -432,6 +432,120 @@ PostSaveSchema.index({ postId: 1, userId: 1 }, { unique: true });
 export const PostSaveModel =
   mongoose.models.PostSave || mongoose.model<IPostSave>("PostSave", PostSaveSchema);
 
+// Q&A – Questions, Answers, Follows
+export type QuestionStatus = "open" | "resolved" | "archived";
+export type QuestionContextType = "none" | "event" | "trip" | "retreat" | "umrah" | "hajj" | "profile";
+
+export interface IQuestion {
+  _id: string;
+  title: string;
+  body?: string;
+  topics?: string[];
+  city?: string;
+  contextType: QuestionContextType;
+  contextId?: mongoose.Types.ObjectId | null;
+  askedByUserId: mongoose.Types.ObjectId;
+  isAnonymousToMembers: boolean;
+  status: QuestionStatus;
+  answerCount: number;
+  followerCount: number;
+  hasAcceptedAnswer: boolean;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+const QuestionSchema = new mongoose.Schema<IQuestion>(
+  {
+    title: { type: String, required: true, trim: true },
+    body: { type: String },
+    topics: [{ type: String }],
+    city: { type: String },
+    contextType: {
+      type: String,
+      enum: ["none", "event", "trip", "retreat", "umrah", "hajj", "profile"],
+      default: "none",
+    },
+    contextId: { type: mongoose.Schema.Types.ObjectId },
+    askedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    isAnonymousToMembers: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["open", "resolved", "archived"],
+      default: "open",
+    },
+    answerCount: { type: Number, default: 0 },
+    followerCount: { type: Number, default: 0 },
+    hasAcceptedAnswer: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+QuestionSchema.index({ createdAt: -1 });
+QuestionSchema.index({ status: 1, createdAt: -1 });
+QuestionSchema.index({ contextType: 1, contextId: 1, createdAt: -1 });
+QuestionSchema.index({ topics: 1, createdAt: -1 });
+QuestionSchema.index({ title: "text", body: "text" });
+
+export const QuestionModel =
+  mongoose.models.Question || mongoose.model<IQuestion>("Question", QuestionSchema);
+
+export interface IAnswer {
+  _id: string;
+  questionId: mongoose.Types.ObjectId;
+  body: string;
+  answeredByUserId: mongoose.Types.ObjectId;
+  isAnonymousToMembers: boolean;
+  isAcceptedSolution: boolean;
+  upvoteCount: number;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+const AnswerSchema = new mongoose.Schema<IAnswer>(
+  {
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
+    body: { type: String, required: true },
+    answeredByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    isAnonymousToMembers: { type: Boolean, default: false },
+    isAcceptedSolution: { type: Boolean, default: false },
+    upvoteCount: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+AnswerSchema.index({ questionId: 1, createdAt: 1 });
+
+export const AnswerModel =
+  mongoose.models.Answer || mongoose.model<IAnswer>("Answer", AnswerSchema);
+
+export interface IQuestionFollow {
+  _id: string;
+  questionId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  notifyOnNewAnswer: boolean;
+  notifyOnSolution: boolean;
+  createdAt: Date;
+}
+
+const QuestionFollowSchema = new mongoose.Schema<IQuestionFollow>(
+  {
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    notifyOnNewAnswer: { type: Boolean, default: true },
+    notifyOnSolution: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+QuestionFollowSchema.index({ questionId: 1, userId: 1 }, { unique: true });
+
+export const QuestionFollowModel =
+  mongoose.models.QuestionFollow ||
+  mongoose.model<IQuestionFollow>("QuestionFollow", QuestionFollowSchema);
+
 // CircleRelationship – Inner Circle / Trusted Circle (trust-based, not friend list)
 export type CircleType = "TRUSTED" | "INNER";
 export type CircleReason =
@@ -698,6 +812,8 @@ const NotificationSchema = new mongoose.Schema<INotification>(
         "story_reaction",
         "new_post",
         "new_story",
+        "qa_new_answer",
+        "qa_answer_accepted",
       ],
       required: true,
     },

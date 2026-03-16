@@ -5,12 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ReportButton } from "@/components/report/ReportButton";
-import {
-  EliteCard,
-  EliteButton,
-  EliteChip,
-  EliteAvatar,
-} from "@/components/elite";
+import { EliteCard, EliteButton, EliteChip, EliteAvatar } from "@/components/elite";
+import { AskQuestionDrawer } from "@/components/qa/AskQuestionDrawer";
 import { trigger as hapticTrigger } from "@/lib/haptics";
 import { getMeetingPlatform, MeetingPlatformIcon } from "@/components/events/meetingPlatforms";
 
@@ -116,6 +112,8 @@ export function EliteEventDetailClient({
   const isPastEvent = Date.now() > eventEndTime;
 
   const didAttend = status === "going" || status === "accepted";
+  const qaUrl = `/app/qa?contextType=event&contextId=${encodeURIComponent(event._id)}`;
+  const [qaDrawerOpen, setQaDrawerOpen] = useState(false);
 
   /** Prefetch event channel in background so "Open chat" is instant */
   useEffect(() => {
@@ -735,16 +733,16 @@ export function EliteEventDetailClient({
                     )}
                     <Link
                       href={`/app/events/${event._id}/host`}
-                    onClick={() => hapticTrigger("light")}
-                    className={ACTION_TILE_CLASS}
-                    aria-label="Manage event"
-                  >
-                    <svg className="w-6 h-6 text-[var(--elite-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-[10px] font-medium text-[var(--elite-text-secondary)]">Manage</span>
-                  </Link>
+                      onClick={() => hapticTrigger("light")}
+                      className={ACTION_TILE_CLASS}
+                      aria-label="Manage event"
+                    >
+                      <svg className="w-6 h-6 text-[var(--elite-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-[10px] font-medium text-[var(--elite-text-secondary)]">Manage</span>
+                    </Link>
                     <Link
                       href={`/app/events/${event._id}/edit`}
                       onClick={() => hapticTrigger("light")}
@@ -758,6 +756,20 @@ export function EliteEventDetailClient({
                     </Link>
                   </>
                 )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    hapticTrigger("light");
+                    setQaDrawerOpen(true);
+                  }}
+                  className={ACTION_TILE_CLASS}
+                  aria-label="Event Q&A"
+                >
+                  <svg className="w-6 h-6 text-[var(--elite-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M8 14h8M5 20l1.5-3H6a3 3 0 01-3-3V7a3 3 0 013-3h12a3 3 0 013 3v7a3 3 0 01-3 3H9l-4 3z" />
+                  </svg>
+                  <span className="text-[10px] font-medium text-[var(--elite-text-secondary)]">Event Q&amp;A</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1137,6 +1149,13 @@ export function EliteEventDetailClient({
           </div>
         </div>
       </div>
+      <AskQuestionDrawer
+        open={qaDrawerOpen}
+        onClose={() => setQaDrawerOpen(false)}
+        contextType="event"
+        contextId={event._id}
+        defaultTitle=""
+      />
     </div>
   );
 }

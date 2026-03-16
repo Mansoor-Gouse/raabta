@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useChannelStateContext, useChatContext } from "stream-chat-react";
 import { useGroupMembersOpen } from "./GroupMembersOpenContext";
 
@@ -9,17 +9,7 @@ export function ChannelOptionsMenu() {
   const { client } = useChatContext();
   const [open, setOpen] = useState(false);
   const [editGroupOpen, setEditGroupOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const groupMembersOpen = useGroupMembersOpen();
-
-  useEffect(() => {
-    if (!open) return;
-    const onOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, [open]);
 
   const members = channel?.state?.members ?? {};
   const memberCount = Object.keys(members).length;
@@ -74,7 +64,7 @@ export function ChannelOptionsMenu() {
   const currentGroupImage = channelData.image ?? "";
 
   return (
-    <div className="relative shrink-0" ref={ref}>
+    <div className="relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -87,74 +77,84 @@ export function ChannelOptionsMenu() {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg bg-[var(--ig-bg-primary)] border border-[var(--ig-border)] min-w-[160px] z-20">
-          {isGroup && (
+        <div
+          className="fixed inset-0 z-40 flex items-end bg-black/40"
+          onClick={() => setOpen(false)}
+          aria-label="Channel options drawer"
+        >
+          <div
+            className="w-full max-h-[70vh] bg-[var(--ig-bg-primary)] border-t border-[var(--ig-border)] rounded-t-2xl shadow-xl p-3 space-y-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full bg-[var(--ig-border)] mx-auto mb-2" aria-hidden />
+            {isGroup && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  groupMembersOpen?.setOpen(true);
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
+              >
+                View group members
+              </button>
+            )}
+            {isGroup && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setEditGroupOpen(true);
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
+              >
+                Edit group
+              </button>
+            )}
+            {isGroup && <div className="border-t border-[var(--ig-border)] my-1" />}
+            {otherUserId && (
+              <button
+                type="button"
+                onClick={handleBlock}
+                className="w-full text-left px-3 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)] rounded-lg"
+              >
+                Block user
+              </button>
+            )}
+            <div className="border-t border-[var(--ig-border)] my-1" />
+            <div className="px-3 py-1.5 text-xs font-medium text-[var(--ig-text-secondary)]">
+              Disappearing messages {retentionLabel && `(${retentionLabel})`}
+            </div>
             <button
               type="button"
-              onClick={() => {
-                setOpen(false);
-                groupMembersOpen?.setOpen(true);
-              }}
-              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+              onClick={() => setDisappearing("off")}
+              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
             >
-              View group members
+              Off
             </button>
-          )}
-          {isGroup && (
             <button
               type="button"
-              onClick={() => {
-                setOpen(false);
-                setEditGroupOpen(true);
-              }}
-              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+              onClick={() => setDisappearing("24h")}
+              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
             >
-              Edit group
+              24 hours
             </button>
-          )}
-          {isGroup && <div className="border-t border-[var(--ig-border)] my-1" />}
-          {otherUserId && (
             <button
               type="button"
-              onClick={handleBlock}
-              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]"
+              onClick={() => setDisappearing("7d")}
+              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
             >
-              Block user
+              7 days
             </button>
-          )}
-          <div className="border-t border-[var(--ig-border)] my-1" />
-          <div className="px-3 py-1.5 text-xs font-medium text-[var(--ig-text-secondary)]">
-            Disappearing messages {retentionLabel && `(${retentionLabel})`}
+            <div className="border-t border-[var(--ig-border)] my-1" />
+            <button
+              type="button"
+              onClick={handleReportChannel}
+              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
+            >
+              Report chat
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setDisappearing("off")}
-            className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-          >
-            Off
-          </button>
-          <button
-            type="button"
-            onClick={() => setDisappearing("24h")}
-            className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-          >
-            24 hours
-          </button>
-          <button
-            type="button"
-            onClick={() => setDisappearing("7d")}
-            className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-          >
-            7 days
-          </button>
-          <div className="border-t border-[var(--ig-border)] my-1" />
-          <button
-            type="button"
-            onClick={handleReportChannel}
-            className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
-          >
-            Report chat
-          </button>
         </div>
       )}
       {editGroupOpen && isGroup && channel && (
@@ -182,7 +182,41 @@ function EditGroupModal({
 }) {
   const [name, setName] = useState(currentName);
   const [image, setImage] = useState(currentImage);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/posts/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setUploadError(data?.error || "Failed to upload image");
+        return;
+      }
+      const data = (await res.json()) as { mediaUrls?: string[] };
+      const url = data.mediaUrls?.[0];
+      if (url) {
+        setImage(url);
+      } else {
+        setUploadError("Upload succeeded but no URL returned");
+      }
+    } catch {
+      setUploadError("Failed to upload image");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -202,6 +236,30 @@ function EditGroupModal({
       <div className="bg-[var(--ig-bg-primary)] rounded-xl shadow-xl border border-[var(--ig-border)] w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-lg font-semibold text-[var(--ig-text)] mb-3">Edit group</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center">
+              {image ? (
+                <img src={image} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-semibold text-[var(--ig-text-secondary)]">
+                  {(name || "G")[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+            <label className="text-xs font-medium text-[var(--ig-link)] cursor-pointer">
+              {uploading ? "Uploading…" : "Change image"}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+            {uploadError && (
+              <p className="text-xs text-[var(--ig-error)] text-center max-w-xs">{uploadError}</p>
+            )}
+          </div>
           <label className="block text-sm font-medium text-[var(--ig-text-secondary)]">
             Group name
             <input

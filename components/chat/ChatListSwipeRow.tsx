@@ -26,7 +26,6 @@ export type ChatListSwipeRowProps = {
   onUnarchive: () => void;
   onMute: () => void;
   onUnmute: () => void;
-  onMarkRead: () => void;
   /** After an action, parent may refresh list. */
   onActionDone: () => void;
 };
@@ -72,7 +71,6 @@ export function ChatListSwipeRow({
   onUnarchive,
   onMute,
   onUnmute,
-  onMarkRead,
   onActionDone,
 }: ChatListSwipeRowProps) {
   const startX = useRef(0);
@@ -202,14 +200,6 @@ export function ChatListSwipeRow({
                 label="Mute"
                 iconPath="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 17.31C15.55 18.37 13.85 19 12 19zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z"
                 onClick={() => runAction(onMute)}
-                className="text-[var(--ig-text)]"
-              />
-            )}
-            {hasUnread && (
-              <ActionButton
-                label="Mark read"
-                iconPath="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm-12 .34L12 13.09V7H6.34z"
-                onClick={() => runAction(onMarkRead)}
                 className="text-[var(--ig-text)]"
               />
             )}
