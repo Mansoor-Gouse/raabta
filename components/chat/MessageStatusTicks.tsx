@@ -9,7 +9,7 @@ import { useMessageContext } from "stream-chat-react";
 export function MessageStatusTicks() {
   const { message, isMyMessage, handleRetry } = useMessageContext();
 
-  if (!message || !isMyMessage?.() || message.type === "error") return null;
+  if (!message || !isMyMessage?.()) return null;
 
   const isFailed = message.status === "failed" && (message as { errorStatusCode?: number }).errorStatusCode !== 403;
   if (isFailed) {

@@ -492,16 +492,18 @@ export function EliteEventsClient({
   const showTabsAndContentShell = loading || showSectionTabsAndPanels;
 
   return (
-    <div className="elite-events min-h-full bg-[var(--elite-bg)] flex flex-col">
-      {/* Static header: visible instantly on nav for smooth transition */}
-      <header
-        className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-[var(--elite-border)] bg-[var(--elite-bg)] transition-colors duration-[var(--elite-transition)]"
-        style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
-      >
-        <h1 className="feed-title-font text-lg font-semibold text-[var(--elite-text)]">
-          The Rope
-        </h1>
-      </header>
+    <div className="elite-events min-h-full bg-[var(--ig-bg)] flex flex-col">
+      {/* Static header: match home feed header exactly for alignment */}
+      <div className="shrink-0">
+        <div className="sticky top-0 z-30 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+          <div
+            className="flex items-center px-4 py-2.5"
+            style={{ paddingTop: "calc(0.75rem + var(--safe-area-inset-top))" }}
+          >
+            <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+          </div>
+        </div>
+      </div>
 
       {/* Filter drawer: slide-up from bottom */}
       {filterExpanded && (

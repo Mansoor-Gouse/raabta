@@ -27,14 +27,18 @@ export function ChannelMessageLayout() {
   useEffect(() => {
     if (channel) markRead?.();
   }, [channel, markRead]);
-  const memberCount = channel?.state?.members ? Object.keys(channel.state.members).length : 0;
-  const isOneToOne = memberCount === 2;
-
-  const currentUserId = client?.userID;
-  const otherMemberId =
-    isOneToOne && currentUserId
-      ? Object.keys(channel?.state?.members || {}).find((id) => id !== currentUserId)
-      : undefined;
+  const currentUserId = client?.userID ?? null;
+  const members = channel?.state?.members ?? {};
+  const memberIds = Object.keys(members);
+  const otherUserIds = currentUserId
+    ? memberIds.filter((id) => {
+        if (id === currentUserId) return false;
+        const user = (members as any)[id]?.user as { id?: string } | undefined;
+        return !!user?.id;
+      })
+    : [];
+  const isOneToOne = otherUserIds.length === 1;
+  const otherMemberId = isOneToOne ? otherUserIds[0] : undefined;
 
   // Defensive: only pass messages that have created_at so SDK never throws on message.created_at
   const rawMessages = Array.isArray(channel?.state?.messages) ? channel.state.messages : [];

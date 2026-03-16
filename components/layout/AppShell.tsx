@@ -152,8 +152,8 @@ export function AppShell({
           </AppUserContext.Provider>
         </main>
 
-        {/* Bottom navigation: hidden on channel, events, status, and new-post flow */}
-        {!isChannelScreen && !isEventsScreen && !isStatusFlow && !isNewPostFlow && (
+        {/* Bottom navigation: hidden on channel, status, and new-post flow (visible on events pages) */}
+        {!isChannelScreen && !isStatusFlow && !isNewPostFlow && (
         <nav
           className="md:hidden shrink-0 flex items-center justify-around h-[50px] border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
           style={{ paddingBottom: "var(--safe-area-inset-bottom)" }}
