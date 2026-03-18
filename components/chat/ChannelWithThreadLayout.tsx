@@ -10,7 +10,6 @@ import { ChannelOptionsMenu } from "./ChannelOptionsMenu";
 import { ConnectionBanner } from "./ConnectionBanner";
 import { GroupMembersOpenProvider, useGroupMembersOpen } from "./GroupMembersOpenContext";
 import { GroupMembersSheet } from "./GroupMembersSheet";
-import { ViewOnceMessage } from "./ViewOnceMessage";
 
 /**
  * Renders channel main panel and thread panel. When a thread is open:
@@ -74,7 +73,10 @@ function ChannelWithThreadLayoutInner() {
       {/* Thread panel: visible when thread is set */}
       {thread && (
         <div className="flex flex-1 md:max-w-md min-w-0 flex-col border-l border-[var(--ig-border)] bg-[var(--ig-bg-primary)]">
-          <Thread fullWidth Message={ViewOnceMessage} />
+          <Thread
+            fullWidth
+            messageActions={["delete", "edit", "flag", "mute", "pin", "quote", "react", "reply"]}
+          />
         </div>
       )}
       {groupMembersOpen && (

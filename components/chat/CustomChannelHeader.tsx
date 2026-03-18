@@ -114,7 +114,7 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
         )}
       </button>
       <div
-        className="shrink-0 overflow-hidden bg-[var(--ig-border-light)] rounded-sm flex items-center justify-center"
+        className="shrink-0 overflow-hidden bg-[var(--ig-border-light)] rounded-[5px] flex items-center justify-center"
         style={{ width: avatarSize, height: avatarSize }}
         aria-label="Channel avatar"
       >

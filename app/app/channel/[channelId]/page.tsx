@@ -11,8 +11,6 @@ import { MessageStatusTicks } from "@/components/chat/MessageStatusTicks";
 import { EventChannelInfoProvider, type EventChannelInfo } from "@/components/chat/EventChannelInfoContext";
 import { ChannelErrorBoundary } from "@/components/chat/ChannelErrorBoundary";
 import { EventChannelMessageSystem } from "@/components/chat/EventChannelMessageSystem";
-import { ViewOnceProvider } from "@/components/chat/ViewOnceContext";
-import { ViewOnceMessage } from "@/components/chat/ViewOnceMessage";
 import { FilteredChannelStateWrapper } from "@/components/chat/FilteredChannelStateWrapper";
 import { getDraft } from "@/lib/draftStorage";
 
@@ -57,26 +55,23 @@ export default function ChannelPage() {
   const cid = `${channelType}:${channelId}`;
   return (
     <ChannelErrorBoundary>
-      <ViewOnceProvider>
-        <EventChannelInfoProvider value={eventInfo}>
-          <Channel
-            EmptyStateIndicator={EmptyChannelState}
-            enrichURLForPreview
-            HeaderComponent={CustomChannelHeader}
-            Input={CustomMessageInputWithRichMedia}
-            Message={ViewOnceMessage}
-            MessageStatus={MessageStatusTicks}
-            MessageSystem={EventChannelMessageSystem}
-            multipleUploads
-            maxNumberOfFiles={10}
-            optionalMessageInputProps={{ getDefaultValue: () => getDraft(cid) }}
-          >
-            <FilteredChannelStateWrapper>
-              <ChannelWithThreadLayout />
-            </FilteredChannelStateWrapper>
-          </Channel>
-        </EventChannelInfoProvider>
-      </ViewOnceProvider>
+      <EventChannelInfoProvider value={eventInfo}>
+        <Channel
+          EmptyStateIndicator={EmptyChannelState}
+          enrichURLForPreview
+          HeaderComponent={CustomChannelHeader}
+          Input={CustomMessageInputWithRichMedia}
+          MessageStatus={MessageStatusTicks}
+          MessageSystem={EventChannelMessageSystem}
+          multipleUploads
+          maxNumberOfFiles={10}
+          optionalMessageInputProps={{ getDefaultValue: () => getDraft(cid) }}
+        >
+          <FilteredChannelStateWrapper>
+            <ChannelWithThreadLayout />
+          </FilteredChannelStateWrapper>
+        </Channel>
+      </EventChannelInfoProvider>
     </ChannelErrorBoundary>
   );
 }

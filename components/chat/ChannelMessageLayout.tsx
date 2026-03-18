@@ -3,7 +3,6 @@
 import { useRef, useEffect, useCallback, useMemo } from "react";
 import { MessageList, MessageInput, useChannelActionContext, useChannelStateContext, useChatContext } from "stream-chat-react";
 import { PinnedMessagesBar } from "./PinnedMessagesBar";
-import { useViewOnce } from "./ViewOnceContext";
 import { getDraft } from "@/lib/draftStorage";
 import { FailedMessageAutoRetry } from "./FailedMessageAutoRetry";
 import { useConnectionState } from "./ConnectionStateContext";
@@ -37,14 +36,16 @@ export function ChannelMessageLayout() {
       : Array.from(
           new Set(
             memberEntries
-              .map((m) => m.user_id ?? m.user?.id)
+              .map((m) => m.user?.id ?? m.user_id)
               .filter((id): id is string => !!id && id !== currentUserId)
           )
         );
   const isOneToOne = otherUserIds.length === 1;
   const otherMemberId = isOneToOne ? otherUserIds[0] : undefined;
 
-  // Defensive: only pass messages that have created_at so SDK never throws on message.created_at
+  // Defensive: keep two message lists:
+  // - safeMessages: filtered to prevent SDK crashes when created_at is missing
+  // - indicatorMessages: used only for UI calculations (sent/seen) and can tolerate missing timestamps
   const rawMessages = Array.isArray(channel?.state?.messages) ? channel.state.messages : [];
   type MsgEl = (typeof rawMessages)[number];
   const safeMessages = useMemo(
@@ -53,6 +54,10 @@ export function ChannelMessageLayout() {
         (m: MsgEl): m is MsgEl & { created_at: unknown } =>
           m != null && typeof m === "object" && (m as { created_at?: unknown }).created_at != null
       ),
+    [rawMessages]
+  );
+  const indicatorMessages = useMemo(
+    () => rawMessages.filter((m: MsgEl): m is NonNullable<MsgEl> => m != null),
     [rawMessages]
   );
 
@@ -77,36 +82,48 @@ export function ChannelMessageLayout() {
   const lastReadDate = otherRead?.last_read ? new Date(otherRead.last_read) : null;
 
   const lastMessageFromMe = useMemo(() => {
-    if (!currentUserId || safeMessages.length === 0) return null;
-    let best: (typeof safeMessages)[number] | null = null;
+    if (!currentUserId || indicatorMessages.length === 0) return null;
+    let best: (typeof indicatorMessages)[number] | null = null;
     let bestTime = -1;
-    for (const m of safeMessages) {
-      if (!m) continue;
-      const senderId = (m.user as { id?: string } | undefined)?.id ?? (m as { user_id?: string }).user_id;
+
+    for (const m of indicatorMessages) {
+      const senderId =
+        (m as { user?: { id?: string } }).user?.id ?? (m as { user_id?: string }).user_id;
       if (senderId !== currentUserId) continue;
-      const t = m.created_at != null ? new Date(m.created_at as string | Date).getTime() : -1;
+
+      const createdAt = (m as { created_at?: string | Date }).created_at;
+      const updatedAt = (m as { updated_at?: string | Date }).updated_at;
+      const t =
+        createdAt != null
+          ? new Date(createdAt).getTime()
+          : updatedAt != null
+            ? new Date(updatedAt).getTime()
+            : -1;
+
       if (t >= bestTime) {
         bestTime = t;
         best = m;
       }
     }
+
     return best;
-  }, [safeMessages, currentUserId]);
+  }, [indicatorMessages, currentUserId]);
 
-  const lastFromMeIsRead = Boolean(
-    lastMessageFromMe &&
-      lastReadDate &&
-      lastMessageFromMe.created_at != null &&
-      new Date(lastMessageFromMe.created_at as string | Date) <= lastReadDate
-  );
+  const lastFromMeIsRead = (() => {
+    if (!lastMessageFromMe || !lastReadDate) return false;
+    const createdAt = (lastMessageFromMe as { created_at?: string | Date }).created_at;
+    const updatedAt = (lastMessageFromMe as { updated_at?: string | Date }).updated_at;
+    const t =
+      createdAt != null ? new Date(createdAt).getTime() : updatedAt != null ? new Date(updatedAt).getTime() : null;
+    if (t == null) return false;
+    return t <= lastReadDate.getTime();
+  })();
 
-  const { viewOnce, setViewOnce } = useViewOnce();
   const overrideSubmitHandler = useCallback(
     (message: Record<string, unknown>, _channelCid: string, customMessageData?: Record<string, unknown>, options?: Record<string, unknown>) => {
       if (!channel) return;
       const customData = {
         ...((customMessageData as Record<string, unknown> | undefined)?.customData as Record<string, unknown> | undefined),
-        ...(viewOnce ? { view_once: true } : {}),
       };
       const payload = { ...customMessageData, customData };
       if (!isOnline) {
@@ -116,7 +133,6 @@ export function ChannelMessageLayout() {
           customMessageData: payload,
           options,
         });
-        setViewOnce(false);
         return;
       }
       void channel.sendMessage(
@@ -124,9 +140,8 @@ export function ChannelMessageLayout() {
         payload as Parameters<typeof channel.sendMessage>[1],
         options as Parameters<typeof channel.sendMessage>[2]
       );
-      setViewOnce(false);
     },
-    [channel, viewOnce, setViewOnce, isOnline, enqueue]
+    [channel, isOnline, enqueue]
   );
 
   useEffect(() => {
@@ -160,6 +175,7 @@ export function ChannelMessageLayout() {
           <MessageList
             head={<></>}
             headerPosition={0}
+            messageActions={["delete", "edit", "flag", "mute", "pin", "quote", "react", "reply"]}
             messages={safeMessages}
             disableDateSeparator
             hideNewMessageSeparator

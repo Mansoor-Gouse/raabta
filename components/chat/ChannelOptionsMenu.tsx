@@ -45,20 +45,6 @@ export function ChannelOptionsMenu() {
     }
   }
 
-  const retention = (channel?.data as { message_retention?: string })?.message_retention;
-  const retentionLabel = retention === "86400" ? "24h" : retention === "604800" ? "7d" : null;
-
-  async function setDisappearing(value: "off" | "24h" | "7d") {
-    if (!channel) return;
-    try {
-      const message_retention = value === "off" ? "infinite" : value === "24h" ? "86400" : "604800";
-      await channel.update({ message_retention } as Record<string, unknown>);
-      setOpen(false);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
   const channelData = (channel?.data || {}) as { name?: string; image?: string };
   const currentGroupName = channelData.name ?? "";
   const currentGroupImage = channelData.image ?? "";
@@ -122,30 +108,6 @@ export function ChannelOptionsMenu() {
               </button>
             )}
             <div className="border-t border-[var(--ig-border)] my-1" />
-            <div className="px-3 py-1.5 text-xs font-medium text-[var(--ig-text-secondary)]">
-              Disappearing messages {retentionLabel && `(${retentionLabel})`}
-            </div>
-            <button
-              type="button"
-              onClick={() => setDisappearing("off")}
-              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
-            >
-              Off
-            </button>
-            <button
-              type="button"
-              onClick={() => setDisappearing("24h")}
-              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
-            >
-              24 hours
-            </button>
-            <button
-              type="button"
-              onClick={() => setDisappearing("7d")}
-              className="w-full text-left px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
-            >
-              7 days
-            </button>
             <div className="border-t border-[var(--ig-border)] my-1" />
             <button
               type="button"

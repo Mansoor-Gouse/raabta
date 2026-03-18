@@ -71,7 +71,7 @@ export function SharedPostCard({ attachment }: SharedPostCardProps) {
         {/* Right: author + caption — same layout for both cases */}
         <div className="flex-1 min-w-0 flex flex-col justify-center pr-1">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-5 h-5 rounded-sm overflow-hidden bg-[var(--ig-border-light)] shrink-0">
+            <div className="w-5 h-5 rounded-[5px] overflow-hidden bg-[var(--ig-border-light)] shrink-0">
               {authorImage ? (
                 <img src={authorImage} alt="" className="w-full h-full object-cover" />
               ) : (
