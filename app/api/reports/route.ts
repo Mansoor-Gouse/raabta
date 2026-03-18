@@ -34,8 +34,15 @@ export async function POST(request: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await request.json();
   const { targetType, targetId, reason } = body as { targetType?: string; targetId?: string; reason?: string };
-  if (!targetType || !["post", "event", "user", "message", "channel"].includes(targetType) || !targetId) {
-    return NextResponse.json({ error: "targetType (post|event|user|message|channel) and targetId required" }, { status: 400 });
+  if (
+    !targetType ||
+    !["post", "event", "user", "message", "channel", "qa_question", "qa_answer"].includes(targetType) ||
+    !targetId
+  ) {
+    return NextResponse.json(
+      { error: "targetType and targetId required" },
+      { status: 400 }
+    );
   }
   await connectDB();
   const report = await ReportModel.create({

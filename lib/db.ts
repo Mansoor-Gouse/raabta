@@ -450,6 +450,7 @@ export interface IQuestion {
   answerCount: number;
   followerCount: number;
   hasAcceptedAnswer: boolean;
+  score: number;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -476,6 +477,7 @@ const QuestionSchema = new mongoose.Schema<IQuestion>(
     answerCount: { type: Number, default: 0 },
     followerCount: { type: Number, default: 0 },
     hasAcceptedAnswer: { type: Boolean, default: false },
+    score: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
@@ -498,6 +500,9 @@ export interface IAnswer {
   isAnonymousToMembers: boolean;
   isAcceptedSolution: boolean;
   upvoteCount: number;
+  score: number;
+  downvoteCount: number;
+  parentAnswerId?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -510,15 +515,92 @@ const AnswerSchema = new mongoose.Schema<IAnswer>(
     isAnonymousToMembers: { type: Boolean, default: false },
     isAcceptedSolution: { type: Boolean, default: false },
     upvoteCount: { type: Number, default: 0 },
+    downvoteCount: { type: Number, default: 0 },
+    score: { type: Number, default: 0 },
+    parentAnswerId: { type: mongoose.Schema.Types.ObjectId, default: null },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
 AnswerSchema.index({ questionId: 1, createdAt: 1 });
+AnswerSchema.index({ questionId: 1, parentAnswerId: 1, createdAt: 1 });
 
 export const AnswerModel =
   mongoose.models.Answer || mongoose.model<IAnswer>("Answer", AnswerSchema);
+
+export interface IQaQuestionVote {
+  _id: string;
+  questionId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  value: 1 | -1;
+  createdAt: Date;
+}
+
+const QaQuestionVoteSchema = new mongoose.Schema<IQaQuestionVote>(
+  {
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    value: { type: Number, enum: [1, -1], required: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+QaQuestionVoteSchema.index({ questionId: 1, userId: 1 }, { unique: true });
+QaQuestionVoteSchema.index({ questionId: 1, createdAt: -1 });
+
+export const QaQuestionVoteModel =
+  mongoose.models.QaQuestionVote ||
+  mongoose.model<IQaQuestionVote>("QaQuestionVote", QaQuestionVoteSchema);
+
+export interface IQaAnswerVote {
+  _id: string;
+  answerId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  value: 1 | -1;
+  createdAt: Date;
+}
+
+const QaAnswerVoteSchema = new mongoose.Schema<IQaAnswerVote>(
+  {
+    answerId: { type: mongoose.Schema.Types.ObjectId, ref: "Answer", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    value: { type: Number, enum: [1, -1], required: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+QaAnswerVoteSchema.index({ answerId: 1, userId: 1 }, { unique: true });
+QaAnswerVoteSchema.index({ answerId: 1, createdAt: -1 });
+
+export const QaAnswerVoteModel =
+  mongoose.models.QaAnswerVote ||
+  mongoose.model<IQaAnswerVote>("QaAnswerVote", QaAnswerVoteSchema);
+
+export interface IAnonymousHandle {
+  _id: string;
+  userId: mongoose.Types.ObjectId;
+  handle: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+const AnonymousHandleSchema = new mongoose.Schema<IAnonymousHandle>(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+    handle: { type: String, required: true, unique: true, trim: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+AnonymousHandleSchema.index({ handle: 1 }, { unique: true });
+
+export const AnonymousHandleModel =
+  mongoose.models.AnonymousHandle ||
+  mongoose.model<IAnonymousHandle>("AnonymousHandle", AnonymousHandleSchema);
 
 export interface IQuestionFollow {
   _id: string;
@@ -545,6 +627,28 @@ QuestionFollowSchema.index({ questionId: 1, userId: 1 }, { unique: true });
 export const QuestionFollowModel =
   mongoose.models.QuestionFollow ||
   mongoose.model<IQuestionFollow>("QuestionFollow", QuestionFollowSchema);
+
+export interface IQuestionSave {
+  _id: string;
+  questionId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  createdAt: Date;
+}
+
+const QuestionSaveSchema = new mongoose.Schema<IQuestionSave>(
+  {
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+QuestionSaveSchema.index({ questionId: 1, userId: 1 }, { unique: true });
+
+export const QuestionSaveModel =
+  mongoose.models.QuestionSave ||
+  mongoose.model<IQuestionSave>("QuestionSave", QuestionSaveSchema);
 
 // CircleRelationship – Inner Circle / Trusted Circle (trust-based, not friend list)
 export type CircleType = "TRUSTED" | "INNER";
@@ -1044,7 +1148,7 @@ export const BlockModel =
 export interface IReport {
   _id: string;
   reporterId: mongoose.Types.ObjectId;
-  targetType: "post" | "event" | "user" | "message" | "channel";
+  targetType: "post" | "event" | "user" | "message" | "channel" | "qa_question" | "qa_answer";
   targetId: string;
   reason?: string;
   status: "pending" | "reviewed" | "resolved" | "dismissed";
@@ -1055,7 +1159,11 @@ export interface IReport {
 const ReportSchema = new mongoose.Schema<IReport>(
   {
     reporterId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    targetType: { type: String, enum: ["post", "event", "user", "message", "channel"], required: true },
+    targetType: {
+      type: String,
+      enum: ["post", "event", "user", "message", "channel", "qa_question", "qa_answer"],
+      required: true,
+    },
     targetId: { type: String, required: true },
     reason: { type: String },
     status: { type: String, enum: ["pending", "reviewed", "resolved", "dismissed"], default: "pending" },

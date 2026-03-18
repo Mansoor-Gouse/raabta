@@ -29,14 +29,18 @@ export function ChannelMessageLayout() {
   }, [channel, markRead]);
   const currentUserId = client?.userID ?? null;
   const members = channel?.state?.members ?? {};
-  const memberIds = Object.keys(members);
-  const otherUserIds = currentUserId
-    ? memberIds.filter((id) => {
-        if (id === currentUserId) return false;
-        const user = (members as any)[id]?.user as { id?: string } | undefined;
-        return !!user?.id;
-      })
-    : [];
+  const memberEntries = Object.values(members) as { user_id?: string; user?: { id?: string } }[];
+  // Derive distinct other user IDs from membership, ignoring entries without a real user id.
+  const otherUserIds =
+    currentUserId == null
+      ? []
+      : Array.from(
+          new Set(
+            memberEntries
+              .map((m) => m.user_id ?? m.user?.id)
+              .filter((id): id is string => !!id && id !== currentUserId)
+          )
+        );
   const isOneToOne = otherUserIds.length === 1;
   const otherMemberId = isOneToOne ? otherUserIds[0] : undefined;
 
@@ -74,8 +78,19 @@ export function ChannelMessageLayout() {
 
   const lastMessageFromMe = useMemo(() => {
     if (!currentUserId || safeMessages.length === 0) return null;
-    const fromMe = [...safeMessages].reverse().find((m) => m?.user?.id === currentUserId || (m as { user_id?: string }).user_id === currentUserId);
-    return fromMe ?? null;
+    let best: (typeof safeMessages)[number] | null = null;
+    let bestTime = -1;
+    for (const m of safeMessages) {
+      if (!m) continue;
+      const senderId = (m.user as { id?: string } | undefined)?.id ?? (m as { user_id?: string }).user_id;
+      if (senderId !== currentUserId) continue;
+      const t = m.created_at != null ? new Date(m.created_at as string | Date).getTime() : -1;
+      if (t >= bestTime) {
+        bestTime = t;
+        best = m;
+      }
+    }
+    return best;
   }, [safeMessages, currentUserId]);
 
   const lastFromMeIsRead = Boolean(

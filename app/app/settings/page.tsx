@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BlockedList } from "@/components/settings/BlockedList";
 import { PushSettingsSection } from "@/components/PushRegistration";
+import { AnonymousHandleSection } from "@/components/settings/AnonymousHandleSection";
 
 export default function SettingsPage() {
   return (
@@ -16,6 +17,7 @@ export default function SettingsPage() {
         Edit profile
       </Link>
       <PushSettingsSection />
+      <AnonymousHandleSection />
       <BlockedList />
     </div>
   );

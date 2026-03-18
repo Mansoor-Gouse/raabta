@@ -476,10 +476,9 @@ export function EliteEventsClient({
       const rawProgress = w > 0 ? el.scrollLeft / w : 0;
       const clamped = Math.max(0, Math.min(rawProgress, maxIndex));
       if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
-      // We only use scroll position to decide which tab is active (below);
-      // underline position is driven from activeSection to avoid desync.
       scrollRafRef.current = requestAnimationFrame(() => {
         scrollRafRef.current = null;
+        setScrollProgress(clamped);
       });
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
@@ -501,12 +500,6 @@ export function EliteEventsClient({
     };
   }, [activeSection]);
 
-  // Keep underline position strictly in sync with the active tab index
-  useEffect(() => {
-    const idx = SECTION_KEYS.indexOf(activeSection);
-    if (idx >= 0) setScrollProgress(idx);
-  }, [activeSection]);
-
   useEffect(() => {
     if (!showSectionTabsAndPanels || initialSectionHandled.current || !initialSection) return;
     const key = initialSection as SectionKey;
@@ -522,6 +515,9 @@ export function EliteEventsClient({
   }, [showSectionTabsAndPanels, initialSection]);
 
   const showTabsAndContentShell = loading || showSectionTabsAndPanels;
+  const activeIndex = SECTION_KEYS.indexOf(activeSection);
+  const visualIndex =
+    activeIndex >= 0 ? Math.round(scrollProgress || activeIndex) : Math.round(scrollProgress || 0);
 
   return (
     <div className="elite-events min-h-full bg-[var(--ig-bg)] flex flex-col">
@@ -534,18 +530,18 @@ export function EliteEventsClient({
             aria-label="Event sections"
           >
             <div className="relative flex min-w-full">
-              {SECTION_KEYS.map((key) => (
+              {SECTION_KEYS.map((key, index) => (
                 <button
                   key={key}
                   type="button"
                   role="tab"
-                  aria-selected={activeSection === key}
+                  aria-selected={visualIndex === index}
                   aria-controls={`events-panel-${key}`}
                   id={`events-tab-${key}`}
                   onClick={() => !loading && scrollToSection(key)}
                   disabled={loading}
                   className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
-                    activeSection === key
+                    visualIndex === index
                       ? "text-[var(--ig-text)]"
                       : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
                   } ${loading ? "pointer-events-none" : ""}`}

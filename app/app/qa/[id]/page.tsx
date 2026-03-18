@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAppUser } from "@/components/layout/AppShell";
+import { QuestionCard, type QaQuestionCard } from "@/components/qa/reddit/QuestionCard";
+import { AnswerCard, type QaAnswerCard } from "@/components/qa/reddit/AnswerCard";
+import { SortTabs } from "@/components/qa/reddit/SortTabs";
+import { ReplyDrawer } from "@/components/qa/ReplyDrawer";
+import { MoreSheet } from "@/components/qa/MoreSheet";
 
 type Question = {
   id: string;
@@ -18,6 +23,10 @@ type Question = {
   askedByUserId: string;
   isFollowing: boolean;
   followerCount: number;
+  score?: number;
+  myVote?: 1 | 0 | -1;
+  authorLabel?: string;
+  savedByMe?: boolean;
 };
 
 type Answer = {
@@ -28,6 +37,10 @@ type Answer = {
   upvoteCount: number;
   answeredByUserId: string;
   createdAt: string;
+  score?: number;
+  myVote?: 1 | 0 | -1;
+  authorLabel?: string;
+  parentAnswerId?: string | null;
 };
 
 type DetailResponse = {
@@ -47,6 +60,9 @@ export default function QuestionDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [solutionLoadingId, setSolutionLoadingId] = useState<string | null>(null);
+  const [answerSort, setAnswerSort] = useState<"top" | "new">("top");
+  const [replyingTo, setReplyingTo] = useState<{ answerId: string; label?: string } | null>(null);
+  const [moreTarget, setMoreTarget] = useState<{ type: "qa_question" | "qa_answer"; id: string } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -68,6 +84,53 @@ export default function QuestionDetailPage() {
   }, [id]);
 
   const isAsker = data && user.id && data.question.askedByUserId === user.id;
+
+  async function voteQuestion(value: 1 | 0 | -1) {
+    if (!id) return;
+    setData((prev) => {
+      if (!prev) return prev;
+      const prevVote = prev.question.myVote ?? 0;
+      const nextVote = value;
+      const delta = nextVote - prevVote;
+      return {
+        ...prev,
+        question: {
+          ...prev.question,
+          myVote: nextVote,
+          score: (prev.question.score ?? 0) + delta,
+        },
+      };
+    });
+    await fetch(`/api/qa/questions/${id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ value }),
+    }).catch(() => {});
+  }
+
+  async function voteAnswer(answerId: string, value: 1 | 0 | -1) {
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            answers: prev.answers.map((a) => {
+              if (a.id !== answerId) return a;
+              const prevVote = a.myVote ?? 0;
+              const nextVote = value;
+              const delta = nextVote - prevVote;
+              return { ...a, myVote: nextVote, score: (a.score ?? 0) + delta };
+            }),
+          }
+        : prev
+    );
+    await fetch(`/api/qa/answers/${answerId}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ value }),
+    }).catch(() => {});
+  }
 
   async function toggleFollow() {
     if (!id || !data || followLoading) return;
@@ -196,17 +259,66 @@ export default function QuestionDetailPage() {
   if (!data) return null;
 
   const { question, answers } = data;
+  const sortFn = (a: Answer, b: Answer) => {
+    if (answerSort === "new") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return (b.score ?? 0) - (a.score ?? 0);
+  };
+  const byParent: Record<string, Answer[]> = {};
+  for (const a of answers) {
+    const key = a.parentAnswerId ?? "root";
+    (byParent[key] ??= []).push(a);
+  }
+  for (const key of Object.keys(byParent)) {
+    byParent[key].sort(sortFn);
+  }
+  const threaded: Array<{ a: Answer; depth: number }> = [];
+  const walk = (parentKey: string, depth: number) => {
+    const kids = byParent[parentKey] ?? [];
+    for (const k of kids) {
+      threaded.push({ a: k, depth });
+      walk(k.id, depth + 1);
+    }
+  };
+  walk("root", 0);
+
+  const qCard: QaQuestionCard = {
+    _id: question.id,
+    title: question.title,
+    body: question.body,
+    topics: question.topics,
+    contextLabel: null,
+    answerCount: question.answerCount,
+    followerCount: question.followerCount,
+    createdAt: question.createdAt,
+    score: question.score ?? 0,
+    myVote: question.myVote ?? 0,
+    authorLabel: question.authorLabel,
+  };
+
+  async function toggleSaveQuestion() {
+    const current = question.savedByMe ?? false;
+    setData((prev) => (prev ? { ...prev, question: { ...prev.question, savedByMe: !current } } : prev));
+    await fetch(`/api/qa/questions/${question.id}/save`, {
+      method: current ? "DELETE" : "POST",
+      credentials: "include",
+    }).catch(() => {});
+  }
+
+  async function shareLink(path: string) {
+    const link =
+      typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <div className="min-h-full bg-[var(--ig-bg)] flex flex-col" style={{ paddingTop: "var(--safe-area-inset-top)" }}>
       <header className="sticky top-0 z-10 px-4 py-3 border-b border-[var(--ig-border)] bg-[var(--ig-bg-primary)] flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-semibold text-[var(--ig-text)] line-clamp-2">
-            {question.title}
-          </h1>
-          <p className="mt-1 text-xs text-[var(--ig-text-secondary)]">
-            {question.answerCount} answer{question.answerCount === 1 ? "" : "s"}
-          </p>
+          <h1 className="text-lg font-semibold text-[var(--ig-text)] line-clamp-2">Thread</h1>
         </div>
         <button
           type="button"
@@ -221,74 +333,69 @@ export default function QuestionDetailPage() {
           {question.isFollowing ? "Following" : "Follow"}
         </button>
       </header>
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-        {question.body && (
-          <div className="text-sm text-[var(--ig-text)] whitespace-pre-wrap">
-            {question.body}
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2 text-[10px] text-[var(--ig-text-secondary)]">
-          {question.topics.map((t) => (
-            <span
-              key={t}
-              className="px-2 py-0.5 rounded-full bg-[var(--ig-border-light)]"
-            >
-              {t}
-            </span>
-          ))}
-          {question.city && (
-            <span className="px-2 py-0.5 rounded-full bg-[var(--ig-border-light)]">
-              {question.city}
-            </span>
-          )}
-          {question.hasAcceptedAnswer && (
-            <span className="px-2 py-0.5 rounded-full bg-green-600/10 text-green-700 dark:text-green-300 border border-green-600/30">
-              Resolved
-            </span>
-          )}
-        </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <QuestionCard
+          q={qCard}
+          onVote={voteQuestion}
+          saved={question.savedByMe ?? false}
+          onSave={toggleSaveQuestion}
+          onShare={() => shareLink(`/app/qa/${question.id}`)}
+          onMore={() => setMoreTarget({ type: "qa_question", id: question.id })}
+        />
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--ig-text)] mb-2">
-            Answers
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-[var(--ig-text)]">Answers</h2>
+            <SortTabs
+              tabs={[
+                { id: "top", label: "Top" },
+                { id: "new", label: "New" },
+              ]}
+              activeId={answerSort}
+              onChange={(id2) => setAnswerSort(id2 as "top" | "new")}
+            />
+          </div>
           {answers.length === 0 ? (
             <p className="text-sm text-[var(--ig-text-secondary)]">
               No answers yet. Be the first to respond.
             </p>
           ) : (
             <ul className="space-y-3">
-              {answers.map((a) => {
+              {threaded.map(({ a, depth }) => {
                 const canMark = isAsker;
                 const isLoading = solutionLoadingId === a.id;
+                const aCard: QaAnswerCard = {
+                  _id: a.id,
+                  body: a.body,
+                  createdAt: a.createdAt,
+                  authorLabel: a.authorLabel,
+                  score: a.score ?? 0,
+                  myVote: a.myVote ?? 0,
+                  isAcceptedSolution: a.isAcceptedSolution,
+                  depth,
+                };
                 return (
-                  <li
-                    key={a.id}
-                    className={`rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] px-3 py-2 text-sm text-[var(--ig-text)] ${
-                      a.isAcceptedSolution ? "border-green-600/60" : ""
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{a.body}</p>
-                    <div className="mt-1 flex items-center justify-between text-[10px] text-[var(--ig-text-secondary)] gap-2">
-                      <div className="flex items-center gap-2">
-                        {a.isAcceptedSolution && (
-                          <span className="text-green-600 dark:text-green-300 font-semibold">
-                            Marked as solution
-                          </span>
-                        )}
-                        {canMark && (
-                          <button
-                            type="button"
-                            disabled={isLoading}
-                            onClick={() => toggleSolution(a.id, a.isAcceptedSolution)}
-                            className="px-2 py-0.5 rounded-full border border-[var(--ig-border)] text-[10px] text-[var(--ig-text)] disabled:opacity-50"
-                          >
-                            {a.isAcceptedSolution ? "Unmark solution" : "Mark as solution"}
-                          </button>
-                        )}
+                  <li key={a.id} className={a.isAcceptedSolution ? "ring-1 ring-green-600/50 rounded-xl" : ""}>
+                    <AnswerCard
+                      a={aCard}
+                      showConnector
+                      onVote={(v) => voteAnswer(a.id, v)}
+                      onMore={() => setMoreTarget({ type: "qa_answer", id: a.id })}
+                      onShare={() => shareLink(`/app/qa/${question.id}#answer-${a.id}`)}
+                      onReply={() => setReplyingTo({ answerId: a.id, label: a.authorLabel })}
+                    />
+                    {canMark && (
+                      <div className="mt-2">
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => toggleSolution(a.id, a.isAcceptedSolution)}
+                          className="qa-action-btn text-xs text-[var(--ig-text)] border border-[var(--qa-card-border)]"
+                        >
+                          {a.isAcceptedSolution ? "Unmark solution" : "Mark as solution"}
+                        </button>
                       </div>
-                      <span>{new Date(a.createdAt).toLocaleString()}</span>
-                    </div>
+                    )}
                   </li>
                 );
               })}
@@ -338,6 +445,43 @@ export default function QuestionDetailPage() {
           </form>
         </section>
       </div>
+
+      <ReplyDrawer
+        open={!!replyingTo}
+        onClose={() => setReplyingTo(null)}
+        questionId={question.id}
+        parentAnswerId={replyingTo?.answerId ?? null}
+        replyingToLabel={replyingTo?.label}
+        onCreated={(created) => {
+          setData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  question: { ...prev.question, answerCount: prev.question.answerCount + 1 },
+                  answers: [...prev.answers, created as Answer],
+                }
+              : prev
+          );
+        }}
+      />
+
+      <MoreSheet
+        open={!!moreTarget}
+        onClose={() => setMoreTarget(null)}
+        link={
+          typeof window !== "undefined" && moreTarget
+            ? `${window.location.origin}${
+                moreTarget.type === "qa_question"
+                  ? `/app/qa/${moreTarget.id}`
+                  : `/app/qa/${question.id}#answer-${moreTarget.id}`
+              }`
+            : moreTarget?.type === "qa_question"
+              ? `/app/qa/${moreTarget.id}`
+              : `/app/qa/${question.id}#answer-${moreTarget?.id ?? ""}`
+        }
+        reportTargetType={(moreTarget?.type ?? "qa_question") as "qa_question" | "qa_answer"}
+        reportTargetId={moreTarget?.id ?? ""}
+      />
     </div>
   );
 }

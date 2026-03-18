@@ -35,6 +35,32 @@
   --post-flow-accent: var(--ig-link);
   --post-flow-cta: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
   --post-flow-cta-hover: linear-gradient(180deg, #3d3d3d 0%, #2a2a2a 100%);
+
+  /* Q&A (Reddit-like) tokens */
+  --qa-card-bg: var(--ig-bg-primary);
+  --qa-card-border: var(--ig-border-light);
+  --qa-rail-bg: #f2f3f5;
+  --qa-rail-border: #e6e8eb;
+  --qa-title: var(--ig-text);
+  --qa-body: var(--ig-text);
+  --qa-meta: var(--ig-text-secondary);
+  --qa-action: var(--ig-text-secondary);
+  --qa-connector: #e6e8eb;
+  --qa-solution: #2e7d32;
+
+  --qa-tab-bg: transparent;
+  --qa-tab-hover-bg: rgba(0, 0, 0, 0.03);
+  --qa-tab-border: var(--ig-border-light);
+  --qa-tab-text: var(--ig-text-secondary);
+  --qa-tab-active-bg: #111827;
+  --qa-tab-active-text: #ffffff;
+  --qa-tab-active-border: #111827;
+
+  --qa-score-text: #111827;
+  --qa-vote-idle-text: #6b7280;
+  --qa-vote-hover-bg: rgba(0, 0, 0, 0.04);
+  --qa-vote-active-bg: rgba(0, 149, 246, 0.12);
+  --qa-vote-active-text: #0b5aa2;
 }
 
 html {
@@ -78,6 +104,50 @@ body {
   --post-flow-accent: var(--ig-link);
   --post-flow-cta: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
   --post-flow-cta-hover: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
+
+  /* Q&A (Reddit-like) tokens - dark */
+  --qa-card-bg: #0a0a0a;
+  --qa-card-border: #262626;
+  --qa-rail-bg: #111111;
+  --qa-rail-border: #262626;
+  --qa-title: var(--ig-text);
+  --qa-body: var(--ig-text);
+  --qa-meta: var(--ig-text-secondary);
+  --qa-action: var(--ig-text-secondary);
+  --qa-connector: #262626;
+  --qa-solution: #7cd992;
+
+  --qa-tab-hover-bg: rgba(255, 255, 255, 0.06);
+  --qa-tab-active-bg: #e5e5e5;
+  --qa-tab-active-text: #111111;
+  --qa-tab-active-border: #e5e5e5;
+
+  --qa-score-text: #e5e5e5;
+  --qa-vote-idle-text: #a3a3a3;
+  --qa-vote-hover-bg: rgba(255, 255, 255, 0.06);
+  --qa-vote-active-bg: rgba(0, 149, 246, 0.2);
+  --qa-vote-active-text: #7cc6ff;
+}
+
+.qa-card {
+  background: var(--qa-card-bg);
+  border: 1px solid var(--qa-card-border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.qa-action-btn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.qa-action-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--qa-card-border);
+}
+.dark .qa-action-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Post adding flow: page container (event-module fonts + gradient bg) */

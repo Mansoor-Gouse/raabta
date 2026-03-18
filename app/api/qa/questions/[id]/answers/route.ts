@@ -7,6 +7,8 @@ import {
   AnswerModel,
   QuestionFollowModel,
   NotificationModel,
+  AnonymousHandleModel,
+  User,
 } from "@/lib/db";
 
 export async function POST(
@@ -22,9 +24,10 @@ export async function POST(
   }
 
   const body = await request.json().catch(() => ({}));
-  const { text, isAnonymousToMembers } = body as {
+  const { text, isAnonymousToMembers, parentAnswerId } = body as {
     text?: string;
     isAnonymousToMembers?: boolean;
+    parentAnswerId?: string | null;
   };
 
   const trimmed = typeof text === "string" ? text.trim() : "";
@@ -42,11 +45,17 @@ export async function POST(
     return NextResponse.json({ error: "Question is not available." }, { status: 404 });
   }
 
+  const safeParentAnswerId =
+    typeof parentAnswerId === "string" && mongoose.Types.ObjectId.isValid(parentAnswerId)
+      ? new mongoose.Types.ObjectId(parentAnswerId)
+      : null;
+
   const answer = await AnswerModel.create({
     questionId: question._id,
     body: trimmed,
     answeredByUserId: new mongoose.Types.ObjectId(session.userId),
     isAnonymousToMembers: Boolean(isAnonymousToMembers),
+    parentAnswerId: safeParentAnswerId,
   });
 
   await QuestionModel.updateOne(
@@ -97,6 +106,15 @@ export async function POST(
     }
   })();
 
+  const meId = new mongoose.Types.ObjectId(session.userId);
+  const [me, anon] = await Promise.all([
+    User.findById(meId).select("fullName name").lean().exec(),
+    AnonymousHandleModel.findOne({ userId: meId }).select("handle").lean().exec(),
+  ]);
+  const authorLabel = answer.isAnonymousToMembers
+    ? `u/${(anon as any)?.handle ?? "anonymous"}`
+    : ((me as any)?.fullName || (me as any)?.name || "You");
+
   return NextResponse.json(
     {
       id: String(answer._id),
@@ -104,7 +122,11 @@ export async function POST(
       isAnonymousToMembers: answer.isAnonymousToMembers ?? false,
       isAcceptedSolution: answer.isAcceptedSolution ?? false,
       upvoteCount: answer.upvoteCount ?? 0,
+      score: answer.score ?? 0,
+      myVote: 0,
+      parentAnswerId: answer.parentAnswerId ? String(answer.parentAnswerId) : null,
       answeredByUserId: String(answer.answeredByUserId),
+      authorLabel,
       createdAt: answer.createdAt.toISOString(),
     },
     { status: 201 }

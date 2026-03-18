@@ -4,6 +4,10 @@ import { requireAuth } from "@/lib/auth";
 import {
   connectDB,
   QuestionModel,
+  QaQuestionVoteModel,
+  AnonymousHandleModel,
+  User,
+  QuestionSaveModel,
   type QuestionStatus,
   type QuestionContextType,
 } from "@/lib/db";
@@ -23,8 +27,10 @@ export async function GET(request: NextRequest) {
   const status = (searchParams.get("status") as QuestionStatus | null) ?? null;
   const contextType = (searchParams.get("contextType") as QuestionContextType | null) ?? null;
   const contextId = searchParams.get("contextId");
-  const sort = searchParams.get("sort") ?? "latest"; // latest | unanswered
+  const sort = searchParams.get("sort") ?? "new"; // hot | new | top | unanswered (legacy)
   const cursor = searchParams.get("cursor");
+  const savedOnly = searchParams.get("saved") === "1";
+  const window = searchParams.get("window") ?? "all"; // for top: today|week|month|all
 
   await connectDB();
 
@@ -45,6 +51,17 @@ export async function GET(request: NextRequest) {
     query.answerCount = 0;
   }
 
+  if (savedOnly) {
+    const saved = await QuestionSaveModel.find({
+      userId: new mongoose.Types.ObjectId(session.userId),
+    })
+      .select("questionId")
+      .lean()
+      .exec();
+    const ids = (saved as any[]).map((s) => s.questionId as mongoose.Types.ObjectId);
+    query._id = { $in: ids.length > 0 ? ids : [new mongoose.Types.ObjectId("000000000000000000000000")] };
+  }
+
   if (cursor && mongoose.Types.ObjectId.isValid(cursor)) {
     const cursorDoc = await QuestionModel.findById(cursor).select("createdAt").lean().exec();
     const anyCursor = cursorDoc as any;
@@ -53,18 +70,102 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const docs = await QuestionModel.find(query)
-    .sort({ createdAt: -1 })
-    .limit(limit + 1)
-    .lean()
-    .exec();
+  if (sort === "top" && window !== "all") {
+    const now = new Date();
+    const since =
+      window === "today"
+        ? new Date(now.getTime() - 24 * 3600 * 1000)
+        : window === "week"
+          ? new Date(now.getTime() - 7 * 24 * 3600 * 1000)
+          : window === "month"
+            ? new Date(now.getTime() - 30 * 24 * 3600 * 1000)
+            : null;
+    if (since) (query as any).createdAt = { ...(query as any).createdAt, $gte: since };
+  }
+
+  const docs =
+    sort === "hot"
+      ? await QuestionModel.aggregate([
+          { $match: query as any },
+          {
+            $addFields: {
+              __ageHours: {
+                $divide: [{ $subtract: [new Date(), "$createdAt"] }, 1000 * 60 * 60],
+              },
+            },
+          },
+          {
+            $addFields: {
+              __hot: {
+                $divide: [
+                  "$score",
+                  { $pow: [{ $add: ["$__ageHours", 2] }, 1.5] },
+                ],
+              },
+            },
+          },
+          { $sort: { __hot: -1, createdAt: -1 } },
+          { $limit: limit + 1 },
+        ]).exec()
+      : await QuestionModel.find(query)
+          .sort(sort === "top" ? { score: -1, createdAt: -1 } : { createdAt: -1 })
+          .limit(limit + 1)
+          .lean()
+          .exec();
 
   const hasMore = docs.length > limit;
   const list = hasMore ? docs.slice(0, limit) : docs;
 
+  const userId = new mongoose.Types.ObjectId(session.userId);
+  const questionIds = list.map((q) => (q as any)._id as mongoose.Types.ObjectId);
+  const myVotes =
+    questionIds.length > 0
+      ? await QaQuestionVoteModel.find({ userId, questionId: { $in: questionIds } })
+          .select("questionId value")
+          .lean()
+          .exec()
+      : [];
+  const myVoteById = new Map<string, 1 | -1>();
+  for (const v of myVotes as any[]) {
+    myVoteById.set(String(v.questionId), v.value as 1 | -1);
+  }
+
+  const savedRows =
+    questionIds.length > 0
+      ? await QuestionSaveModel.find({ userId, questionId: { $in: questionIds } })
+          .select("questionId")
+          .lean()
+          .exec()
+      : [];
+  const savedSet = new Set<string>((savedRows as any[]).map((r) => String(r.questionId)));
+
+  const askerIds = Array.from(
+    new Set(list.map((q) => String((q as any).askedByUserId)))
+  ).filter((x) => mongoose.Types.ObjectId.isValid(x));
+  const askerObjectIds = askerIds.map((x) => new mongoose.Types.ObjectId(x));
+  const [askers, handles] = await Promise.all([
+    User.find({ _id: { $in: askerObjectIds } }).select("fullName name").lean().exec(),
+    AnonymousHandleModel.find({ userId: { $in: askerObjectIds } })
+      .select("userId handle")
+      .lean()
+      .exec(),
+  ]);
+  const nameByUserId = new Map<string, string>();
+  for (const u of askers as any[]) {
+    nameByUserId.set(String(u._id), (u.fullName || u.name || "Member") as string);
+  }
+  const handleByUserId = new Map<string, string>();
+  for (const h of handles as any[]) {
+    handleByUserId.set(String(h.userId), h.handle as string);
+  }
+
   return NextResponse.json({
     questions: list.map((qRaw) => {
       const q = qRaw as any;
+      const askerId = String(q.askedByUserId);
+      const authorLabel = q.isAnonymousToMembers
+        ? `u/${handleByUserId.get(askerId) ?? "anonymous"}`
+        : nameByUserId.get(askerId) ?? "Member";
       return {
         id: String(q._id),
         title: q.title,
@@ -78,6 +179,10 @@ export async function GET(request: NextRequest) {
         followerCount: q.followerCount ?? 0,
         hasAcceptedAnswer: q.hasAcceptedAnswer ?? false,
         isAnonymousToMembers: q.isAnonymousToMembers ?? false,
+        score: q.score ?? 0,
+        myVote: (myVoteById.get(String(q._id)) ?? 0) as 1 | 0 | -1,
+        savedByMe: savedSet.has(String(q._id)),
+        authorLabel,
         createdAt: (q.createdAt as Date).toISOString(),
       };
     }),
