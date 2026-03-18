@@ -1,6 +1,7 @@
 "use client";
 
 import { VoteRail } from "./VoteRail";
+import { IconComment, IconMore, IconShare } from "@/components/layout/InstagramIcons";
 
 export type QaAnswerCard = {
   _id: string;
@@ -84,10 +85,16 @@ export function AnswerCard({
           <div className="mt-3 flex items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
             <div className="flex items-center gap-2">
               <button type="button" className="qa-action-btn" onClick={onReply}>
-                Reply
+                <span className="inline-flex items-center gap-1.5">
+                  <IconComment className="w-4 h-4" />
+                  <span>Reply</span>
+                </span>
               </button>
               <button type="button" className="qa-action-btn" onClick={onShare}>
-                Share
+                <span className="inline-flex items-center gap-1.5">
+                  <IconShare className="w-4 h-4" />
+                  <span>Share</span>
+                </span>
               </button>
             </div>
             <button
@@ -96,7 +103,7 @@ export function AnswerCard({
               onClick={onMore}
               aria-label="More"
             >
-              ⋯
+              <IconMore className="w-5 h-5" />
             </button>
           </div>
         </div>

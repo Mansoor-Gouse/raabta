@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconShare } from "@/components/layout/InstagramIcons";
 
 type ReplyDrawerProps = {
   open: boolean;
@@ -8,8 +9,44 @@ type ReplyDrawerProps = {
   questionId: string;
   parentAnswerId?: string | null;
   replyingToLabel?: string;
+  quotedText?: string;
   onCreated?: (answer: any) => void;
 };
+
+function IconClose({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+function IconLink({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07L10 4.93" />
+      <path d="M14 11a5 5 0 0 0-7.07 0L5.52 12.4a5 5 0 0 0 7.07 7.07L14 19.07" />
+    </svg>
+  );
+}
 
 export function ReplyDrawer({
   open,
@@ -17,6 +54,7 @@ export function ReplyDrawer({
   questionId,
   parentAnswerId,
   replyingToLabel,
+  quotedText,
   onCreated,
 }: ReplyDrawerProps) {
   const [text, setText] = useState("");
@@ -73,64 +111,61 @@ export function ReplyDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} aria-hidden />
-      <div
-        className="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[82vh] rounded-t-2xl bg-[var(--ig-bg-primary)] border-t border-[var(--ig-border-light)] shadow-[0_-4px_20px_rgba(0,0,0,0.12)]"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Reply"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="shrink-0 border-b border-[var(--ig-border-light)]">
-          <div className="flex justify-center pt-2.5 pb-1" aria-hidden>
-            <div className="w-9 h-1 rounded-full bg-[var(--ig-border)]" />
-          </div>
-          <div className="px-4 pb-3">
-            <h2 className="text-lg font-semibold text-[var(--ig-text)]">Reply</h2>
-            {replyingToLabel && (
-              <div className="mt-1 text-xs text-[var(--ig-text-secondary)]">
-                Replying to {replyingToLabel}
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="fixed inset-0 z-50 bg-[var(--ig-bg-primary)]" role="dialog" aria-modal="true" aria-label="Add comment">
+        <header className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 border-b border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]">
+          <button type="button" onClick={onClose} className="p-2 -m-2 text-[var(--ig-text)]" aria-label="Close">
+            <IconClose />
+          </button>
+          <div className="text-sm font-semibold text-[var(--ig-text)]">Add comment</div>
+          <button
+            type="button"
+            onClick={(e) => void submit(e as unknown as React.FormEvent)}
+            disabled={submitting || !text.trim()}
+            className="text-sm font-semibold text-[var(--ig-link)] disabled:opacity-40"
+          >
+            Post
+          </button>
+        </header>
 
-        <form onSubmit={submit} className="flex-1 min-h-0 overflow-y-auto px-4 pt-3 pb-4 space-y-3">
-          {error && (
-            <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-lg px-3 py-2">
-              {error}
+        <div className="px-4 pt-3">
+          {(quotedText || replyingToLabel) && (
+            <div className="pb-3 border-b border-[var(--ig-border-light)]">
+              {quotedText && (
+                <div className="text-sm text-[var(--ig-text)] line-clamp-3">{quotedText}</div>
+              )}
+              {replyingToLabel && (
+                <div className="mt-1 text-xs text-[var(--ig-text-secondary)]">Replying to {replyingToLabel}</div>
+              )}
             </div>
+          )}
+          {error && (
+            <div className="mt-3 text-xs text-red-600 dark:text-red-400">{error}</div>
           )}
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            rows={4}
             maxLength={4000}
-            placeholder="Write a helpful reply…"
-            className="w-full rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] px-3 py-2 text-sm text-[var(--ig-text)] resize-y"
+            placeholder="Your comment"
+            className="mt-3 w-full min-h-[45vh] bg-transparent text-[15px] text-[var(--ig-text)] outline-none resize-none"
           />
-          <label className="flex items-start gap-2 text-xs text-[var(--ig-text)]">
+        </div>
+
+        <footer className="fixed inset-x-0 bottom-0 z-10 px-4 py-3 border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)] flex items-center justify-between">
+          <button type="button" className="p-2 -m-2 text-[var(--ig-text-secondary)]" aria-label="Attach link">
+            <IconLink />
+          </button>
+          <label className="flex items-center gap-2 text-xs text-[var(--ig-text-secondary)]">
             <input
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="mt-0.5"
             />
-            <span>
-              Reply discreetly
-              <span className="block text-[10px] text-[var(--ig-text-secondary)]">
-                Members will see your anonymous handle (once set).
-              </span>
-            </span>
+            Discreet
           </label>
-          <button
-            type="submit"
-            disabled={submitting || !text.trim()}
-            className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-[var(--ig-text)] text-[var(--ig-bg-primary)] text-sm font-semibold disabled:opacity-50"
-          >
-            {submitting ? "Posting…" : "Post reply"}
+          <button type="button" className="p-2 -m-2 text-[var(--ig-text-secondary)]" aria-label="Share">
+            <IconShare className="w-5 h-5" />
           </button>
-        </form>
+        </footer>
       </div>
     </>
   );

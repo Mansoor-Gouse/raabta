@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { VoteRail } from "./VoteRail";
+import { IconBookmark, IconComment, IconMore, IconShare } from "@/components/layout/InstagramIcons";
 
 export type QaQuestionCard = {
   _id: string;
@@ -96,14 +97,23 @@ export function QuestionCard({
               onClick={() => {}}
               aria-label="Answers"
             >
-              <span className="font-semibold">{q.answerCount}</span>
-              <span className="ml-1">Answers</span>
+              <span className="inline-flex items-center gap-1.5">
+                <IconComment className="w-4 h-4" />
+                <span className="font-semibold tabular-nums">{q.answerCount}</span>
+                <span>Answers</span>
+              </span>
             </button>
             <button type="button" className="qa-action-btn" onClick={onShare}>
-              Share
+              <span className="inline-flex items-center gap-1.5">
+                <IconShare className="w-4 h-4" />
+                <span>Share</span>
+              </span>
             </button>
             <button type="button" className="qa-action-btn" onClick={onSave}>
-              {saved ? "Saved" : "Save"}
+              <span className="inline-flex items-center gap-1.5">
+                <IconBookmark className="w-4 h-4" filled={!!saved} />
+                <span>{saved ? "Saved" : "Save"}</span>
+              </span>
             </button>
           </div>
           <button
@@ -112,7 +122,7 @@ export function QuestionCard({
             onClick={onMore}
             aria-label="More"
           >
-            ⋯
+            <IconMore className="w-5 h-5" />
           </button>
         </div>
       </div>
