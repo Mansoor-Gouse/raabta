@@ -54,11 +54,12 @@ export async function DELETE(
 
   const questionId = a.questionId as mongoose.Types.ObjectId;
   const wasAccepted = Boolean(a.isAcceptedSolution);
+  const wasReply = Boolean((a as any).parentAnswerId);
   await AnswerModel.deleteOne({ _id: a._id }).exec();
   await QuestionModel.updateOne(
     { _id: questionId },
     {
-      $inc: { answerCount: -1 },
+      ...(wasReply ? {} : { $inc: { answerCount: -1 } }),
       ...(wasAccepted ? { $set: { hasAcceptedAnswer: false, status: "open" } } : {}),
     }
   ).exec();

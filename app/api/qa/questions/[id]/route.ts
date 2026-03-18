@@ -101,7 +101,7 @@ export async function GET(
       contextType: q.contextType,
       contextId: q.contextId ? String(q.contextId) : null,
       status: q.status,
-      answerCount: q.answerCount ?? 0,
+      answerCount: answers.filter((x) => !(x as any).parentAnswerId).length,
       followerCount: q.followerCount ?? 0,
       hasAcceptedAnswer: q.hasAcceptedAnswer ?? false,
       isAnonymousToMembers: q.isAnonymousToMembers ?? false,

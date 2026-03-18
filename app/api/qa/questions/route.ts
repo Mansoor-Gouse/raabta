@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import {
   connectDB,
   QuestionModel,
+  AnswerModel,
   QaQuestionVoteModel,
   AnonymousHandleModel,
   User,
@@ -143,12 +144,18 @@ export async function GET(request: NextRequest) {
     new Set(list.map((q) => String((q as any).askedByUserId)))
   ).filter((x) => mongoose.Types.ObjectId.isValid(x));
   const askerObjectIds = askerIds.map((x) => new mongoose.Types.ObjectId(x));
-  const [askers, handles] = await Promise.all([
+  const [askers, handles, topCounts] = await Promise.all([
     User.find({ _id: { $in: askerObjectIds } }).select("fullName name").lean().exec(),
     AnonymousHandleModel.find({ userId: { $in: askerObjectIds } })
       .select("userId handle")
       .lean()
       .exec(),
+    questionIds.length > 0
+      ? AnswerModel.aggregate([
+          { $match: { questionId: { $in: questionIds }, parentAnswerId: null } },
+          { $group: { _id: "$questionId", count: { $sum: 1 } } },
+        ]).exec()
+      : Promise.resolve([] as any[]),
   ]);
   const nameByUserId = new Map<string, string>();
   for (const u of askers as any[]) {
@@ -157,6 +164,10 @@ export async function GET(request: NextRequest) {
   const handleByUserId = new Map<string, string>();
   for (const h of handles as any[]) {
     handleByUserId.set(String(h.userId), h.handle as string);
+  }
+  const topCountByQuestionId = new Map<string, number>();
+  for (const row of topCounts as any[]) {
+    topCountByQuestionId.set(String(row._id), Number(row.count) || 0);
   }
 
   return NextResponse.json({
@@ -175,7 +186,7 @@ export async function GET(request: NextRequest) {
         contextType: q.contextType,
         contextId: q.contextId ? String(q.contextId) : null,
         status: q.status,
-        answerCount: q.answerCount ?? 0,
+        answerCount: topCountByQuestionId.get(String(q._id)) ?? (q.answerCount ?? 0),
         followerCount: q.followerCount ?? 0,
         hasAcceptedAnswer: q.hasAcceptedAnswer ?? false,
         isAnonymousToMembers: q.isAnonymousToMembers ?? false,

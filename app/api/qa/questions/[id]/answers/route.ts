@@ -58,10 +58,13 @@ export async function POST(
     parentAnswerId: safeParentAnswerId,
   });
 
-  await QuestionModel.updateOne(
-    { _id: question._id },
-    { $inc: { answerCount: 1 } }
-  ).exec();
+  // Only top-level answers affect answerCount. Replies (threaded) do not.
+  if (!safeParentAnswerId) {
+    await QuestionModel.updateOne(
+      { _id: question._id },
+      { $inc: { answerCount: 1 } }
+    ).exec();
+  }
 
   // Ensure the answerer follows the question
   await QuestionFollowModel.updateOne(

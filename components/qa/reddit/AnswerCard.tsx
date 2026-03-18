@@ -75,7 +75,7 @@ export function AnswerCard({
     <div className="relative" style={{ marginLeft: depth * 14 }}>
       {showConnector && depth > 0 && (
         <div
-          className="absolute -top-3 -bottom-3 left-3 w-px bg-[var(--qa-connector)]"
+          className="absolute -top-3 -bottom-3 left-[18px] w-px bg-[var(--qa-connector)]"
           aria-hidden
         />
       )}
@@ -102,8 +102,8 @@ export function AnswerCard({
             {a.body}
           </div>
 
-          <div className="mt-2 flex items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
-            <div className="flex items-center gap-1">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
+            <div className="flex flex-wrap items-center gap-1 min-w-0">
               <button type="button" className="qa-action-btn" onClick={onReply}>
                 <span className="inline-flex items-center gap-1.5">
                   <IconComment className="w-4 h-4" />
@@ -118,7 +118,7 @@ export function AnswerCard({
               </button>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 className={`qa-action-btn ${upActive ? "text-[var(--ig-text)]" : ""}`}

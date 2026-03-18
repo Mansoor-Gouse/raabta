@@ -89,8 +89,8 @@ export function QuestionCard({
           )}
         </Link>
 
-        <div className="mt-3 flex items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
-          <div className="flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             <button
               type="button"
               className="qa-action-btn"

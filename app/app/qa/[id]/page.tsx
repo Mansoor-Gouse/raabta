@@ -319,6 +319,7 @@ export default function QuestionDetailPage() {
   if (!data) return null;
 
   const { question, answers } = data;
+  const topLevelAnswerCount = answers.filter((a) => !a.parentAnswerId).length;
   const sortFn = (a: Answer, b: Answer) => {
     if (answerSort === "new") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     return (b.score ?? 0) - (a.score ?? 0);
@@ -421,7 +422,9 @@ export default function QuestionDetailPage() {
 
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-[var(--ig-text)]">Answers</h2>
+            <h2 className="text-sm font-semibold text-[var(--ig-text)]">
+              Answers <span className="text-[var(--ig-text-secondary)] font-normal">({topLevelAnswerCount})</span>
+            </h2>
             <SortTabs
               tabs={[
                 { id: "top", label: "Top" },
@@ -562,7 +565,7 @@ export default function QuestionDetailPage() {
             prev
               ? {
                   ...prev,
-                  question: { ...prev.question, answerCount: prev.question.answerCount + 1 },
+                  question: prev.question,
                   answers: [...prev.answers, created as Answer],
                 }
               : prev
