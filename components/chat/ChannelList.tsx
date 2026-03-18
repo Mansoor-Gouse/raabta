@@ -238,7 +238,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
               className="flex items-center gap-3 px-4 py-3 min-h-[72px] border-b border-[var(--ig-border-light)]"
             >
               <div
-                className="w-12 h-12 shrink-0 rounded-full bg-[var(--ig-border-light)] animate-pulse"
+                className="w-12 h-12 shrink-0 rounded-sm bg-[var(--ig-border-light)] animate-pulse"
                 aria-hidden
               />
               <div className="flex-1 min-w-0 space-y-2">
@@ -260,7 +260,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
         </ul>
       ) : showEmptyState ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-sm bg-[var(--ig-border-light)] flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-[var(--ig-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -330,7 +330,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                     className="flex flex-1 min-w-0 items-center gap-3 -m-3 p-3 rounded-lg"
                     aria-label={`Chat with ${channelName}`}
                   >
-                    <div className="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center">
+                    <div className="shrink-0 w-12 h-12 rounded-sm overflow-hidden bg-[var(--ig-border-light)] flex items-center justify-center">
                       {avatarImage ? (
                         <img src={avatarImage} alt="" className="w-full h-full object-cover" />
                       ) : (

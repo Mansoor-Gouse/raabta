@@ -36,7 +36,7 @@ function ChannelWithThreadLayoutInner() {
       >
         <Window>
           <ConnectionBanner />
-          <div className="flex items-center gap-1 sm:gap-2 border-b border-[var(--ig-border)] px-2 py-1 min-h-[44px] shrink-0 bg-[var(--ig-bg-primary)]">
+          <div className="flex items-center gap-1 sm:gap-2 border-b border-[var(--ig-border)] px-2 py-2 min-h-[48px] shrink-0 bg-[var(--ig-bg-primary)]">
             <Link
               href="/app/chats"
               className="md:hidden p-2 -ml-1 rounded-lg text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)] min-w-[40px] min-h-[40px] flex items-center justify-center shrink-0"

@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import {
-  Avatar as DefaultAvatar,
   ChannelHeader as DefaultChannelHeader,
   useChannelStateContext,
   useChannelPreviewInfo,
@@ -48,19 +47,31 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
   });
 
   const members = channel?.state?.members ?? {};
-  const memberIds = Object.keys(members);
-  const isOneToOne = memberIds.length === 2;
-  const currentUserId = client?.userID;
-  const otherMemberId = currentUserId
-    ? memberIds.find((id) => id !== currentUserId)
+  const memberEntries = Object.values(members) as Array<{
+    user_id?: string;
+    user?: { id?: string; last_active?: string };
+  }>;
+
+  const currentUserId = client?.userID ?? null;
+  const distinctUserIds = Array.from(
+    new Set(
+      memberEntries
+        .map((m) => m.user_id ?? m.user?.id)
+        .filter((id): id is string => !!id)
+    )
+  );
+  const otherUserIds = currentUserId ? distinctUserIds.filter((id) => id !== currentUserId) : [];
+
+  const isOneToOne = otherUserIds.length === 1;
+  const otherMemberId = isOneToOne ? otherUserIds[0] : undefined;
+
+  const otherMemberEntry = otherMemberId
+    ? memberEntries.find((m) => (m.user_id ?? m.user?.id) === otherMemberId)
     : undefined;
-  const otherIsOnline = isOneToOne && otherMemberId && !!watchers[otherMemberId];
-  const otherMember = otherMemberId ? (members[otherMemberId] as { user?: { last_active?: string } }) : undefined;
-  const lastActive = otherMember?.user?.last_active;
-  const lastSeenText =
-    isOneToOne && !otherIsOnline && lastActive
-      ? formatLastSeen(lastActive)
-      : null;
+
+  const otherIsOnline = isOneToOne && otherMemberId ? !!watchers[otherMemberId] : false;
+  const lastActive = otherMemberEntry?.user?.last_active;
+  const lastSeenText = isOneToOne && !otherIsOnline && lastActive ? formatLastSeen(lastActive) : null;
 
   const channelData = (channel?.data ?? {}) as {
     member_count?: number;
@@ -68,17 +79,18 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
   };
   const { member_count: member_count_data, subtitle } = channelData;
 
-  const Avatar = props.Avatar ?? DefaultAvatar;
   const MenuIconComponent = props.MenuIcon;
   const groupMembersOpen = useGroupMembersOpen();
 
   const title = displayTitle || (isEventChannel ? "Event" : "");
   const avatarName = title || " ";
-  const memberCount = memberIds.length;
+  const memberCount = distinctUserIds.length;
   const isGroup = memberCount > 2;
+  const avatarSize = channel?.type === "commerce" ? 60 : 40;
+  const avatarInitial = (avatarName || "?").slice(0, 1).toUpperCase();
 
   return (
-    <div className="str-chat__header-livestream str-chat__channel-header">
+    <div className="str-chat__header-livestream str-chat__channel-header px-2 py-2">
       <button
         type="button"
         aria-label={t("aria/Menu")}
@@ -101,12 +113,17 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
           </svg>
         )}
       </button>
-      <Avatar
-        image={displayImage}
-        name={avatarName}
-        shape="rounded"
-        size={channel?.type === "commerce" ? 60 : 40}
-      />
+      <div
+        className="shrink-0 overflow-hidden bg-[var(--ig-border-light)] rounded-sm flex items-center justify-center"
+        style={{ width: avatarSize, height: avatarSize }}
+        aria-label="Channel avatar"
+      >
+        {displayImage ? (
+          <img src={displayImage} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-sm font-semibold text-[var(--ig-text-secondary)]">{avatarInitial}</span>
+        )}
+      </div>
       <div className="str-chat__header-livestream-left str-chat__channel-header-end min-w-0 flex-1">
         {isOneToOne && otherMemberId ? (
           <Link
@@ -131,32 +148,36 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
         <p className="str-chat__header-livestream-left--members str-chat__channel-header-info">
           {isOneToOne ? (
             otherIsOnline ? (
-              String(t("Online"))
+              <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-text)]">
+                {String(t("Online"))}
+              </span>
             ) : lastSeenText ? (
-              <span className="text-[var(--ig-text-secondary)] text-xs">{lastSeenText}</span>
+              <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-text-secondary)]">
+                {lastSeenText}
+              </span>
             ) : null
           ) : isGroup ? (
             <button
               type="button"
               onClick={() => groupMembersOpen?.setOpen(true)}
-              className="text-left text-xs text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)] underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)] rounded"
+              className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)]"
               aria-label={`View group members (${memberCount} members)`}
             >
-              {memberCount} members · {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
+              {memberCount} members ·{" "}
+              {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
             </button>
           ) : (
             <>
               {!props.live &&
                 member_count_data != null &&
                 member_count_data > 0 && (
-                  <>
-                    {String(t("{{ memberCount }} members", {
-                      memberCount: member_count_data,
-                    }))}
-                    ,{" "}
-                  </>
+                  <span className="text-xs text-[var(--ig-text-secondary)]">
+                    {String(t("{{ memberCount }} members", { memberCount: member_count_data }))}
+                  </span>
                 )}
-              {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
+              <span className="text-xs text-[var(--ig-text-secondary)]">
+                {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
+              </span>
             </>
           )}
         </p>

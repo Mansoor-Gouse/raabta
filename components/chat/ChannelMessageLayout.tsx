@@ -156,7 +156,7 @@ export function ChannelMessageLayout() {
       <FailedMessageAutoRetry />
       <div className="channel-message-list flex-1 min-h-0 flex flex-col">
         <PinnedMessagesBar />
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex-1 min-h-0 overflow-auto pt-2">
           <MessageList
             head={<></>}
             headerPosition={0}
