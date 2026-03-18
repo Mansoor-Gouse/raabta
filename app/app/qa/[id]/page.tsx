@@ -552,6 +552,11 @@ export default function QuestionDetailPage() {
         questionId={question.id}
         parentAnswerId={replyingTo?.answerId ?? null}
         replyingToLabel={replyingTo?.label}
+        quotedText={
+          replyingTo
+            ? data?.answers.find((x) => x.id === replyingTo.answerId)?.body ?? ""
+            : undefined
+        }
         onCreated={(created) => {
           setData((prev) =>
             prev
