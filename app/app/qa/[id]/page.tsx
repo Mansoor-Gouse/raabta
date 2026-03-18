@@ -48,6 +48,43 @@ type DetailResponse = {
   answers: Answer[];
 };
 
+function ThreadSkeleton() {
+  return (
+    <div className="px-4 py-4 space-y-4 animate-pulse">
+      <div className="qa-card flex gap-3">
+        <div className="pt-1">
+          <div className="bg-[var(--qa-rail-bg)] border border-[var(--qa-rail-border)] rounded-md px-1 py-2 flex flex-col items-center gap-2">
+            <div className="w-9 h-9 rounded-md bg-black/10 dark:bg-white/10" />
+            <div className="w-7 h-3 rounded bg-black/10 dark:bg-white/10" />
+            <div className="w-9 h-9 rounded-md bg-black/10 dark:bg-white/10" />
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="h-3 w-44 rounded bg-black/10 dark:bg-white/10" />
+          <div className="mt-2 h-5 w-5/6 rounded bg-black/10 dark:bg-white/10" />
+          <div className="mt-2 h-4 w-4/6 rounded bg-black/10 dark:bg-white/10" />
+        </div>
+      </div>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="qa-card flex gap-3">
+          <div className="pt-1">
+            <div className="bg-[var(--qa-rail-bg)] border border-[var(--qa-rail-border)] rounded-md px-1 py-2 flex flex-col items-center gap-2">
+              <div className="w-9 h-9 rounded-md bg-black/10 dark:bg-white/10" />
+              <div className="w-7 h-3 rounded bg-black/10 dark:bg-white/10" />
+              <div className="w-9 h-9 rounded-md bg-black/10 dark:bg-white/10" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="h-3 w-32 rounded bg-black/10 dark:bg-white/10" />
+            <div className="mt-2 h-4 w-5/6 rounded bg-black/10 dark:bg-white/10" />
+            <div className="mt-2 h-4 w-4/6 rounded bg-black/10 dark:bg-white/10" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function QuestionDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
@@ -55,6 +92,7 @@ export default function QuestionDetailPage() {
   const [data, setData] = useState<DetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [highlightedAnswerId, setHighlightedAnswerId] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState("");
   const [answerAnon, setAnswerAnon] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +101,7 @@ export default function QuestionDetailPage() {
   const [answerSort, setAnswerSort] = useState<"top" | "new">("top");
   const [replyingTo, setReplyingTo] = useState<{ answerId: string; label?: string } | null>(null);
   const [moreTarget, setMoreTarget] = useState<{ type: "qa_question" | "qa_answer"; id: string } | null>(null);
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(["root"]));
 
   useEffect(() => {
     if (!id) return;
@@ -82,6 +121,24 @@ export default function QuestionDetailPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    function syncHash() {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const m = hash.match(/^#answer-(.+)$/);
+      const answerId = m?.[1] ?? null;
+      setHighlightedAnswerId(answerId);
+      if (!answerId) return;
+      setTimeout(() => {
+        const el = document.getElementById(`answer-${answerId}`);
+        if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+      }, 50);
+      setTimeout(() => setHighlightedAnswerId(null), 2500);
+    }
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, []);
 
   const isAsker = data && user.id && data.question.askedByUserId === user.id;
 
@@ -242,8 +299,11 @@ export default function QuestionDetailPage() {
 
   if (loading && !data && !error) {
     return (
-      <div className="min-h-full flex items-center justify-center text-[var(--ig-text-secondary)]">
-        Loading…
+      <div className="min-h-full bg-[var(--ig-bg)] flex flex-col" style={{ paddingTop: "var(--safe-area-inset-top)" }}>
+        <header className="sticky top-0 z-10 px-4 py-3 border-b border-[var(--ig-border)] bg-[var(--ig-bg-primary)]">
+          <div className="h-5 w-28 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+        </header>
+        <ThreadSkeleton />
       </div>
     );
   }
@@ -271,15 +331,31 @@ export default function QuestionDetailPage() {
   for (const key of Object.keys(byParent)) {
     byParent[key].sort(sortFn);
   }
-  const threaded: Array<{ a: Answer; depth: number }> = [];
+  const threaded: Array<{ a: Answer; depth: number; parentKey: string; hasChildren: boolean }> = [];
   const walk = (parentKey: string, depth: number) => {
     const kids = byParent[parentKey] ?? [];
     for (const k of kids) {
-      threaded.push({ a: k, depth });
+      const hasChildren = (byParent[k.id] ?? []).length > 0;
+      threaded.push({ a: k, depth, parentKey, hasChildren });
       walk(k.id, depth + 1);
     }
   };
   walk("root", 0);
+
+  const visible = threaded.filter(({ a, depth, parentKey }) => {
+    if (depth <= 2) return true;
+    return expandedParents.has(parentKey) || expandedParents.has(a.id);
+  });
+
+  const collapsedChildCountByParent = new Map<string, number>();
+  for (const row of threaded) {
+    if (row.depth <= 2) continue;
+    const parent = row.parentKey;
+    const isVisible = expandedParents.has(parent) || expandedParents.has(row.a.id);
+    if (!isVisible) {
+      collapsedChildCountByParent.set(parent, (collapsedChildCountByParent.get(parent) ?? 0) + 1);
+    }
+  }
 
   const qCard: QaQuestionCard = {
     _id: question.id,
@@ -361,7 +437,7 @@ export default function QuestionDetailPage() {
             </p>
           ) : (
             <ul className="space-y-3">
-              {threaded.map(({ a, depth }) => {
+              {visible.map(({ a, depth, hasChildren }) => {
                 const canMark = isAsker;
                 const isLoading = solutionLoadingId === a.id;
                 const aCard: QaAnswerCard = {
@@ -374,8 +450,15 @@ export default function QuestionDetailPage() {
                   isAcceptedSolution: a.isAcceptedSolution,
                   depth,
                 };
+                const collapsedCount = collapsedChildCountByParent.get(a.id) ?? 0;
                 return (
-                  <li key={a.id} className={a.isAcceptedSolution ? "ring-1 ring-green-600/50 rounded-xl" : ""}>
+                  <li
+                    key={a.id}
+                    id={`answer-${a.id}`}
+                    className={`rounded-xl transition-colors ${
+                      highlightedAnswerId === a.id ? "ring-2 ring-[var(--ig-link)]" : ""
+                    } ${a.isAcceptedSolution ? "ring-1 ring-green-600/50" : ""}`}
+                  >
                     <AnswerCard
                       a={aCard}
                       showConnector
@@ -384,6 +467,23 @@ export default function QuestionDetailPage() {
                       onShare={() => shareLink(`/app/qa/${question.id}#answer-${a.id}`)}
                       onReply={() => setReplyingTo({ answerId: a.id, label: a.authorLabel })}
                     />
+                    {hasChildren && collapsedCount > 0 && (
+                      <div className="mt-2" style={{ marginLeft: depth * 12 }}>
+                        <button
+                          type="button"
+                          className="qa-action-btn text-xs text-[var(--ig-text)] border border-[var(--qa-card-border)]"
+                          onClick={() =>
+                            setExpandedParents((prev) => {
+                              const next = new Set(prev);
+                              next.add(a.id);
+                              return next;
+                            })
+                          }
+                        >
+                          Show {collapsedCount} repl{collapsedCount === 1 ? "y" : "ies"}
+                        </button>
+                      </div>
+                    )}
                     {canMark && (
                       <div className="mt-2">
                         <button
@@ -481,6 +581,75 @@ export default function QuestionDetailPage() {
         }
         reportTargetType={(moreTarget?.type ?? "qa_question") as "qa_question" | "qa_answer"}
         reportTargetId={moreTarget?.id ?? ""}
+        owner={
+          moreTarget
+            ? moreTarget.type === "qa_question"
+              ? {
+                  kind: "qa_question",
+                  canEdit: Boolean(user.id && question.askedByUserId === user.id),
+                  canDelete: Boolean(user.id && question.askedByUserId === user.id),
+                  initialTitle: question.title,
+                  initialBody: question.body,
+                  onEdited: (p) => {
+                    setData((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            question: {
+                              ...prev.question,
+                              title: typeof p.title === "string" ? p.title : prev.question.title,
+                              body: typeof p.body === "string" ? p.body : prev.question.body,
+                            },
+                          }
+                        : prev
+                    );
+                  },
+                  onDeleted: () => {
+                    window.location.href = "/app/qa";
+                  },
+                }
+              : {
+                  kind: "qa_answer",
+                  canEdit: Boolean(
+                    user.id &&
+                      data?.answers.find((a) => a.id === moreTarget.id)?.answeredByUserId === user.id
+                  ),
+                  canDelete: Boolean(
+                    user.id &&
+                      data?.answers.find((a) => a.id === moreTarget.id)?.answeredByUserId === user.id
+                  ),
+                  initialBody: data?.answers.find((a) => a.id === moreTarget.id)?.body ?? "",
+                  onEdited: (p) => {
+                    setData((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            answers: prev.answers.map((a) =>
+                              a.id === moreTarget.id && typeof p.body === "string"
+                                ? { ...a, body: p.body }
+                                : a
+                            ),
+                          }
+                        : prev
+                    );
+                  },
+                  onDeleted: () => {
+                    setData((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            question: {
+                              ...prev.question,
+                              answerCount: Math.max(0, prev.question.answerCount - 1),
+                            },
+                            answers: prev.answers.filter((a) => a.id !== moreTarget.id),
+                          }
+                        : prev
+                    );
+                  },
+                }
+            : undefined
+        }
       />
     </div>
   );

@@ -31,6 +31,30 @@ type ListResponse = {
   nextCursor: string | null;
 };
 
+function QuestionCardSkeleton() {
+  return (
+    <div className="qa-card flex gap-3 animate-pulse">
+      <div className="pt-1">
+        <div className="bg-[var(--qa-rail-bg)] border border-[var(--qa-rail-border)] rounded-md px-1 py-2 flex flex-col items-center gap-2">
+          <div className="w-9 h-9 rounded-md bg-black/10 dark:bg-white/10" />
+          <div className="w-7 h-3 rounded bg-black/10 dark:bg-white/10" />
+          <div className="w-9 h-9 rounded-md bg-black/10 dark:bg-white/10" />
+        </div>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="h-3 w-40 rounded bg-black/10 dark:bg-white/10" />
+        <div className="mt-2 h-4 w-5/6 rounded bg-black/10 dark:bg-white/10" />
+        <div className="mt-2 h-3 w-4/6 rounded bg-black/10 dark:bg-white/10" />
+        <div className="mt-4 flex gap-2">
+          <div className="h-7 w-20 rounded-full bg-black/10 dark:bg-white/10" />
+          <div className="h-7 w-16 rounded-full bg-black/10 dark:bg-white/10" />
+          <div className="h-7 w-16 rounded-full bg-black/10 dark:bg-white/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function QnaPage() {
   const searchParams = useSearchParams();
   const contextType = searchParams.get("contextType");
@@ -41,12 +65,14 @@ export default function QnaPage() {
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [sort, setSort] = useState<"hot" | "new" | "top">("new");
+  const [topWindow, setTopWindow] = useState<"today" | "week" | "month" | "all">("week");
   const [moreForId, setMoreForId] = useState<string | null>(null);
 
   async function load(cursor?: string, replace = false) {
     const params = new URLSearchParams();
     params.set("limit", "20");
     params.set("sort", sort);
+    if (sort === "top") params.set("window", topWindow);
     if (contextType && contextId) {
       params.set("contextType", contextType);
       params.set("contextId", contextId);
@@ -64,7 +90,7 @@ export default function QnaPage() {
     setLoading(true);
     load(undefined, true).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort]);
+  }, [sort, topWindow]);
 
   async function voteQuestion(questionId: string, value: 1 | 0 | -1) {
     setItems((prev) =>
@@ -119,6 +145,18 @@ export default function QnaPage() {
             activeId={sort}
             onChange={(id) => setSort(id as "hot" | "new" | "top")}
           />
+          {sort === "top" && (
+            <SortTabs
+              tabs={[
+                { id: "today", label: "Today" },
+                { id: "week", label: "Week" },
+                { id: "month", label: "Month" },
+                { id: "all", label: "All" },
+              ]}
+              activeId={topWindow}
+              onChange={(id) => setTopWindow(id as "today" | "week" | "month" | "all")}
+            />
+          )}
           <Link
             href="/app/qa/saved"
             className="inline-flex items-center justify-center px-3 py-1.5 rounded-full border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] text-[var(--ig-text)] text-xs font-semibold"
@@ -135,7 +173,11 @@ export default function QnaPage() {
       </header>
       <div className="flex-1 overflow-y-auto">
         {loading && items.length === 0 ? (
-          <div className="p-4 text-[var(--ig-text-secondary)]">Loading questions…</div>
+          <div className="px-4 py-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <QuestionCardSkeleton key={i} />
+            ))}
+          </div>
         ) : items.length === 0 ? (
           <div className="p-8 text-center text-[var(--ig-text-secondary)]">
             No questions yet.

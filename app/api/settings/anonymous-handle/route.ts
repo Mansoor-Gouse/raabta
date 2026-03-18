@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
 import { AnonymousHandleModel, connectDB } from "@/lib/db";
 
+const COOLDOWN_DAYS = 30;
+const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+
 function normalizeHandle(raw: string) {
   const h = raw.trim().replace(/^u\//i, "");
   const safe = h.replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 20);
@@ -20,10 +23,15 @@ export async function GET() {
     .lean()
     .exec();
   const anyDoc = doc as any;
+  const lastChangedAt: Date | null = anyDoc?.updatedAt || anyDoc?.createdAt || null;
+  const canChangeAt = lastChangedAt ? new Date(lastChangedAt.getTime() + COOLDOWN_MS) : null;
+  const cooldownRemainingMs = canChangeAt ? Math.max(0, canChangeAt.getTime() - Date.now()) : 0;
   return NextResponse.json({
     handle: anyDoc?.handle ?? null,
     createdAt: anyDoc?.createdAt ? (anyDoc.createdAt as Date).toISOString() : null,
     updatedAt: anyDoc?.updatedAt ? (anyDoc.updatedAt as Date).toISOString() : null,
+    canChangeAt: canChangeAt ? canChangeAt.toISOString() : null,
+    cooldownRemainingSeconds: Math.floor(cooldownRemainingMs / 1000),
   });
 }
 
@@ -45,15 +53,44 @@ export async function POST(request: NextRequest) {
   const userId = new mongoose.Types.ObjectId(session.userId);
 
   try {
+    const existing = await AnonymousHandleModel.findOne({ userId })
+      .select("createdAt updatedAt")
+      .lean()
+      .exec();
+    if (existing) {
+      const anyExisting = existing as any;
+      const lastChangedAt: Date = (anyExisting.updatedAt || anyExisting.createdAt) as Date;
+      const canChangeAt = new Date(lastChangedAt.getTime() + COOLDOWN_MS);
+      const remainingMs = canChangeAt.getTime() - Date.now();
+      if (remainingMs > 0) {
+        return NextResponse.json(
+          {
+            error: `You can change your handle once every ${COOLDOWN_DAYS} days.`,
+            canChangeAt: canChangeAt.toISOString(),
+            cooldownRemainingSeconds: Math.floor(remainingMs / 1000),
+          },
+          { status: 429 }
+        );
+      }
+    }
+
     const doc = await AnonymousHandleModel.findOneAndUpdate(
       { userId },
       { $set: { handle } },
       { upsert: true, new: true }
     )
-      .select("handle")
+      .select("handle createdAt updatedAt")
       .lean()
       .exec();
-    return NextResponse.json({ handle: (doc as any)?.handle ?? handle });
+    const anyDoc = doc as any;
+    const lastChangedAt: Date | null = anyDoc?.updatedAt || anyDoc?.createdAt || null;
+    const canChangeAt = lastChangedAt ? new Date(lastChangedAt.getTime() + COOLDOWN_MS) : null;
+    const cooldownRemainingMs = canChangeAt ? Math.max(0, canChangeAt.getTime() - Date.now()) : 0;
+    return NextResponse.json({
+      handle: anyDoc?.handle ?? handle,
+      canChangeAt: canChangeAt ? canChangeAt.toISOString() : null,
+      cooldownRemainingSeconds: Math.floor(cooldownRemainingMs / 1000),
+    });
   } catch (err: any) {
     const message = typeof err?.message === "string" ? err.message : "";
     if (message.includes("duplicate key")) {
