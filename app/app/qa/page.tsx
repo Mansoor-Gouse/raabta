@@ -67,6 +67,12 @@ export default function QnaPage() {
   const [sort, setSort] = useState<"hot" | "new" | "top">("new");
   const [topWindow, setTopWindow] = useState<"today" | "week" | "month" | "all">("week");
   const [moreForId, setMoreForId] = useState<string | null>(null);
+  const askHref =
+    contextType && contextId
+      ? `/app/qa/ask?contextType=${encodeURIComponent(contextType)}&contextId=${encodeURIComponent(
+          contextId
+        )}`
+      : "/app/qa/ask";
 
   async function load(cursor?: string, replace = false) {
     const params = new URLSearchParams();
@@ -164,7 +170,7 @@ export default function QnaPage() {
             Saved
           </Link>
           <Link
-            href="/app/qa/ask"
+            href={askHref}
             className="inline-flex items-center justify-center px-3 py-1.5 rounded-full bg-[var(--ig-text)] text-[var(--ig-bg-primary)] text-xs font-semibold"
           >
             Ask
@@ -183,7 +189,7 @@ export default function QnaPage() {
             No questions yet.
             <div className="mt-3">
               <Link
-                href="/app/qa/ask"
+                href={askHref}
                 className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-[var(--ig-text)] text-[var(--ig-bg-primary)] text-sm font-semibold"
               >
                 Ask the first question

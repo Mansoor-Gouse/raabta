@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, createContext, useContext } from "react";
+import { useState, useCallback, createContext, useContext, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChannelList } from "@/components/chat/ChannelList";
@@ -70,6 +70,43 @@ export function AppShell({
   const isNewPostFlow = pathname === "/app/feed/new" || pathname.startsWith("/app/feed/new/");
   const isChatsPage = pathname === "/app/chats";
 
+  const [blockedIds, setBlockedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/me/block")
+      .then((r) => r.json())
+      .then((data: { blockedIds?: string[] }) => {
+        if (cancelled) return;
+        setBlockedIds(data.blockedIds ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    function onBlockedUpdated(e: Event) {
+      const detail = (e as CustomEvent<{ blockedUserId?: string; unblockedUserId?: string }>).detail;
+      const blockedUserId = detail?.blockedUserId;
+      const unblockedUserId = detail?.unblockedUserId;
+
+      if (blockedUserId) {
+        setBlockedIds((prev) => (prev.includes(blockedUserId) ? prev : [...prev, blockedUserId]));
+        return;
+      }
+
+      if (unblockedUserId) {
+        setBlockedIds((prev) => prev.filter((id) => id !== unblockedUserId));
+      }
+    }
+
+    window.addEventListener("blocked-users-updated", onBlockedUpdated);
+    return () => window.removeEventListener("blocked-users-updated", onBlockedUpdated);
+  }, []);
+
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   return (
@@ -129,7 +166,7 @@ export function AppShell({
           </div>
         </nav>
         <div className="flex-1 min-h-0 overflow-hidden">
-          <ChannelList />
+          <ChannelList blockedUserIds={blockedIds} />
         </div>
         <div className="p-2 shrink-0 border-t border-[var(--ig-border-light)]">
           <button

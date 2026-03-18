@@ -16,7 +16,12 @@ export function BlockedList() {
 
   async function handleUnblock(userId: string) {
     const res = await fetch("/api/me/block/" + encodeURIComponent(userId), { method: "DELETE" });
-    if (res.ok) setBlockedIds((prev) => prev.filter((id) => id !== userId));
+    if (res.ok) {
+      setBlockedIds((prev) => prev.filter((id) => id !== userId));
+      window.dispatchEvent(
+        new CustomEvent("blocked-users-updated", { detail: { unblockedUserId: userId } })
+      );
+    }
   }
 
   if (loading) return <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>;

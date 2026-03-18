@@ -49,7 +49,6 @@ export function PostPreviewCard({
       {caption && (
         <div className="px-4 pb-2">
           <p className="text-sm text-[var(--ig-text)]" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
-            <span className="font-semibold mr-1.5">{authorName}</span>
             {caption}
           </p>
         </div>

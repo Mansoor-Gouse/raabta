@@ -87,10 +87,22 @@ export type ChannelListProps = {
   /** When provided, parent controls archived view (e.g. from chats page). */
   showArchived?: boolean;
   onShowArchivedChange?: (show: boolean) => void;
+  /** When true, show only channels that contain at least one blocked member. */
+  showBlocked?: boolean;
+  /** App user IDs that are blocked by the current user (used for filtering channels). */
+  blockedUserIds?: string[];
 };
 
 export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function ChannelList(
-  { hideSearchBar, searchValue, onSearchChange, showArchived: controlledShowArchived, onShowArchivedChange },
+  {
+    hideSearchBar,
+    searchValue,
+    onSearchChange,
+    showArchived: controlledShowArchived,
+    onShowArchivedChange,
+    showBlocked = false,
+    blockedUserIds,
+  },
   ref
 ) {
   const { client, setActiveChannel } = useChatContext();
@@ -141,11 +153,30 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   // Parent (chats page) calls refresh() when user navigates back from a channel so unread counts stay in sync.
   useImperativeHandle(ref, () => ({ refresh: fetchChannels }), [fetchChannels]);
 
+  const blockedSet = useMemo(() => new Set(blockedUserIds ?? []), [blockedUserIds]);
+
+  function channelHasBlockedMember(ch: StreamChannel, currentUserId: string): boolean {
+    if (blockedSet.size === 0) return false;
+    const members = ch.state?.members ?? {};
+    const memberIds = Object.values(members)
+      .map((m) => (m as { user_id?: string; user?: { id?: string } }).user?.id ?? (m as { user_id?: string }).user_id)
+      .filter((id): id is string => !!id && id !== currentUserId);
+    return memberIds.some((id) => blockedSet.has(id));
+  }
+
   const list = useMemo(() => {
-    if (!channelSearch.trim() || !client?.userID) return channels;
+    const currentUserId = client?.userID;
+    if (!currentUserId) return channels;
+
+    const blockFiltered = channels.filter((ch) => {
+      const hasBlocked = channelHasBlockedMember(ch, currentUserId);
+      return showBlocked ? hasBlocked : !hasBlocked;
+    });
+
+    if (!channelSearch.trim()) return blockFiltered;
     const q = channelSearch.trim().toLowerCase();
-    return channels.filter((ch) => getChannelDisplayName(ch, client.userID!).toLowerCase().includes(q));
-  }, [channels, channelSearch, client?.userID]);
+    return blockFiltered.filter((ch) => getChannelDisplayName(ch, currentUserId).toLowerCase().includes(q));
+  }, [channels, channelSearch, client?.userID, showBlocked, blockedSet]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const el = scrollRef.current;
@@ -169,7 +200,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   if (!client?.userID) return null;
 
   const isEmpty = list.length === 0 && !channelSearch.trim();
-  const showEmptyState = isEmpty && !showArchived;
+  const showEmptyState = isEmpty;
 
   return (
     <div
@@ -265,14 +296,20 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <p className="text-base font-semibold text-[var(--ig-text)] mb-1">No messages yet</p>
-          <p className="text-sm text-[var(--ig-text-secondary)] mb-5">Send a message to get started.</p>
-          <Link
-            href="/app/new"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--ig-text)] text-[var(--ig-bg-primary)] text-sm font-semibold hover:opacity-90"
-          >
-            Send message
-          </Link>
+          <p className="text-base font-semibold text-[var(--ig-text)] mb-1">
+            {showBlocked ? "No blocked chats" : "No messages yet"}
+          </p>
+          <p className="text-sm text-[var(--ig-text-secondary)] mb-5">
+            {showBlocked ? "When you block someone, their chats appear here." : "Send a message to get started."}
+          </p>
+          {!showBlocked && (
+            <Link
+              href="/app/new"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--ig-text)] text-[var(--ig-bg-primary)] text-sm font-semibold hover:opacity-90"
+            >
+              Send message
+            </Link>
+          )}
         </div>
       ) : (
         <ul className="flex-1 overflow-y-auto">
@@ -280,7 +317,9 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
             <li className="p-4 text-sm text-[var(--ig-text-secondary)] text-center">
               {showArchived
                 ? "No archived chats. Swipe left on a chat to archive it."
-                : "No chats match your search."}
+                : showBlocked
+                  ? "No blocked chats match your search."
+                  : "No chats match your search."}
             </li>
           )}
           {list.map((channel) => {

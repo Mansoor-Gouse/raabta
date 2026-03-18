@@ -5,10 +5,24 @@ import { useChannelStateContext, useChatContext } from "stream-chat-react";
 
 type Member = {
   user_id?: string;
-  user?: { id?: string; name?: string; image?: string };
+  user?: { id?: string; name?: string; image?: string; last_active?: string };
 };
 
 type SearchUser = { _id: string; fullName?: string; name?: string; profileImage?: string };
+
+function formatLastSeen(isoDate: string): string {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return "Last seen just now";
+  if (diffMins < 60) return `Last seen ${diffMins}m ago`;
+  if (diffHours < 24) return `Last seen ${diffHours}h ago`;
+  if (diffDays < 7) return `Last seen ${diffDays}d ago`;
+  return "Last seen recently";
+}
 
 export function GroupMembersSheet({
   open,
@@ -17,7 +31,7 @@ export function GroupMembersSheet({
   open: boolean;
   onClose: () => void;
 }) {
-  const { channel } = useChannelStateContext();
+  const { channel, watchers = {} } = useChannelStateContext();
   const { client } = useChatContext();
   const currentUserId = client?.userID ?? "";
   const [addMode, setAddMode] = useState(false);
@@ -41,6 +55,7 @@ export function GroupMembersSheet({
     id: m.user_id ?? id,
     name: (m.user as { name?: string })?.name ?? (m.user as { id?: string })?.id ?? id,
     image: (m.user as { image?: string })?.image,
+    lastActive: (m.user as { last_active?: string })?.last_active ?? null,
   }));
 
   useEffect(() => {
@@ -139,8 +154,10 @@ export function GroupMembersSheet({
         className="relative flex flex-col bg-[var(--ig-bg-primary)] rounded-t-2xl md:rounded-xl md:max-w-sm w-full max-h-[70vh] md:max-h-[400px] shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--ig-border)]">
-          <h2 id={titleId} className="text-lg font-semibold text-[var(--ig-text)]">Group members</h2>
+        <h2 id={titleId} className="sr-only">
+          Group members
+        </h2>
+        <div className="shrink-0 flex items-center justify-end px-4 py-3">
           <button
             ref={closeButtonRef}
             type="button"
@@ -176,7 +193,7 @@ export function GroupMembersSheet({
                         onClick={() => toggleSelectedToAdd(u._id)}
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--ig-border-light)] text-left"
                       >
-                        <div className="w-9 h-9 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center shrink-0 overflow-hidden">
+                        <div className="w-9 h-9 rounded-[5px] bg-[var(--ig-border-light)] flex items-center justify-center shrink-0 overflow-hidden">
                           {u.profileImage ? (
                             <img src={u.profileImage} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -213,9 +230,12 @@ export function GroupMembersSheet({
               <button
                 type="button"
                 onClick={() => setAddMode(true)}
-                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] mb-1"
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] mb-1 flex items-center gap-2"
+                aria-label="Add members"
               >
-                Add members
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
+                </svg>
               </button>
               {memberList.length === 0 ? (
                 <p className="text-sm text-[var(--ig-text-secondary)] py-4 text-center">Loading members…</p>
@@ -226,31 +246,49 @@ export function GroupMembersSheet({
                     const displayName = m.name || m.id || "Unknown";
                     const initial = (displayName || "?")[0].toUpperCase();
                     const isRemoving = removingId === m.id;
+                    const isOnline = !!(watchers as Record<string, boolean>)[m.id];
+                    const lastSeenText = !isOnline && m.lastActive ? formatLastSeen(m.lastActive) : null;
                     return (
                       <li key={m.id}>
                         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[var(--ig-border-light)]">
-                          <div className="w-10 h-10 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-[5px] bg-[var(--ig-border-light)] flex items-center justify-center shrink-0 overflow-hidden">
                             {m.image ? (
                               <img src={m.image} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <span className="text-sm font-medium text-[var(--ig-text-secondary)]">{initial}</span>
                             )}
                           </div>
-                          <span className="flex-1 min-w-0 truncate text-[var(--ig-text)] font-medium">
-                            {displayName}
-                          </span>
-                          {isYou && (
-                            <span className="text-xs font-medium text-[var(--ig-text-secondary)] shrink-0">You</span>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="truncate text-[var(--ig-text)] font-medium">{displayName}</span>
+                              {isYou && (
+                                <span className="text-xs font-medium text-[var(--ig-text-secondary)] shrink-0">You</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-[var(--ig-text-secondary)] mt-0.5 truncate">
+                              {isOnline ? "Online" : lastSeenText ?? "Offline"}
+                            </div>
+                          </div>
                           {!isYou && (
                             <button
                               type="button"
                               onClick={() => handleRemoveMember(m.id)}
                               disabled={isRemoving}
-                              className="text-xs font-medium text-[var(--ig-error)] hover:underline disabled:opacity-50"
+                              className="shrink-0 p-2 rounded-lg text-[var(--ig-error)] hover:bg-[var(--ig-border-light)] disabled:opacity-50"
                               aria-label={`Remove ${displayName}`}
                             >
-                              {isRemoving ? "…" : "Remove"}
+                              {isRemoving ? (
+                                <span className="text-xs font-semibold">…</span>
+                              ) : (
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-1 0v14a1 1 0 01-1 1H10a1 1 0 01-1-1V7"
+                                  />
+                                </svg>
+                              )}
                             </button>
                           )}
                         </div>

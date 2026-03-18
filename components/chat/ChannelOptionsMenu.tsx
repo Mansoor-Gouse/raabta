@@ -28,7 +28,10 @@ export function ChannelOptionsMenu() {
     });
     if (res.ok) {
       setOpen(false);
-      window.location.href = "/app";
+      // Update chats UI without a full page refresh.
+      window.dispatchEvent(
+        new CustomEvent("blocked-users-updated", { detail: { blockedUserId: otherUserId } })
+      );
     }
   }
 

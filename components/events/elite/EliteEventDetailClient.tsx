@@ -760,7 +760,9 @@ export function EliteEventDetailClient({
                   type="button"
                   onClick={() => {
                     hapticTrigger("light");
-                    setQaDrawerOpen(true);
+                        // Navigate to the event-scoped Q&A feed (not the quick drawer)
+                        router.push(qaUrl);
+                        setQaDrawerOpen(false);
                   }}
                   className={ACTION_TILE_CLASS}
                   aria-label="Event Q&A"

@@ -20,11 +20,48 @@ export default function ChatsPage() {
   const user = useAppUser();
   const { client } = useChatContext();
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"messages" | "requests">("messages");
+  const [activeTab, setActiveTab] = useState<"messages" | "blocked" | "requests">("messages");
   const [showArchived, setShowArchived] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPushBanner, setShowPushBanner] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const [blockedIds, setBlockedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/me/block")
+      .then((r) => r.json())
+      .then((data: { blockedIds?: string[] }) => {
+        if (cancelled) return;
+        setBlockedIds(data.blockedIds ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    function onBlockedUpdated(e: Event) {
+      const detail = (e as CustomEvent<{ blockedUserId?: string; unblockedUserId?: string }>).detail;
+      const blockedUserId = detail?.blockedUserId;
+      const unblockedUserId = detail?.unblockedUserId;
+
+      if (blockedUserId) {
+        setBlockedIds((prev) => (prev.includes(blockedUserId) ? prev : [...prev, blockedUserId]));
+        return;
+      }
+
+      if (unblockedUserId) {
+        setBlockedIds((prev) => prev.filter((id) => id !== unblockedUserId));
+      }
+    }
+
+    window.addEventListener("blocked-users-updated", onBlockedUpdated);
+    return () => window.removeEventListener("blocked-users-updated", onBlockedUpdated);
+  }, []);
 
   useEffect(() => {
     if (isPushSupported() && getPushPermission() === "default" && !wasPushPromptDismissed()) {
@@ -54,7 +91,7 @@ export default function ChatsPage() {
     prevPathnameRef.current = pathname ?? null;
     const wasOnChannel = prev?.startsWith("/app/channel/");
     const isNowOnChats = pathname === "/app/chats";
-    if (wasOnChannel && isNowOnChats && activeTab === "messages") {
+    if (wasOnChannel && isNowOnChats && (activeTab === "messages" || activeTab === "blocked")) {
       listRef.current?.refresh();
     }
   }, [pathname, activeTab]);
@@ -198,18 +235,35 @@ export default function ChatsPage() {
         >
           Requests
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowArchived(false);
+            setMenuOpen(false);
+            setActiveTab("blocked");
+          }}
+          className={`flex-1 py-3 px-4 text-sm font-medium ${
+            activeTab === "blocked"
+              ? "text-[var(--ig-text)] border-b-2 border-[var(--ig-text)]"
+              : "text-[var(--ig-link)] border-b-2 border-transparent"
+          }`}
+        >
+          Blocked
+        </button>
       </div>
 
-      {/* Channel list - show messages tab content; requests could show empty or future list */}
+      {/* Channel list - show messages/blocked; requests could show empty or future list */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        {activeTab === "messages" ? (
+        {activeTab === "messages" || activeTab === "blocked" ? (
           <ChannelList
             ref={listRef}
             hideSearchBar
             searchValue={search}
             onSearchChange={setSearch}
-            showArchived={showArchived}
-            onShowArchivedChange={setShowArchived}
+            showArchived={activeTab === "messages" ? showArchived : false}
+            onShowArchivedChange={activeTab === "messages" ? setShowArchived : undefined}
+            showBlocked={activeTab === "blocked"}
+            blockedUserIds={blockedIds}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
