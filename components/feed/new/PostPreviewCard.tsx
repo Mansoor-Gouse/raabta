@@ -68,11 +68,22 @@ export function PostPreviewCard({
             ) : (
               <>
                 <video
+                  key={firstUrl}
                   src={firstUrl}
                   className="absolute inset-0 w-full h-full object-cover object-center"
-                  preload="metadata"
+                  preload="auto"
                   muted
                   playsInline
+                  autoPlay
+                  loop
+                  onLoadedData={(e) => {
+                    // Ensure the preview shows from the start across browsers.
+                    try {
+                      e.currentTarget.currentTime = 0;
+                    } catch {
+                      // ignore
+                    }
+                  }}
                   aria-hidden
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

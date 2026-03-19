@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FeedClient } from "@/app/app/feed/FeedClient";
 import { EliteEventsClient } from "@/components/events/elite/EliteEventsClient";
@@ -23,12 +23,29 @@ export function FeedEventsScrollView() {
   const currentIndex = ROUTES.indexOf(pathname as (typeof ROUTES)[number]);
   const panelIndex: PanelIndex = (currentIndex >= 0 ? currentIndex : 0) as PanelIndex;
 
-  // Scroll to the correct panel when pathname changes (e.g. user tapped nav)
-  useEffect(() => {
+  // Scroll to the correct panel when pathname changes (e.g. user tapped nav).
+  // UseLayoutEffect avoids a visible flash at panel 0 then sliding to chats.
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el || isSyncingRef.current) return;
     const w = el.clientWidth;
-    if (w <= 0) return;
+    if (w <= 0) {
+      requestAnimationFrame(() => {
+        const el2 = scrollRef.current;
+        if (!el2 || isSyncingRef.current) return;
+        const w2 = el2.clientWidth;
+        if (w2 <= 0) return;
+        const targetScroll2 = panelIndex * w2;
+        if (Math.abs(el2.scrollLeft - targetScroll2) < 2) return;
+        isSyncingRef.current = true;
+        el2.scrollTo({ left: targetScroll2, behavior: "auto" });
+        const t2 = requestAnimationFrame(() => {
+          isSyncingRef.current = false;
+        });
+        return () => cancelAnimationFrame(t2);
+      });
+      return;
+    }
     const targetScroll = panelIndex * w;
     if (Math.abs(el.scrollLeft - targetScroll) < 2) return;
     isSyncingRef.current = true;

@@ -40,6 +40,7 @@ export default function ChatsPage() {
     }>
   >([]);
   const [unstarringById, setUnstarringById] = useState<Record<string, boolean>>({});
+  const [channelNamesById, setChannelNamesById] = useState<Record<string, string>>({});
 
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
 
@@ -142,12 +143,100 @@ export default function ChatsPage() {
     };
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab !== "starred" || !client?.userID || starredItems.length === 0) {
+      if (activeTab !== "starred") setChannelNamesById({});
+      return;
+    }
+    let cancelled = false;
+    const channelIds = Array.from(new Set(starredItems.map((x) => x.channelId).filter(Boolean)));
+    if (channelIds.length === 0) {
+      setChannelNamesById({});
+      return;
+    }
+    const resolveName = (ch: {
+      id?: string;
+      data?: { name?: string };
+      state?: { members?: Record<string, { user_id?: string; user?: { id?: string; name?: string } }> };
+    }): string => {
+      const named = ch.data?.name?.trim();
+      if (named) return named;
+      const members = ch.state?.members ?? {};
+      const other = Object.values(members).find((m) => (m.user?.id ?? m.user_id) !== client.userID);
+      return other?.user?.name || other?.user?.id || "Chat";
+    };
+    Promise.all([
+      client.queryChannels({ type: "messaging", id: { $in: channelIds }, members: { $in: [client.userID] } }, [], { limit: 100 }),
+      client.queryChannels({ type: "team", id: { $in: channelIds }, members: { $in: [client.userID] } }, [], { limit: 100 }),
+    ])
+      .then(([messaging, team]) => {
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        [...messaging, ...team].forEach((ch) => {
+          const id = ch.id ?? "";
+          if (!id) return;
+          map[id] = resolveName(ch as unknown as {
+            id?: string;
+            data?: { name?: string };
+            state?: { members?: Record<string, { user_id?: string; user?: { id?: string; name?: string } }> };
+          });
+        });
+        setChannelNamesById(map);
+      })
+      .catch(() => {
+        if (!cancelled) setChannelNamesById({});
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, client, starredItems]);
+
   const starredFiltered = starredItems.filter((item) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
     const hay = `${item.senderName ?? ""} ${item.textPreview ?? ""} ${item.channelId}`.toLowerCase();
     return hay.includes(q);
   });
+
+  const chatReady = !!client?.userID;
+  if (!chatReady) {
+    return (
+      <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg-primary)]">
+        <header
+          className="shrink-0 flex items-center justify-between min-h-[64px] px-4 border-b border-[var(--ig-border-light)]"
+          style={{ paddingTop: "var(--safe-area-inset-top)" }}
+        >
+          <div className="flex-1 min-w-0 px-1">
+            <div className="h-10 rounded-xl bg-[var(--ig-border-light)] animate-pulse" />
+          </div>
+          <div className="w-10 h-10 rounded-full bg-[var(--ig-border-light)] animate-pulse ml-3" />
+        </header>
+        <div className="shrink-0 flex border-b border-[var(--ig-border-light)]">
+          {["messages", "archived", "starred", "blocked"].map((t) => (
+            <div key={t} className="flex-1 py-3 px-4">
+              <div className="h-5 w-20 rounded bg-[var(--ig-border-light)] animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2" aria-busy="true" aria-label="Loading chats">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 px-2 py-3 min-h-[72px] border-b border-[var(--ig-border-light)]"
+            >
+              <div className="w-12 h-12 rounded-[5px] bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-4 w-3/4 max-w-[140px] rounded bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+                <div className="h-3 w-full max-w-[220px] rounded bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+              </div>
+              <div className="h-3 w-12 shrink-0 rounded bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   async function handleUnstar(item: {
     _id: string;
@@ -346,7 +435,19 @@ export default function ChatsPage() {
               <span className="text-xs text-[var(--ig-text-secondary)]">{starredItems.length}</span>
             </div>
             {starredLoading ? (
-              <p className="p-4 text-sm text-[var(--ig-text-secondary)]">Loading starred messages...</p>
+              <ul className="p-3 space-y-2" aria-busy="true" aria-label="Loading starred messages">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <li
+                    key={i}
+                    className="rounded-xl border border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)] p-3"
+                  >
+                    <div className="h-3.5 w-1/3 max-w-[140px] rounded bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+                    <div className="mt-2 h-3 w-2/3 max-w-[220px] rounded bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+                    <div className="mt-2 h-3 w-full rounded bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+                    <div className="mt-3 h-7 w-24 rounded-lg bg-[var(--ig-border-light)] animate-pulse" aria-hidden />
+                  </li>
+                ))}
+              </ul>
             ) : starredFiltered.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center p-8">
                 <div className="w-14 h-14 rounded-[10px] bg-[var(--ig-border-light)] flex items-center justify-center mb-3">
@@ -370,6 +471,9 @@ export default function ChatsPage() {
                           <p className="text-sm font-semibold text-[var(--ig-text)] truncate">
                             {item.senderName ? `${item.senderName}` : "Message"}
                           </p>
+                          <p className="text-xs text-[var(--ig-text-secondary)] truncate mt-0.5">
+                            {channelNamesById[item.channelId] ? `in ${channelNamesById[item.channelId]}` : `Channel ${item.channelId}`}
+                          </p>
                           <p className="text-sm text-[var(--ig-text-secondary)] line-clamp-2 mt-0.5">
                             {item.textPreview?.trim() || "Message preview unavailable"}
                           </p>
@@ -382,10 +486,19 @@ export default function ChatsPage() {
                         </span>
                       </div>
                       <div className="mt-2 flex items-center justify-between text-xs text-[var(--ig-text-secondary)] gap-2">
-                        <span className="truncate">Channel: {item.channelId}</span>
+                        <span className="truncate">{channelNamesById[item.channelId] || item.channelId}</span>
                         <span className="shrink-0">{item.createdAt ? formatRelativeTime(new Date(item.createdAt)) : ""}</span>
                       </div>
-                      <div className="mt-2 flex justify-end">
+                      <div className="mt-2 flex items-center justify-end gap-2">
+                        <span
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text-secondary)]"
+                          aria-label="Open chat"
+                          title="Open chat"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h4m0 0v4m0-4L10 14m-6 7h16a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </span>
                         <button
                           type="button"
                           onClick={(e) => {

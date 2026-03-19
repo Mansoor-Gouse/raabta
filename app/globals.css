@@ -1080,7 +1080,20 @@ textarea:focus-visible {
   .str-chat__message-actions-box,
   .str-chat__message-reactions-list,
   .str-chat__dialog,
-  .str-chat__modal {
+  .str-chat__modal,
+  .str-chat__popover,
+  .str-chat__menu,
+  .str-chat__reactions-list,
+  .str-chat__message-actions,
+  .str-chat__edit,
+  .str-chat__edit-message,
+  .str-chat [role="dialog"],
+  .str-chat [aria-modal="true"],
+  .str-chat .ngxp__container,
+  .str-chat .float-ui-container,
+  [class*="str-chat__message-reactions"],
+  [class*="str-chat__message-actions"],
+  [class*="str-chat__edit"] {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
@@ -1096,12 +1109,41 @@ textarea:focus-visible {
     padding-bottom: calc(12px + var(--safe-area-inset-bottom)) !important;
     z-index: 70 !important;
     transform: none !important;
+    max-height: calc(100dvh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom)) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .str-chat__message-actions-list {
     display: grid !important;
     gap: 6px !important;
     padding: 8px 10px !important;
+  }
+
+  .str-chat__message-actions-list,
+  .str-chat__message-reactions-list,
+  .str-chat__reactions-list,
+  .str-chat__dialog__body,
+  .str-chat__dialog__footer {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+
+  /* Make Stream dialogs use a predictable sheet layout */
+  .str-chat__dialog,
+  .str-chat__modal,
+  .str-chat__message-actions,
+  .str-chat__edit-message {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .str-chat__dialog__body,
+  .str-chat__reactions-list,
+  .str-chat__message-actions-list {
+    flex: 1 1 auto !important;
   }
 
   .str-chat__message-actions-list button,

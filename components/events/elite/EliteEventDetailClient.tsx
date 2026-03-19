@@ -671,7 +671,7 @@ export function EliteEventDetailClient({
                 <p className="text-sm text-[var(--elite-error)]">{channelError}</p>
               )}
 
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1" role="group" aria-label="Event actions" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="relative z-10 flex gap-3 overflow-x-auto no-scrollbar pb-1 px-1" role="group" aria-label="Event actions" style={{ WebkitOverflowScrolling: "touch" }}>
                 <button
                   type="button"
                   onClick={openChat}
