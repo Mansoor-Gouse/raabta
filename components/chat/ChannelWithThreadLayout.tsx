@@ -17,6 +17,7 @@ import { GroupMembersSheet } from "./GroupMembersSheet";
  * - Desktop: main and thread side by side.
  */
 function ChannelWithThreadLayoutInner() {
+  const messageActions = ["reply", "react", "edit", "delete", "pin", "quote", "flag", "mute"] as const;
   const { thread } = useChannelStateContext();
   const { HeaderComponent } = useComponentContext();
   const groupMembersOpen = useGroupMembersOpen();
@@ -75,7 +76,7 @@ function ChannelWithThreadLayoutInner() {
         <div className="flex flex-1 md:max-w-md min-w-0 flex-col border-l border-[var(--ig-border)] bg-[var(--ig-bg-primary)]">
           <Thread
             fullWidth
-            messageActions={["delete", "edit", "flag", "mute", "pin", "quote", "react", "reply"]}
+            messageActions={[...messageActions]}
           />
         </div>
       )}

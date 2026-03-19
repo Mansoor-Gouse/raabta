@@ -69,6 +69,8 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
     ? memberEntries.find((m) => (m.user_id ?? m.user?.id) === otherMemberId)
     : undefined;
 
+  const typingMap = (channel?.state as { typing?: Record<string, unknown> } | undefined)?.typing ?? {};
+  const isOtherTyping = isOneToOne && otherMemberId ? !!typingMap[otherMemberId] : false;
   const otherIsOnline = isOneToOne && otherMemberId ? !!watchers[otherMemberId] : false;
   const lastActive = otherMemberEntry?.user?.last_active;
   const lastSeenText = isOneToOne && !otherIsOnline && lastActive ? formatLastSeen(lastActive) : null;
@@ -147,7 +149,11 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
         )}
         <p className="str-chat__header-livestream-left--members str-chat__channel-header-info">
           {isOneToOne ? (
-            otherIsOnline ? (
+            isOtherTyping ? (
+              <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-link)]">
+                typing...
+              </span>
+            ) : otherIsOnline ? (
               <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-text)]">
                 {String(t("Online"))}
               </span>

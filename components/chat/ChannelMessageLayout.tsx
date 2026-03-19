@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useEffect, useCallback, useMemo } from "react";
-import { MessageList, MessageInput, useChannelActionContext, useChannelStateContext, useChatContext } from "stream-chat-react";
+import {
+  MessageList,
+  MessageInput,
+  TypingIndicator,
+  useChannelActionContext,
+  useChannelStateContext,
+  useChatContext,
+} from "stream-chat-react";
 import { PinnedMessagesBar } from "./PinnedMessagesBar";
 import { getDraft } from "@/lib/draftStorage";
 import { FailedMessageAutoRetry } from "./FailedMessageAutoRetry";
@@ -16,6 +23,7 @@ import { OfflinePendingMessages } from "./OfflinePendingMessages";
  * - In 1:1 channels, avatars are hidden via data-dm for a cleaner look.
  */
 export function ChannelMessageLayout() {
+  const messageActions = ["reply", "react", "edit", "delete", "pin", "quote", "flag", "mute"] as const;
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const { channel } = useChannelStateContext();
   const { markRead } = useChannelActionContext();
@@ -77,47 +85,6 @@ export function ChannelMessageLayout() {
     },
     []
   );
-  const readState = (channel?.state as any)?.read || {};
-  const otherRead = otherMemberId ? readState[otherMemberId] : undefined;
-  const lastReadDate = otherRead?.last_read ? new Date(otherRead.last_read) : null;
-
-  const lastMessageFromMe = useMemo(() => {
-    if (!currentUserId || indicatorMessages.length === 0) return null;
-    let best: (typeof indicatorMessages)[number] | null = null;
-    let bestTime = -1;
-
-    for (const m of indicatorMessages) {
-      const senderId =
-        (m as { user?: { id?: string } }).user?.id ?? (m as { user_id?: string }).user_id;
-      if (senderId !== currentUserId) continue;
-
-      const createdAt = (m as { created_at?: string | Date }).created_at;
-      const updatedAt = (m as { updated_at?: string | Date }).updated_at;
-      const t =
-        createdAt != null
-          ? new Date(createdAt).getTime()
-          : updatedAt != null
-            ? new Date(updatedAt).getTime()
-            : -1;
-
-      if (t >= bestTime) {
-        bestTime = t;
-        best = m;
-      }
-    }
-
-    return best;
-  }, [indicatorMessages, currentUserId]);
-
-  const lastFromMeIsRead = (() => {
-    if (!lastMessageFromMe || !lastReadDate) return false;
-    const createdAt = (lastMessageFromMe as { created_at?: string | Date }).created_at;
-    const updatedAt = (lastMessageFromMe as { updated_at?: string | Date }).updated_at;
-    const t =
-      createdAt != null ? new Date(createdAt).getTime() : updatedAt != null ? new Date(updatedAt).getTime() : null;
-    if (t == null) return false;
-    return t <= lastReadDate.getTime();
-  })();
 
   const overrideSubmitHandler = useCallback(
     (message: Record<string, unknown>, _channelCid: string, customMessageData?: Record<string, unknown>, options?: Record<string, unknown>) => {
@@ -175,24 +142,17 @@ export function ChannelMessageLayout() {
           <MessageList
             head={<></>}
             headerPosition={0}
-            messageActions={["delete", "edit", "flag", "mute", "pin", "quote", "react", "reply"]}
+            messageActions={[...messageActions]}
             messages={safeMessages}
             disableDateSeparator
             hideNewMessageSeparator
             reviewProcessedMessage={reviewProcessedMessage}
           />
-          {isOneToOne && lastMessageFromMe && (
-            <div className="px-3 pb-1 flex items-center justify-end gap-1.5" aria-label={lastFromMeIsRead ? "Read" : "Sent"}>
-              <span
-                className={`inline-block rounded-sm shrink-0 ${lastFromMeIsRead ? "bg-[var(--ig-status-read)]" : "bg-[var(--ig-status-sent)]"}`}
-                style={{ width: 10, height: 10 }}
-                title={lastFromMeIsRead ? "Read" : "Sent"}
-              />
-              {lastFromMeIsRead && <span className="text-xs text-[var(--ig-text-secondary)]">Seen</span>}
-            </div>
-          )}
           <OfflinePendingMessages />
         </div>
+      </div>
+      <div className="px-3 pb-1 shrink-0 text-xs text-[var(--ig-text-secondary)]">
+        <TypingIndicator />
       </div>
       <div
         ref={inputWrapRef}
