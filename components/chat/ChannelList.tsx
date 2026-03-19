@@ -9,6 +9,15 @@ import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { ChatListSwipeRow } from "./ChatListSwipeRow";
 
 type OtherUser = { name?: string; id?: string; image?: string };
+type ChatMessageLike = {
+  id?: string;
+  text?: string;
+  created_at?: string | number | Date;
+  user_id?: string;
+  user?: { id?: string };
+  mentioned_users?: Array<{ id?: string; name?: string }>;
+  attachments?: Array<{ type?: string }>;
+};
 
 function getChannelDisplayName(channel: StreamChannel, currentUserId: string): string {
   const name = (channel.data as { name?: string })?.name;
@@ -40,11 +49,48 @@ function getCurrentUserName(channel: StreamChannel, currentUserId: string): stri
   return user?.name;
 }
 
+function getLatestMessage(channel: StreamChannel): ChatMessageLike | undefined {
+  const messages = (channel.state?.messages ?? []) as ChatMessageLike[];
+  if (!messages.length) return undefined;
+  if (messages.length === 1) return messages[0];
+  let latest = messages[0];
+  let latestTs = latest?.created_at ? new Date(latest.created_at).getTime() : 0;
+  for (let i = 1; i < messages.length; i += 1) {
+    const candidate = messages[i];
+    const ts = candidate?.created_at ? new Date(candidate.created_at).getTime() : 0;
+    if (ts >= latestTs) {
+      latest = candidate;
+      latestTs = ts;
+    }
+  }
+  return latest;
+}
+
+function getMessagePreview(message: ChatMessageLike | undefined): string {
+  const text = message?.text?.trim();
+  if (text) return text.slice(0, 50);
+  const hasImage = (message?.attachments ?? []).some((a) => a?.type === "image");
+  if (hasImage) return "Photo";
+  const hasFile = (message?.attachments ?? []).length > 0;
+  if (hasFile) return "Attachment";
+  return "No messages";
+}
+
+function getCreatedAtSafe(value?: string | number | Date): Date | null {
+  if (value == null) return null;
+  const d = new Date(value);
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
 function getLastMessageTime(channel: StreamChannel): Date | null {
-  const msg = channel.state?.messages?.[0];
-  if (msg?.created_at) return new Date(msg.created_at as unknown as string | number);
+  const msg = getLatestMessage(channel);
+  const msgTime = getCreatedAtSafe(msg?.created_at);
+  if (msgTime) return msgTime;
   const ts = (channel.data as { last_message_at?: string })?.last_message_at;
-  if (ts) return new Date(ts);
+  const lastMessageAt = getCreatedAtSafe(ts);
+  if (lastMessageAt) return lastMessageAt;
+  const createdAt = getCreatedAtSafe((channel.data as { created_at?: string })?.created_at);
+  if (createdAt) return createdAt;
   return null;
 }
 
@@ -60,7 +106,7 @@ function getOtherMemberLastRead(channel: StreamChannel, currentUserId: string): 
 /** For groups: number of other members who have read up to the given message (by created_at). */
 function getGroupReadCount(
   channel: StreamChannel,
-  lastMessage: { created_at?: string | Date } | undefined,
+  lastMessage: { created_at?: string | number | Date } | undefined,
   currentUserId: string
 ): number {
   if (!lastMessage?.created_at) return 0;
@@ -77,7 +123,7 @@ function getGroupReadCount(
 }
 
 function isLastMessageFromMe(channel: StreamChannel, currentUserId: string): boolean {
-  const msg = channel.state?.messages?.[0];
+  const msg = getLatestMessage(channel);
   return (msg?.user_id ?? (msg?.user as { id?: string })?.id) === currentUserId;
 }
 
@@ -488,7 +534,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
           )}
           {list.map((channel, index) => {
             const isActive = pathname === `/app/channel/${channel.id}`;
-            const lastMessage = channel.state?.messages?.[0];
+            const lastMessage = getLatestMessage(channel);
             const isFromMe = lastMessage?.user_id === client.userID;
             const other = getOtherMember(channel, client.userID!);
             const memberCount = channel.state?.members ? Object.keys(channel.state.members).length : 0;
@@ -499,13 +545,14 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                 ? new Date(lastMessage.created_at as unknown as string | number) <= otherLastRead
                 : false;
             const groupReadCount = !isOneToOne && isFromMe ? getGroupReadCount(channel, lastMessage, client.userID!) : 0;
-            const preview = lastMessage?.text?.slice(0, 50) || "No messages";
+            const preview = getMessagePreview(lastMessage);
+            const previewForSelf = preview === "Photo" ? "You sent a photo" : preview === "Attachment" ? "You sent an attachment" : `You: ${preview}`;
             const previewLine = lastFromMeAndSeen
               ? `Seen ${formatRelativeTime(otherLastRead!)} ago`
               : !isOneToOne && isFromMe && groupReadCount > 0
                 ? `Read by ${groupReadCount}`
                 : isFromMe
-                  ? `You: ${preview}`
+                  ? previewForSelf
                   : preview;
             const muted = (channel.state?.membership as { channel_muted?: boolean } | undefined)?.channel_muted ?? false;
             const time = getLastMessageTime(channel);
@@ -514,11 +561,14 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
             const isGroup = memberCount > 2 || channel.type === "team";
             const textLower = (lastMessage?.text || "").toLowerCase();
             const meName = getCurrentUserName(channel, client.userID!)?.toLowerCase();
+            const mentionedUsers = lastMessage?.mentioned_users ?? [];
+            const mentionsByMetadata = mentionedUsers.some((u) => (u.id ?? "").toLowerCase() === client.userID!.toLowerCase());
             const mentionsCurrentUser =
               isGroup &&
               !isFromMe &&
-              !!lastMessage?.text &&
-              (textLower.includes(`@${client.userID!.toLowerCase()}`) || (meName ? textLower.includes(`@${meName}`) : false));
+              (mentionsByMetadata ||
+                (!!lastMessage?.text &&
+                  (textLower.includes(`@${client.userID!.toLowerCase()}`) || (meName ? textLower.includes(`@${meName}`) : false))));
             const isRecent = !!time && Date.now() - time.getTime() <= 10 * 60 * 1000;
 
             const isEvent = isEventChannel(channel);
@@ -683,7 +733,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                   }}
                   onMarkUnread={async () => {
                     try {
-                      const last = channel.state?.messages?.[0] as { id?: string } | undefined;
+                    const last = getLatestMessage(channel) as { id?: string } | undefined;
                       if (last?.id && typeof (channel as unknown as { markUnread?: (opts: { message_id: string }) => Promise<unknown> }).markUnread === "function") {
                         await (channel as unknown as { markUnread: (opts: { message_id: string }) => Promise<unknown> }).markUnread({
                           message_id: last.id,

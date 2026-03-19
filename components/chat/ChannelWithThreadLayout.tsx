@@ -11,6 +11,7 @@ import { ChannelOptionsMenu } from "./ChannelOptionsMenu";
 import { ConnectionBanner } from "./ConnectionBanner";
 import { GroupMembersOpenProvider, useGroupMembersOpen } from "./GroupMembersOpenContext";
 import { GroupMembersSheet } from "./GroupMembersSheet";
+import { ViewOnceMessage } from "./ViewOnceMessage";
 
 /**
  * Renders channel main panel and thread panel. When a thread is open:
@@ -19,7 +20,7 @@ import { GroupMembersSheet } from "./GroupMembersSheet";
  */
 function ChannelWithThreadLayoutInner() {
   const messageActions = ["reply", "react", "edit", "delete", "markUnread", "pin", "quote", "flag", "mute"] as const;
-  const { thread } = useChannelStateContext();
+  const { thread, channel } = useChannelStateContext();
   const { HeaderComponent } = useComponentContext();
   const groupMembersOpen = useGroupMembersOpen();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -45,6 +46,60 @@ function ChannelWithThreadLayoutInner() {
     window.addEventListener("chat-forward-request", onForwardRequest);
     return () => window.removeEventListener("chat-forward-request", onForwardRequest);
   }, []);
+
+  const customThreadMessageActions = useMemo(
+    () => ({
+      Forward: (message: { id?: string; text?: string; user?: { id?: string } }) => {
+        if (typeof window === "undefined") return;
+        window.dispatchEvent(
+          new CustomEvent("chat-forward-request", {
+            detail: {
+              messageId: message?.id,
+              text: message?.text ?? "",
+              senderId: message?.user?.id,
+              sourceChannelId: channel?.id ?? "",
+            },
+          })
+        );
+      },
+      "Star message": async (message: { id?: string; text?: string; user?: { id?: string; name?: string } }) => {
+        if (!message?.id || !channel?.id) return;
+        const res = await fetch("/api/me/starred-messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messageId: message.id,
+            channelId: channel.id,
+            channelType: channel.type === "team" ? "team" : "messaging",
+            senderId: message.user?.id,
+            senderName: message.user?.name,
+            textPreview: message.text ?? "",
+          }),
+        });
+        if (!res.ok) {
+          console.warn("[thread][starred] failed to star message", {
+            messageId: message.id,
+            channelId: channel.id,
+            status: res.status,
+          });
+        }
+      },
+      "Unstar message": async (message: { id?: string }) => {
+        if (!message?.id || !channel?.id) return;
+        const res = await fetch(`/api/me/starred-messages/${encodeURIComponent(message.id)}?channelId=${encodeURIComponent(channel.id)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          console.warn("[thread][starred] failed to unstar message", {
+            messageId: message.id,
+            channelId: channel.id,
+            status: res.status,
+          });
+        }
+      },
+    }),
+    [channel?.id, channel?.type]
+  );
 
   return (
     <div className="flex flex-1 min-h-0 min-w-0">
@@ -99,6 +154,10 @@ function ChannelWithThreadLayoutInner() {
           <Thread
             fullWidth
             messageActions={[...messageActions]}
+            Message={ViewOnceMessage}
+            additionalMessageListProps={{
+              customMessageActions: customThreadMessageActions,
+            }}
           />
         </div>
       )}
@@ -213,7 +272,12 @@ function ForwardPickerModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-10 h-1 rounded-full bg-[var(--ig-border)] mx-auto mb-2" aria-hidden />
-        <h3 className="text-base font-semibold text-[var(--ig-text)] mb-2">Forward message</h3>
+        <h3 className="text-base font-semibold text-[var(--ig-text)] mb-2 inline-flex items-center gap-2">
+          <svg className="w-5 h-5 text-[var(--ig-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8l-6 4 6 4V8zM9 8v8" />
+          </svg>
+          Forward message
+        </h3>
         <input
           type="search"
           placeholder="Search chats..."
@@ -240,7 +304,12 @@ function ForwardPickerModal({
                       {getTargetChannelDisplayName(ch, client?.userID ?? "")}
                     </span>
                     {ch.id && selectedIds.has(ch.id) && (
-                      <span className="text-xs text-[var(--ig-link)] font-semibold">Selected</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-[var(--ig-link)] font-semibold">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Selected
+                      </span>
                     )}
                   </button>
                 </li>
@@ -252,15 +321,21 @@ function ForwardPickerModal({
           type="button"
           onClick={handleForwardSelected}
           disabled={selectedIds.size === 0 || sending}
-          className="mt-2 w-full px-3 py-2 rounded-lg bg-[var(--ig-text)] text-[var(--ig-bg-primary)] disabled:opacity-50"
+          className="mt-2 w-full px-3 py-2 rounded-lg bg-[var(--ig-text)] text-[var(--ig-bg-primary)] disabled:opacity-50 inline-flex items-center justify-center gap-2"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8l-6 4 6 4V8zM9 8v8" />
+          </svg>
           {sending ? "Forwarding..." : `Forward to ${selectedIds.size}`}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="mt-2 w-full px-3 py-2 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+          className="mt-2 w-full px-3 py-2 rounded-lg border border-[var(--ig-border)] text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] inline-flex items-center justify-center gap-2"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
           Cancel
         </button>
       </div>
