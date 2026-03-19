@@ -86,8 +86,9 @@ export function ComposeView({
           </div>
         </div>
       )}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="max-w-xl mx-auto space-y-5">
+      <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto p-4">
+          <div className="max-w-xl mx-auto space-y-5">
           {/* Post content — elevated card with label */}
           <div className="post-flow-section p-4">
             <label htmlFor="compose-caption" className="post-flow-section-title block mb-3 flex items-center gap-2">
@@ -158,24 +159,44 @@ export function ComposeView({
             <MediaStrip items={items} onItemsChange={onItemsChange} onEditImage={onEditImage} />
           </div>
 
-          {/* Preview */}
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={handlePreviewClick}
-              className="w-full min-h-[44px] px-4 py-3 rounded-xl post-flow-cta text-sm font-semibold transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-              </svg>
-              Preview post
-            </button>
-          </div>
-
           {error && (
             <p role="alert" className="text-sm font-medium text-[var(--ig-error)] py-2">{error}</p>
           )}
+          </div>
+        </div>
+
+        {/* Bottom actions */}
+        <div className="shrink-0 p-4 pt-0">
+          <div className="max-w-xl mx-auto grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handlePreviewClick}
+              className="w-full min-h-[44px] px-4 py-3 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-semibold hover:bg-[var(--ig-border-light)] transition-all duration-200 active:scale-[0.99]"
+            >
+              <span className="inline-flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+                </svg>
+                Preview
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onPost}
+              disabled={!canPost || saving}
+              className="w-full min-h-[44px] post-flow-cta px-4 py-3 rounded-xl text-sm font-semibold disabled:opacity-50 transition-all duration-200 active:scale-[0.99] disabled:pointer-events-none"
+            >
+              <span className="inline-flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l1.2 4.6L18 8l-4.8 1.4L12 14l-1.2-4.6L6 8l4.8-1.4L12 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 13l.8 3 3 .8-3 .8-.8 3-.8-3-3-.8 3-.8.8-3z" />
+                </svg>
+                {saving ? "Posting…" : "Post"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
