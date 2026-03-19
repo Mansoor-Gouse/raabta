@@ -26,9 +26,11 @@ export function PostPreviewCard({
   // Blob URLs often don't have file extensions, so extension-based detection breaks.
   // We try image first, then fall back to video if image decoding fails.
   const [mediaMode, setMediaMode] = useState<"image" | "video">("image");
+  const [mediaAspectRatio, setMediaAspectRatio] = useState<string>("16 / 10");
 
   useEffect(() => {
     setMediaMode("image");
+    setMediaAspectRatio("16 / 10");
   }, [firstUrl]);
 
   return (
@@ -63,18 +65,27 @@ export function PostPreviewCard({
 
       {/* Media — rectangular, same aspect as PostCard; ensure image fills and displays */}
       {mediaUrls.length > 0 && (
-        <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: "16/10", minHeight: "160px" }}>
+        <div
+          className="relative w-full bg-black overflow-hidden"
+          style={{ aspectRatio: mediaAspectRatio, minHeight: "120px" }}
+        >
           {firstUrl ? (
             <>
               {mediaMode === "image" && (
                 <img
                   src={firstUrl}
                   alt=""
-                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  className="w-full h-full object-cover object-center block"
                   draggable={false}
                   onError={() => {
                     // If it's not an image (e.g. video blob), fall back to video.
                     setMediaMode("video");
+                  }}
+                  onLoad={(e) => {
+                    const { naturalWidth, naturalHeight } = e.currentTarget;
+                    if (naturalWidth > 0 && naturalHeight > 0) {
+                      setMediaAspectRatio(`${naturalWidth} / ${naturalHeight}`);
+                    }
                   }}
                 />
               )}
@@ -84,13 +95,19 @@ export function PostPreviewCard({
                   <video
                     key={firstUrl}
                     src={firstUrl}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                    preload="auto"
+                    className="w-full h-full object-cover object-center block"
+                    preload="metadata"
                     muted
                     playsInline
                     autoPlay
                     loop
                     aria-hidden
+                    onLoadedMetadata={(e) => {
+                      const v = e.currentTarget;
+                      if (v.videoWidth > 0 && v.videoHeight > 0) {
+                        setMediaAspectRatio(`${v.videoWidth} / ${v.videoHeight}`);
+                      }
+                    }}
                     onLoadedData={(e) => {
                       // Ensure the preview shows from the start across browsers.
                       try {
