@@ -74,11 +74,14 @@ export function useTotalUnreadCount(): number {
   useEffect(() => {
     if (!client) return;
     const onMarkRead = () => debouncedFetchTotal();
+    const onMarkUnread = () => debouncedFetchTotal();
     const onMessageNew = () => debouncedFetchTotal();
     client.on("notification.mark_read", onMarkRead);
+    client.on("notification.mark_unread", onMarkUnread);
     client.on("message.new", onMessageNew);
     return () => {
       client.off("notification.mark_read", onMarkRead);
+      client.off("notification.mark_unread", onMarkUnread);
       client.off("message.new", onMessageNew);
     };
   }, [client, debouncedFetchTotal]);

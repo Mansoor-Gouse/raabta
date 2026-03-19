@@ -5,6 +5,8 @@ import { sendPushToUserAsync } from "@/lib/pushSend";
 import { BlockModel } from "@/lib/db";
 
 const STREAM_SECRET = process.env.STREAM_SECRET || "";
+const PUSH_COOLDOWN_MS = 8000;
+const pushCooldownCache = new Map<string, number>();
 
 function base64UrlToBuffer(input: string): Buffer | null {
   try {
@@ -172,9 +174,26 @@ export async function POST(request: NextRequest) {
       dmPushSuppressed: isOneToOneDm && recipientsToNotify.length === 0,
     });
     for (const userId of recipientsToNotify) {
+      const cooldownKey = `${userId}:${channelId}`;
+      const now = Date.now();
+      const lastSentAt = pushCooldownCache.get(cooldownKey) ?? 0;
+      if (now - lastSentAt < PUSH_COOLDOWN_MS) {
+        console.log("[webhooks/stream] push coalesced", {
+          userId,
+          channelId,
+          cooldownMs: PUSH_COOLDOWN_MS,
+        });
+        continue;
+      }
+      pushCooldownCache.set(cooldownKey, now);
+
+      const title = isOneToOneDm
+        ? senderName
+        : `${senderName} in ${channelType === "team" ? "group" : "chat"}`;
+      const body = text || (isOneToOneDm ? "New message" : "New group message");
       sendPushToUserAsync(userId, {
-        title: senderName,
-        body: text || "New message",
+        title,
+        body,
         url,
       });
     }

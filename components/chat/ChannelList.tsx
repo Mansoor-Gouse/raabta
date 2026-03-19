@@ -33,6 +33,13 @@ function getOtherMember(channel: StreamChannel, currentUserId: string): OtherUse
   return { name: user.name, id: user.id, image: user.image };
 }
 
+function getCurrentUserName(channel: StreamChannel, currentUserId: string): string | undefined {
+  const members = channel.state?.members ?? {};
+  const me = Object.values(members).find((m) => (m.user_id ?? (m.user as { id?: string })?.id) === currentUserId);
+  const user = me?.user as { name?: string } | undefined;
+  return user?.name;
+}
+
 function getLastMessageTime(channel: StreamChannel): Date | null {
   const msg = channel.state?.messages?.[0];
   if (msg?.created_at) return new Date(msg.created_at as unknown as string | number);
@@ -160,6 +167,13 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
         [...messaging, ...team].forEach((c) => byId.set(c.id, c));
         const merged = Array.from(byId.values()).sort(compareChannelsByRecencyThenUnread);
         setChannels(merged);
+        if (process.env.NODE_ENV !== "production") {
+          console.info("[chat-list] channels refreshed", {
+            silent,
+            total: merged.length,
+            showArchived,
+          });
+        }
       })
       .catch(console.error)
       .finally(() => {
@@ -176,6 +190,12 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
 
   const scheduleRefresh = useCallback(
     (options?: { silent?: boolean }) => {
+      if (process.env.NODE_ENV !== "production") {
+        console.info("[chat-list] schedule refresh", {
+          silent: options?.silent === true,
+          debounceMs: LIST_REFRESH_DEBOUNCE_MS,
+        });
+      }
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
       refreshTimerRef.current = setTimeout(() => {
         refreshTimerRef.current = null;
@@ -435,6 +455,14 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
             const time = getLastMessageTime(channel);
             const unreadCount = getSafeUnreadCount(channel);
             const hasUnread = unreadCount > 0;
+            const isGroup = memberCount > 2 || channel.type === "team";
+            const textLower = (lastMessage?.text || "").toLowerCase();
+            const meName = getCurrentUserName(channel, client.userID!)?.toLowerCase();
+            const mentionsCurrentUser =
+              isGroup &&
+              !isFromMe &&
+              !!lastMessage?.text &&
+              (textLower.includes(`@${client.userID!.toLowerCase()}`) || (meName ? textLower.includes(`@${meName}`) : false));
 
             const isEvent = isEventChannel(channel);
             const channelImage = isEvent ? getChannelDisplayImage(channel) : undefined;
@@ -468,27 +496,38 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                     </div>
                     <div className="flex-1 min-w-0 pr-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold text-[var(--ig-text)] truncate">
+                        <span className={`truncate ${hasUnread ? "font-bold text-[var(--ig-text)]" : "font-semibold text-[var(--ig-text)]"}`}>
                           {channelName}
                         </span>
                         {time && (
-                          <span className="text-xs text-[var(--ig-text-secondary)] shrink-0" title={time.toLocaleString()}>
+                          <span
+                            className={`text-xs shrink-0 ${hasUnread ? "text-[var(--ig-text)] font-semibold" : "text-[var(--ig-text-secondary)]"}`}
+                            title={time.toLocaleString()}
+                          >
                             {formatRelativeTime(time)}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <span className="text-sm text-[var(--ig-text-secondary)] truncate">
+                        <span className={`text-sm truncate ${hasUnread ? "text-[var(--ig-text)] font-medium" : "text-[var(--ig-text-secondary)]"}`}>
+                          {mentionsCurrentUser && (
+                            <span className="text-[var(--ig-link)] mr-1 font-semibold" aria-label="Mentioned you">
+                              @
+                            </span>
+                          )}
                           {previewLine}
                         </span>
-                        {hasUnread && (
-                          <span
-                            className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--ig-text)] text-white text-[10px] font-semibold px-1.5"
-                            aria-label={`${unreadCount} unread`}
-                          >
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
+                        <div className="shrink-0 flex items-center gap-1">
+                          {hasUnread && <span className="w-1.5 h-1.5 rounded-full bg-[var(--ig-link)]" aria-hidden />}
+                          {hasUnread && (
+                            <span
+                              className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--ig-link)] text-white text-[10px] font-semibold px-1.5"
+                              aria-label={`${unreadCount} unread`}
+                            >
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>

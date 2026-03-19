@@ -45,6 +45,7 @@ function BlockedGuard({
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [blockedLoaded, setBlockedLoaded] = useState(false);
   const [blockedFetchFailed, setBlockedFetchFailed] = useState(false);
+  const [hasLoggedBlockedView, setHasLoggedBlockedView] = useState(false);
 
   const refreshBlocked = useCallback(async () => {
     try {
@@ -81,6 +82,22 @@ function BlockedGuard({
   const is1to1 = enabled && isOneToOneChannel(members, currentUserId);
   const otherUserId = getOtherUserId(members, currentUserId);
   const isBlocked = is1to1 && !!otherUserId && blockedIds.includes(otherUserId);
+
+  useEffect(() => {
+    if (!isBlocked || hasLoggedBlockedView) return;
+    console.info("[block-flow] blocked guard shown", {
+      channelId: channel?.id,
+      otherUserId,
+    });
+    setHasLoggedBlockedView(true);
+  }, [isBlocked, hasLoggedBlockedView, channel?.id, otherUserId]);
+
+  useEffect(() => {
+    if (!blockedFetchFailed) return;
+    console.warn("[block-flow] blocked list fetch failed", {
+      channelId: channel?.id,
+    });
+  }, [blockedFetchFailed, channel?.id]);
 
   if (isBlocked) return <BlockedChatPlaceholder />;
   if (!enabled || !is1to1) return <>{children}</>;

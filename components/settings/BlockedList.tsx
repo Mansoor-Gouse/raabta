@@ -17,10 +17,13 @@ export function BlockedList() {
   async function handleUnblock(userId: string) {
     const res = await fetch("/api/me/block/" + encodeURIComponent(userId), { method: "DELETE" });
     if (res.ok) {
+      console.info("[block-flow] unblock success", { unblockedUserId: userId });
       setBlockedIds((prev) => prev.filter((id) => id !== userId));
       window.dispatchEvent(
         new CustomEvent("blocked-users-updated", { detail: { unblockedUserId: userId } })
       );
+    } else {
+      console.warn("[block-flow] unblock failed", { unblockedUserId: userId, status: res.status });
     }
   }
 

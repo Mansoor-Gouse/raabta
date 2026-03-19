@@ -28,11 +28,22 @@ export function ChannelOptionsMenu() {
       body: JSON.stringify({ userId: otherUserId }),
     });
     if (res.ok) {
+      console.info("[block-flow] block success", {
+        blockedUserId: otherUserId,
+        channelId: channel?.id,
+        channelType: channel?.type,
+      });
       setOpen(false);
       // Update chats UI without a full page refresh.
       window.dispatchEvent(
         new CustomEvent("blocked-users-updated", { detail: { blockedUserId: otherUserId } })
       );
+    } else {
+      console.warn("[block-flow] block failed", {
+        blockedUserId: otherUserId,
+        status: res.status,
+        channelId: channel?.id,
+      });
     }
   }
 
