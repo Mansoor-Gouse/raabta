@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { IconHeart, IconComment, IconShare, IconBookmark } from "@/components/layout/InstagramIcons";
 import type { Visibility } from "./CaptionStep";
 import { VISIBILITY_LABELS } from "@/lib/visibility";
@@ -22,7 +23,13 @@ export function PostPreviewCard({
   authorImage,
 }: PostPreviewCardProps) {
   const firstUrl = mediaUrls[0];
-  const isImage = firstUrl?.match(/\.(gif|webp|png|jpe?g|avif)$/i);
+  // Blob URLs often don't have file extensions, so extension-based detection breaks.
+  // We try image first, then fall back to video if image decoding fails.
+  const [mediaMode, setMediaMode] = useState<"image" | "video">("image");
+
+  useEffect(() => {
+    setMediaMode("image");
+  }, [firstUrl]);
 
   return (
     <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden max-w-md mx-auto shadow-sm">
@@ -58,43 +65,51 @@ export function PostPreviewCard({
       {mediaUrls.length > 0 && (
         <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: "16/10", minHeight: "160px" }}>
           {firstUrl ? (
-            isImage ? (
-              <img
-                src={firstUrl}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover object-center"
-                draggable={false}
-              />
-            ) : (
-              <>
-                <video
-                  key={firstUrl}
+            <>
+              {mediaMode === "image" && (
+                <img
                   src={firstUrl}
+                  alt=""
                   className="absolute inset-0 w-full h-full object-cover object-center"
-                  preload="auto"
-                  muted
-                  playsInline
-                  autoPlay
-                  loop
-                  onLoadedData={(e) => {
-                    // Ensure the preview shows from the start across browsers.
-                    try {
-                      e.currentTarget.currentTime = 0;
-                    } catch {
-                      // ignore
-                    }
+                  draggable={false}
+                  onError={() => {
+                    // If it's not an image (e.g. video blob), fall back to video.
+                    setMediaMode("video");
                   }}
-                  aria-hidden
                 />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
-                    <svg className="w-7 h-7 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </span>
-                </div>
-              </>
-            )
+              )}
+
+              {mediaMode === "video" && (
+                <>
+                  <video
+                    key={firstUrl}
+                    src={firstUrl}
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    preload="auto"
+                    muted
+                    playsInline
+                    autoPlay
+                    loop
+                    aria-hidden
+                    onLoadedData={(e) => {
+                      // Ensure the preview shows from the start across browsers.
+                      try {
+                        e.currentTarget.currentTime = 0;
+                      } catch {
+                        // ignore
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
+                      <svg className="w-7 h-7 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--ig-text-secondary)]">
               No media

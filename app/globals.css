@@ -1084,16 +1084,11 @@ textarea:focus-visible {
   .str-chat__popover,
   .str-chat__menu,
   .str-chat__reactions-list,
-  .str-chat__message-actions,
-  .str-chat__edit,
-  .str-chat__edit-message,
   .str-chat [role="dialog"],
   .str-chat [aria-modal="true"],
   .str-chat .ngxp__container,
   .str-chat .float-ui-container,
-  [class*="str-chat__message-reactions"],
-  [class*="str-chat__message-actions"],
-  [class*="str-chat__edit"] {
+  [class*="str-chat__message-reactions"] {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
@@ -1134,8 +1129,7 @@ textarea:focus-visible {
   /* Make Stream dialogs use a predictable sheet layout */
   .str-chat__dialog,
   .str-chat__modal,
-  .str-chat__message-actions,
-  .str-chat__edit-message {
+  .str-chat__message-actions-box {
     display: flex !important;
     flex-direction: column !important;
   }
