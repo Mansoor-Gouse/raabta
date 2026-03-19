@@ -60,6 +60,17 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
   const activeIndexRef = useRef<SegmentIndex>(0);
   const loadingMoreRef = useRef(false);
 
+  const [tabsHidden, setTabsHidden] = useState(false);
+  const tabsHiddenRef = useRef(false);
+
+  const dispatchChromeHidden = useCallback((hidden: boolean) => {
+    if (typeof window === "undefined") return;
+    if (tabsHiddenRef.current === hidden) return;
+    tabsHiddenRef.current = hidden;
+    setTabsHidden(hidden);
+    window.dispatchEvent(new CustomEvent("rope:feedChromeHidden", { detail: { hidden } }));
+  }, []);
+
   useEffect(() => {
     activeIndexRef.current = activeIndex;
   }, [activeIndex]);
@@ -71,8 +82,34 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
 
   const handlePanelScroll = useCallback(() => {
     const panel = activeIndexRef.current === 0 ? postsPanelRef.current : storiesPanelRef.current;
-    if (panel) lastScrollTopRef.current = panel.scrollTop;
-  }, []);
+    if (!panel) return;
+    const newTop = panel.scrollTop;
+    const delta = newTop - lastScrollTopRef.current;
+    const absDelta = Math.abs(delta);
+    // Avoid reacting to tiny scroll jitter.
+    if (absDelta < 8) {
+      lastScrollTopRef.current = newTop;
+      return;
+    }
+    if (delta > 0) dispatchChromeHidden(true);
+    else dispatchChromeHidden(false);
+    lastScrollTopRef.current = newTop;
+  }, [dispatchChromeHidden]);
+
+  useEffect(() => {
+    // Reset chrome when feed panel becomes inactive.
+    if (!isActive) {
+      dispatchChromeHidden(false);
+      setTabsHidden(false);
+    }
+  }, [isActive, dispatchChromeHidden]);
+
+  useEffect(() => {
+    // Ensure chrome is restored on unmount.
+    return () => {
+      dispatchChromeHidden(false);
+    };
+  }, [dispatchChromeHidden]);
 
   const scrollToIndex = useCallback((index: SegmentIndex) => {
     const el = scrollRef.current;
@@ -213,7 +250,13 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
       {/* Sticky header inside feed panel: title (optional) + segment tabs */}
-      <div className="sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+      <div
+        className={[
+          "sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] overflow-hidden",
+          "transition-[max-height,opacity] duration-200 ease-out",
+          tabsHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-[120px] opacity-100 pointer-events-auto",
+        ].join(" ")}
+      >
         {showTitle && (
           <div className="flex items-center px-4 py-2.5">
             <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>

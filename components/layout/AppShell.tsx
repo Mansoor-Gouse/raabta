@@ -69,7 +69,7 @@ export function AppShell({
   const isStatusFlow = pathname === "/app/status" || pathname.startsWith("/app/status/");
   const isNewPostFlow = pathname === "/app/feed/new" || pathname.startsWith("/app/feed/new/");
   const isChatsPage = pathname === "/app/chats";
-  const [feedVideoPlaying, setFeedVideoPlaying] = useState(false);
+  const [feedChromeHidden, setFeedChromeHidden] = useState(false);
 
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
 
@@ -92,11 +92,16 @@ export function AppShell({
     if (typeof window === "undefined") return;
     const handler = (e: Event) => {
       const ce = e as CustomEvent;
-      setFeedVideoPlaying(!!ce.detail?.playing);
+      const hidden = !!ce.detail?.hidden;
+      setFeedChromeHidden(hidden);
     };
-    window.addEventListener("rope:feedVideoPlaying", handler as EventListener);
-    return () => window.removeEventListener("rope:feedVideoPlaying", handler as EventListener);
+    window.addEventListener("rope:feedChromeHidden", handler as EventListener);
+    return () => window.removeEventListener("rope:feedChromeHidden", handler as EventListener);
   }, []);
+
+  useEffect(() => {
+    if (!pathname.startsWith("/app/feed")) setFeedChromeHidden(false);
+  }, [pathname]);
 
   useEffect(() => {
     function onBlockedUpdated(e: Event) {
@@ -200,8 +205,8 @@ export function AppShell({
           </AppUserContext.Provider>
         </main>
 
-        {/* Bottom navigation: hidden on channel/status/new-post flow; also hide while feed video plays */}
-        {!isChannelScreen && !isStatusFlow && !isNewPostFlow && !(pathname.startsWith("/app/feed") && feedVideoPlaying) && (
+        {/* Bottom navigation: hidden on channel/status/new-post flow; also hide while scrolling down in feed */}
+        {!isChannelScreen && !isStatusFlow && !isNewPostFlow && !(pathname.startsWith("/app/feed") && feedChromeHidden) && (
         <nav
           className="md:hidden shrink-0 flex items-center justify-around h-[50px] border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
           style={{ paddingBottom: "var(--safe-area-inset-bottom)" }}

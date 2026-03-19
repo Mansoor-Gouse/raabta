@@ -57,7 +57,6 @@ export function PostCard({
   onOpenLikes?: (postId: string) => void;
   onShare?: (post: PostCardPost) => void;
 }) {
-  const VIDEO_PLAYING_EVENT = "rope:feedVideoPlaying";
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [saved, setSaved] = useState(post.savedByMe);
@@ -74,20 +73,31 @@ export function PostCard({
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [mediaAspectRatio, setMediaAspectRatio] = useState<string>("16 / 10");
   const [mediaFullScreenOpen, setMediaFullScreenOpen] = useState(false);
+  const cardRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+  const userPausedRef = useRef(false);
 
   const isAuthor = currentUserId && post.authorId === currentUserId;
 
   const isVideoUrl = (url: string) => !url.match(/\.(gif|webp|png|jpe?g|avif)$/i);
 
-  // Let the app hide global chrome while a feed video is playing.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.dispatchEvent(
-      new CustomEvent(VIDEO_PLAYING_EVENT, {
-        detail: { playing: videoPlaying, postId: post._id },
-      })
+    if (!cardRef.current) return;
+    const el = cardRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setInView(!!entry?.isIntersecting);
+      },
+      {
+        threshold: 0.6,
+        rootMargin: "0px 0px -20% 0px",
+      }
     );
-  }, [videoPlaying, post._id]);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const toggleLike = useCallback(async () => {
     triggerHaptic();
@@ -208,6 +218,31 @@ export function PostCard({
     else videoRef.current?.pause();
   }, [mediaIndex, currentIsVideo]);
 
+  // Instagram-like autoplay: play when the card is in view, pause when out.
+  useEffect(() => {
+    if (!currentIsVideo) return;
+    if (mediaFullScreenOpen) {
+      videoRef.current?.pause();
+      setVideoPlaying(false);
+      return;
+    }
+
+    if (inView) {
+      if (!userPausedRef.current) {
+        videoRef.current?.play().then(() => {
+          setVideoPlaying(true);
+        }).catch(() => {
+          // Autoplay can be blocked; keep UI consistent.
+          setVideoPlaying(false);
+        });
+      }
+    } else {
+      userPausedRef.current = false;
+      videoRef.current?.pause();
+      setVideoPlaying(false);
+    }
+  }, [inView, currentIsVideo, mediaFullScreenOpen]);
+
   const prevMediaKeyRef = useRef<string | null>(null);
   useEffect(() => {
     const key = `${mediaIndex}:${media ?? ""}`;
@@ -226,9 +261,11 @@ export function PostCard({
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
+      userPausedRef.current = false;
       video.play().catch(() => {});
       setVideoPlaying(true);
     } else {
+      userPausedRef.current = true;
       video.pause();
       setVideoPlaying(false);
     }
@@ -244,7 +281,7 @@ export function PostCard({
   const likedSampleInitial = likedSampleName?.charAt(0)?.toUpperCase() || "?";
 
   return (
-    <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm">
+    <article ref={cardRef as React.RefObject<HTMLElement>} className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm">
       {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
       {likedSampleName && likeCount > 0 && (
         <button
@@ -421,7 +458,7 @@ export function PostCard({
                     }`}
                     playsInline
                     loop
-                    muted={false}
+                    muted
                     onClick={toggleVideoPlay}
                     onPlay={() => setVideoPlaying(true)}
                     onPause={() => setVideoPlaying(false)}

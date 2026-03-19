@@ -19,7 +19,7 @@ export function FeedEventsScrollView() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
   const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [feedVideoPlaying, setFeedVideoPlaying] = useState(false);
+  const [feedChromeHidden, setFeedChromeHidden] = useState(false);
 
   const currentIndex = ROUTES.indexOf(pathname as (typeof ROUTES)[number]);
   const panelIndex: PanelIndex = (currentIndex >= 0 ? currentIndex : 0) as PanelIndex;
@@ -97,25 +97,32 @@ export function FeedEventsScrollView() {
     if (typeof window === "undefined") return;
     const handler = (e: Event) => {
       const ce = e as CustomEvent;
-      const playing = !!ce.detail?.playing;
-      setFeedVideoPlaying(playing);
+      const hidden = !!ce.detail?.hidden;
+      setFeedChromeHidden(hidden);
     };
-    window.addEventListener("rope:feedVideoPlaying", handler as EventListener);
-    return () => window.removeEventListener("rope:feedVideoPlaying", handler as EventListener);
+    window.addEventListener("rope:feedChromeHidden", handler as EventListener);
+    return () => window.removeEventListener("rope:feedChromeHidden", handler as EventListener);
   }, []);
 
   const isFeedRoute = pathname.startsWith("/app/feed");
 
+  useEffect(() => {
+    if (!isFeedRoute) setFeedChromeHidden(false);
+  }, [isFeedRoute]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--ig-bg)]">
       {/* Global sticky title header: stays fixed across sections */}
-      {!(isFeedRoute && feedVideoPlaying) && (
-        <div className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)]">
-          <div className="flex items-center px-4 py-2.5">
-            <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
-          </div>
+      <div
+        className={[
+          "shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)] overflow-hidden transition-[max-height] duration-200 ease-out",
+          isFeedRoute && feedChromeHidden ? "max-h-0" : "max-h-[64px]",
+        ].join(" ")}
+      >
+        <div className="flex items-center px-4 py-2.5">
+          <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
         </div>
-      )}
+      </div>
 
       {/* Horizontal strip of main sections */}
       <div
