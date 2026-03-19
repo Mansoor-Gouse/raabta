@@ -13,10 +13,19 @@ self.addEventListener("push", function (event) {
   const body = payload.body || "";
   const url = payload.url || "/";
   const icon = payload.icon || "/icon-192.png";
+  const badge = payload.badge || "/icon-192.png";
+  const tag = payload.tag || undefined;
+  const renotify = payload.renotify === true;
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
       icon,
+      badge,
+      tag,
+      renotify,
+      // Keep mobile behavior predictable and similar to chat apps.
+      requireInteraction: false,
+      vibrate: [80, 40, 80],
       data: { url },
     })
   );

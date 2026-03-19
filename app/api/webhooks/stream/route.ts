@@ -151,7 +151,8 @@ export async function POST(request: NextRequest) {
     const base =
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-    const url = base ? `${base}/app/channel/${channelId}` : `/app/channel/${channelId}`;
+    const channelPath = `/app/channel/${channelId}${channelType === "team" ? "?type=team" : ""}`;
+    const url = base ? `${base}${channelPath}` : channelPath;
 
     const isOneToOneDm = channelType === "messaging" && memberIds.length === 1;
     let recipientsToNotify = memberIds;
@@ -191,10 +192,15 @@ export async function POST(request: NextRequest) {
         ? senderName
         : `${senderName} in ${channelType === "team" ? "group" : "chat"}`;
       const body = text || (isOneToOneDm ? "New message" : "New group message");
+      const tag = `chat:${channelType}:${channelId}`;
       sendPushToUserAsync(userId, {
         title,
         body,
         url,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag,
+        renotify: false,
       });
     }
 

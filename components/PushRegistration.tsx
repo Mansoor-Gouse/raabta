@@ -3,7 +3,9 @@
 import React, { useCallback, useState } from "react";
 
 const STORAGE_KEY_DISMISSED = "push_prompt_dismissed";
+const STORAGE_KEY_LAST_SYNC = "push_subscription_last_sync_ms";
 const SW_PATH = "/sw.js";
+const SUBSCRIPTION_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "==".slice(0, (4 - (base64String.length % 4)) % 4);
@@ -69,6 +71,70 @@ export async function registerForPush(): Promise<PushRegisterResult> {
   }
 }
 
+async function ensurePushSubscriptionSynced(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  if (!vapid?.trim()) return;
+  if (!isSecureContext()) return;
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  const registration = await navigator.serviceWorker.register(SW_PATH);
+  await (registration as unknown as { ready: Promise<ServiceWorkerRegistration> }).ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    const applicationServerKey = urlBase64ToUint8Array(vapid);
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: applicationServerKey as BufferSource,
+    });
+  }
+  await sendSubscriptionToBackend(subscription);
+  try {
+    localStorage.setItem(STORAGE_KEY_LAST_SYNC, String(Date.now()));
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function usePushSubscriptionAutoSync(): void {
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isPushSupported()) return;
+
+    const shouldSync = () => {
+      if (getPushPermission() !== "granted") return false;
+      try {
+        const last = Number(localStorage.getItem(STORAGE_KEY_LAST_SYNC) || "0");
+        return Date.now() - last >= SUBSCRIPTION_SYNC_INTERVAL_MS;
+      } catch {
+        return true;
+      }
+    };
+
+    const maybeSync = () => {
+      if (!shouldSync()) return;
+      void ensurePushSubscriptionSynced().catch((err) => {
+        console.warn("[PushRegistration] auto sync failed", err);
+      });
+    };
+
+    // initial check
+    maybeSync();
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") maybeSync();
+    };
+    const onFocus = () => maybeSync();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+}
+
 async function sendSubscriptionToBackend(subscription: PushSubscription): Promise<void> {
   const keyP256 = subscription.getKey("p256dh");
   const keyAuth = subscription.getKey("auth");
@@ -119,6 +185,20 @@ export function setPushPromptDismissed(dismissed: boolean): void {
     else localStorage.removeItem(STORAGE_KEY_DISMISSED);
   } catch {
     // ignore
+  }
+}
+
+export function getLastPushSyncAt(): Date | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
+    if (!raw) return null;
+    const ts = Number(raw);
+    if (!Number.isFinite(ts) || ts <= 0) return null;
+    const date = new Date(ts);
+    return Number.isFinite(date.getTime()) ? date : null;
+  } catch {
+    return null;
   }
 }
 
@@ -202,6 +282,7 @@ export function PushSettingsSection() {
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("unsupported");
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
 
   const updatePermission = useCallback(() => {
     setPermission(getPushPermission());
@@ -209,6 +290,7 @@ export function PushSettingsSection() {
 
   React.useEffect(() => {
     updatePermission();
+    setLastSyncAt(getLastPushSyncAt());
   }, [updatePermission]);
 
   const handleEnable = useCallback(async () => {
@@ -217,6 +299,7 @@ export function PushSettingsSection() {
     try {
       await registerForPush();
       updatePermission();
+      setLastSyncAt(getLastPushSyncAt());
     } finally {
       setLoading(false);
     }
@@ -272,6 +355,9 @@ export function PushSettingsSection() {
       </p>
       <p className="text-sm text-[var(--ig-text)] mb-2">
         Status: <span className="font-medium">{status}</span>
+      </p>
+      <p className="text-xs text-[var(--ig-text-secondary)] mb-2">
+        Last subscription sync: {lastSyncAt ? lastSyncAt.toLocaleString() : "Not synced yet"}
       </p>
       {permission !== "granted" && (
         <button

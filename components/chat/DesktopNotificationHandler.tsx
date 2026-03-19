@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useChatContext } from "stream-chat-react";
 
 const BODY_MAX_LEN = 80;
+const DESKTOP_NOTIFICATION_COOLDOWN_MS = 6000;
 
 /** Parse pathname /app/channel/[channelId] to get the channel id segment. */
 function getCurrentChannelIdFromPath(pathname: string | null): string | null {
@@ -42,6 +43,16 @@ function getChannelIdFromEvent(event: { cid?: string; channel_id?: string }): st
   return null;
 }
 
+function getChannelTypeFromEvent(event: { cid?: string; channel_type?: string }): "messaging" | "team" {
+  if (event.channel_type === "team") return "team";
+  if (event.cid && typeof event.cid === "string") {
+    const idx = event.cid.indexOf(":");
+    const type = idx >= 0 ? event.cid.slice(0, idx) : event.cid;
+    return type === "team" ? "team" : "messaging";
+  }
+  return "messaging";
+}
+
 function isNotificationSupported(): boolean {
   if (typeof window === "undefined") return false;
   return typeof window.Notification !== "undefined";
@@ -52,6 +63,7 @@ export function DesktopNotificationHandler() {
   const pathname = usePathname();
   const router = useRouter();
   const pathnameRef = useRef(pathname);
+  const lastNotifiedAtRef = useRef<Record<string, number>>({});
   pathnameRef.current = pathname;
 
   useEffect(() => {
@@ -62,6 +74,7 @@ export function DesktopNotificationHandler() {
       user?: { name?: string };
       cid?: string;
       channel_id?: string;
+      channel_type?: string;
     }) => {
       if (typeof document === "undefined" || !document.hidden) return;
       const msg = event?.message;
@@ -69,8 +82,14 @@ export function DesktopNotificationHandler() {
       if (senderId === client.userID) return;
       const channelId = getChannelIdFromEvent(event);
       if (!channelId) return;
+      const channelType = getChannelTypeFromEvent(event);
       const currentChannelId = getCurrentChannelIdFromPath(pathnameRef.current);
       if (currentChannelId === channelId) return;
+      const cooldownKey = `${channelType}:${channelId}`;
+      const now = Date.now();
+      const lastAt = lastNotifiedAtRef.current[cooldownKey] ?? 0;
+      if (now - lastAt < DESKTOP_NOTIFICATION_COOLDOWN_MS) return;
+      lastNotifiedAtRef.current[cooldownKey] = now;
 
       const title = getSenderName(event);
       const body = getMessageBody(msg);
@@ -81,7 +100,7 @@ export function DesktopNotificationHandler() {
         n.onclick = () => {
           n.close();
           window.focus();
-          router.push(`/app/channel/${channelId}`);
+          router.push(`/app/channel/${channelId}${channelType === "team" ? "?type=team" : ""}`);
         };
       };
 

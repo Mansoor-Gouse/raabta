@@ -200,6 +200,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const [swipedChannelId, setSwipedChannelId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<{ channelId: string; offset: number } | null>(null);
   const [pullY, setPullY] = useState(0);
+  const [typingByChannel, setTypingByChannel] = useState<Record<string, boolean>>({});
   const pullStartY = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -261,17 +262,35 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
 
   useEffect(() => {
     if (!client) return;
-    const onMessageNew = () => scheduleRefresh({ silent: true });
+    const onMessageNew = (event: unknown) => {
+      const e = event as { cid?: string };
+      if (e?.cid) {
+        setTypingByChannel((prev) => ({ ...prev, [e.cid!]: false }));
+      }
+      scheduleRefresh({ silent: true });
+    };
     const onMarkRead = () => scheduleRefresh({ silent: true });
     const onMarkUnread = () => scheduleRefresh({ silent: true });
     const onAddedToChannel = () => scheduleRefresh({ silent: true });
     const onRemovedFromChannel = () => scheduleRefresh({ silent: true });
+    const onTypingStart = (event: unknown) => {
+      const e = event as { cid?: string; user?: { id?: string } };
+      if (!e?.cid || !client.userID || e.user?.id === client.userID) return;
+      setTypingByChannel((prev) => ({ ...prev, [e.cid!]: true }));
+    };
+    const onTypingStop = (event: unknown) => {
+      const e = event as { cid?: string; user?: { id?: string } };
+      if (!e?.cid || !client.userID || e.user?.id === client.userID) return;
+      setTypingByChannel((prev) => ({ ...prev, [e.cid!]: false }));
+    };
 
     client.on("message.new", onMessageNew);
     client.on("notification.mark_read", onMarkRead);
     client.on("notification.mark_unread", onMarkUnread);
     client.on("notification.added_to_channel", onAddedToChannel);
     client.on("notification.removed_from_channel", onRemovedFromChannel);
+    client.on("typing.start", onTypingStart);
+    client.on("typing.stop", onTypingStop);
 
     return () => {
       client.off("message.new", onMessageNew);
@@ -279,6 +298,8 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
       client.off("notification.mark_unread", onMarkUnread);
       client.off("notification.added_to_channel", onAddedToChannel);
       client.off("notification.removed_from_channel", onRemovedFromChannel);
+      client.off("typing.start", onTypingStart);
+      client.off("typing.stop", onTypingStop);
     };
   }, [client, scheduleRefresh]);
 
@@ -319,6 +340,22 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
 
   const blockedSet = useMemo(() => new Set(blockedUserIds ?? []), [blockedUserIds]);
   const pinnedSet = useMemo(() => new Set(pinnedChannelIds), [pinnedChannelIds]);
+
+  useEffect(() => {
+    // Keep typing map in sync with current channels and avoid stale keys.
+    const validCids = new Set(
+      channels
+        .map((ch) => ch.cid ?? `${ch.type}:${ch.id ?? ""}`)
+        .filter((cid): cid is string => !!cid)
+    );
+    setTypingByChannel((prev) => {
+      const next: Record<string, boolean> = {};
+      for (const [cid, value] of Object.entries(prev)) {
+        if (validCids.has(cid) && value) next[cid] = true;
+      }
+      return next;
+    });
+  }, [channels]);
 
   /** True only for 1:1 messaging DMs (exactly two members, and channel type is `messaging`). */
   function isOneToOneChannel(ch: StreamChannel, currentUserId: string): boolean {
@@ -547,7 +584,11 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
             const groupReadCount = !isOneToOne && isFromMe ? getGroupReadCount(channel, lastMessage, client.userID!) : 0;
             const preview = getMessagePreview(lastMessage);
             const previewForSelf = preview === "Photo" ? "You sent a photo" : preview === "Attachment" ? "You sent an attachment" : `You: ${preview}`;
-            const previewLine = lastFromMeAndSeen
+            const channelCid = channel.cid ?? `${channel.type}:${channel.id ?? ""}`;
+            const isTyping = !!typingByChannel[channelCid];
+            const previewLine = isTyping
+              ? "typing..."
+              : lastFromMeAndSeen
               ? `Seen ${formatRelativeTime(otherLastRead!)} ago`
               : !isOneToOne && isFromMe && groupReadCount > 0
                 ? `Read by ${groupReadCount}`
@@ -569,7 +610,6 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
               (mentionsByMetadata ||
                 (!!lastMessage?.text &&
                   (textLower.includes(`@${client.userID!.toLowerCase()}`) || (meName ? textLower.includes(`@${meName}`) : false))));
-            const isRecent = !!time && Date.now() - time.getTime() <= 10 * 60 * 1000;
 
             const isEvent = isEventChannel(channel);
             const channelImage = isEvent ? getChannelDisplayImage(channel) : undefined;
@@ -616,7 +656,15 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                         )}
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <span className={`text-sm truncate ${hasUnread ? "text-[var(--ig-text)] font-medium" : "text-[var(--ig-text-secondary)]"}`}>
+                        <span
+                          className={`text-sm truncate ${
+                            isTyping
+                              ? "text-[var(--ig-link)] font-medium"
+                              : hasUnread
+                                ? "text-[var(--ig-text)] font-medium"
+                                : "text-[var(--ig-text-secondary)]"
+                          }`}
+                        >
                           {mentionsCurrentUser && (
                             <span className="text-[var(--ig-link)] mr-1 font-semibold" aria-label="Mentioned you">
                               @
@@ -641,13 +689,8 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                               @you
                             </span>
                           )}
-                          {!hasUnread && isRecent && (
-                            <span className="text-[10px] font-semibold text-[var(--ig-link)] px-1.5 py-0.5 rounded-full bg-[var(--ig-border-light)]">
-                              NEW
-                            </span>
-                          )}
-                          {hasUnread && <span className="w-1.5 h-1.5 rounded-full bg-[var(--ig-link)]" aria-hidden />}
-                          {hasUnread && (
+                          {!isTyping && hasUnread && <span className="w-1.5 h-1.5 rounded-full bg-[var(--ig-link)]" aria-hidden />}
+                          {!isTyping && hasUnread && (
                             <span
                               className={`shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-semibold px-1.5 ${muted ? "bg-[var(--ig-text-secondary)]" : "bg-[var(--ig-link)]"}`}
                               aria-label={`${unreadCount} unread`}
