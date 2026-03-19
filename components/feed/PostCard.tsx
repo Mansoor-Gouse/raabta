@@ -57,6 +57,7 @@ export function PostCard({
   onOpenLikes?: (postId: string) => void;
   onShare?: (post: PostCardPost) => void;
 }) {
+  const VIDEO_PLAYING_EVENT = "rope:feedVideoPlaying";
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [saved, setSaved] = useState(post.savedByMe);
@@ -77,6 +78,16 @@ export function PostCard({
   const isAuthor = currentUserId && post.authorId === currentUserId;
 
   const isVideoUrl = (url: string) => !url.match(/\.(gif|webp|png|jpe?g|avif)$/i);
+
+  // Let the app hide global chrome while a feed video is playing.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent(VIDEO_PLAYING_EVENT, {
+        detail: { playing: videoPlaying, postId: post._id },
+      })
+    );
+  }, [videoPlaying, post._id]);
 
   const toggleLike = useCallback(async () => {
     triggerHaptic();

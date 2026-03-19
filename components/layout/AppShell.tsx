@@ -69,6 +69,7 @@ export function AppShell({
   const isStatusFlow = pathname === "/app/status" || pathname.startsWith("/app/status/");
   const isNewPostFlow = pathname === "/app/feed/new" || pathname.startsWith("/app/feed/new/");
   const isChatsPage = pathname === "/app/chats";
+  const [feedVideoPlaying, setFeedVideoPlaying] = useState(false);
 
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
 
@@ -85,6 +86,16 @@ export function AppShell({
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent;
+      setFeedVideoPlaying(!!ce.detail?.playing);
+    };
+    window.addEventListener("rope:feedVideoPlaying", handler as EventListener);
+    return () => window.removeEventListener("rope:feedVideoPlaying", handler as EventListener);
   }, []);
 
   useEffect(() => {
@@ -189,8 +200,8 @@ export function AppShell({
           </AppUserContext.Provider>
         </main>
 
-        {/* Bottom navigation: hidden on channel, status, and new-post flow (visible on events pages) */}
-        {!isChannelScreen && !isStatusFlow && !isNewPostFlow && (
+        {/* Bottom navigation: hidden on channel/status/new-post flow; also hide while feed video plays */}
+        {!isChannelScreen && !isStatusFlow && !isNewPostFlow && !(pathname.startsWith("/app/feed") && feedVideoPlaying) && (
         <nav
           className="md:hidden shrink-0 flex items-center justify-around h-[50px] border-t border-[var(--ig-border-light)] bg-[var(--ig-bg-primary)]"
           style={{ paddingBottom: "var(--safe-area-inset-bottom)" }}

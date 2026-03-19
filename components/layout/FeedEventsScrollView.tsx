@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { useEffect, useRef, useCallback, useLayoutEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FeedClient } from "@/app/app/feed/FeedClient";
 import { EliteEventsClient } from "@/components/events/elite/EliteEventsClient";
@@ -19,6 +19,7 @@ export function FeedEventsScrollView() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
   const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [feedVideoPlaying, setFeedVideoPlaying] = useState(false);
 
   const currentIndex = ROUTES.indexOf(pathname as (typeof ROUTES)[number]);
   const panelIndex: PanelIndex = (currentIndex >= 0 ? currentIndex : 0) as PanelIndex;
@@ -92,14 +93,29 @@ export function FeedEventsScrollView() {
 
   const initialSection = searchParams.get("section") ?? undefined;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent;
+      const playing = !!ce.detail?.playing;
+      setFeedVideoPlaying(playing);
+    };
+    window.addEventListener("rope:feedVideoPlaying", handler as EventListener);
+    return () => window.removeEventListener("rope:feedVideoPlaying", handler as EventListener);
+  }, []);
+
+  const isFeedRoute = pathname.startsWith("/app/feed");
+
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--ig-bg)]">
       {/* Global sticky title header: stays fixed across sections */}
-      <div className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)]">
-        <div className="flex items-center px-4 py-2.5">
-          <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+      {!(isFeedRoute && feedVideoPlaying) && (
+        <div className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)]">
+          <div className="flex items-center px-4 py-2.5">
+            <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Horizontal strip of main sections */}
       <div
