@@ -40,7 +40,6 @@ export function GroupMembersSheet({
   const [selectedToAdd, setSelectedToAdd] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -59,13 +58,6 @@ export function GroupMembersSheet({
   }));
 
   useEffect(() => {
-    fetch("/api/me/block")
-      .then((r) => r.json())
-      .then((data: { blockedIds?: string[] }) => setBlockedIds(data.blockedIds ?? []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     if (!addMode || !search.trim() || search.length < 2) {
       setSearchUsers([]);
       return;
@@ -76,10 +68,7 @@ export function GroupMembersSheet({
         .then((r) => r.json())
         .then((data: { users?: SearchUser[] }) => {
           const users = (data.users ?? []).filter(
-            (u) =>
-              u._id !== currentUserId &&
-              !blockedIds.includes(u._id) &&
-              !existingIdsSet.has(u._id)
+            (u) => u._id !== currentUserId && !existingIdsSet.has(u._id)
           );
           setSearchUsers(users);
         })
@@ -89,7 +78,7 @@ export function GroupMembersSheet({
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
-  }, [addMode, search, currentUserId, blockedIds, existingIdsStr]);
+  }, [addMode, search, currentUserId, existingIdsStr]);
 
   const toggleSelectedToAdd = useCallback((id: string) => {
     setSelectedToAdd((prev) => {

@@ -90,7 +90,11 @@ export function ComposeView({
         <div className="max-w-xl mx-auto space-y-5">
           {/* Post content — elevated card with label */}
           <div className="post-flow-section p-4">
-            <label htmlFor="compose-caption" className="post-flow-section-title block mb-3">
+            <label htmlFor="compose-caption" className="post-flow-section-title block mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4H4v16h16v-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
               Post content
             </label>
             <div className="relative">
@@ -102,7 +106,7 @@ export function ComposeView({
                   if (v.length <= CAPTION_MAX_LENGTH) onCaptionChange(v);
                 }}
                 rows={5}
-                placeholder="What do you want to share? Add a caption or start with media below."
+                placeholder="What do you want to share? Write your caption, then attach media below."
                 maxLength={CAPTION_MAX_LENGTH}
                 className="post-flow-input w-full min-h-[128px] resize-y py-3.5 px-4 text-[0.9375rem] leading-relaxed rounded-xl border-0 bg-transparent focus:ring-0 focus:shadow-none placeholder:text-[var(--ig-text-tertiary)]"
                 aria-describedby="compose-caption-count"
@@ -118,8 +122,14 @@ export function ComposeView({
           </div>
 
           {/* Visibility — chip row */}
-          <div>
-            <p className="post-flow-section-title mb-3">Who can see this?</p>
+          <div className="post-flow-section p-4">
+            <p className="post-flow-section-title mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20s-7-4.35-7-10A7 7 0 0119 7c0 5.65-7 13-7 13z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12a2 2 0 100-4 2 2 0 000 4z" />
+              </svg>
+              Who can see this?
+            </p>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Visibility">
               {VISIBILITY_OPTIONS.map(({ value, label }) => (
                 <button
@@ -136,9 +146,15 @@ export function ComposeView({
             </div>
           </div>
 
-          {/* Media — optional */}
+          {/* Media */}
           <div className="post-flow-section p-4">
-            <p className="post-flow-section-title mb-3">Media (optional)</p>
+            <p className="post-flow-section-title mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l1.5-2.5h15L21 7v14H3V7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 13l2 2 4-5 3 3v6H5v-6l3-0z" />
+              </svg>
+              Media
+            </p>
             <MediaStrip items={items} onItemsChange={onItemsChange} onEditImage={onEditImage} />
           </div>
 
@@ -147,8 +163,12 @@ export function ComposeView({
             <button
               type="button"
               onClick={handlePreviewClick}
-              className="w-full min-h-[44px] px-4 py-3 rounded-xl border border-[var(--ig-border)] text-[var(--ig-text)] text-sm font-semibold hover:bg-[var(--ig-border-light)] transition-all duration-200 active:scale-[0.99] post-flow-section"
+              className="w-full min-h-[44px] px-4 py-3 rounded-xl post-flow-cta text-sm font-semibold transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
               Preview post
             </button>
           </div>

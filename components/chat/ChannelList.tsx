@@ -155,13 +155,30 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
 
   const blockedSet = useMemo(() => new Set(blockedUserIds ?? []), [blockedUserIds]);
 
-  function channelHasBlockedMember(ch: StreamChannel, currentUserId: string): boolean {
-    if (blockedSet.size === 0) return false;
+  /** True only for two-member (1:1) channels; groups and event channels are not 1:1. */
+  function isOneToOneChannel(ch: StreamChannel, currentUserId: string): boolean {
     const members = ch.state?.members ?? {};
-    const memberIds = Object.values(members)
-      .map((m) => (m as { user_id?: string; user?: { id?: string } }).user?.id ?? (m as { user_id?: string }).user_id)
-      .filter((id): id is string => !!id && id !== currentUserId);
-    return memberIds.some((id) => blockedSet.has(id));
+    const memberEntries = Object.values(members) as { user_id?: string; user?: { id?: string } }[];
+    const distinctUserIds = Array.from(
+      new Set(
+        memberEntries
+          .map((m) => m.user?.id ?? m.user_id)
+          .filter((id): id is string => !!id)
+      )
+    );
+    const otherUserIds = distinctUserIds.filter((id) => id !== currentUserId);
+    return distinctUserIds.length === 2 && otherUserIds.length === 1;
+  }
+
+  /** Other user id in a 1:1 channel, or undefined. */
+  function getOtherUserIdInChannel(ch: StreamChannel, currentUserId: string): string | undefined {
+    const members = ch.state?.members ?? {};
+    const memberEntries = Object.values(members) as { user_id?: string; user?: { id?: string } }[];
+    const other = memberEntries.find((m) => {
+      const id = m.user?.id ?? m.user_id;
+      return id && id !== currentUserId;
+    });
+    return other ? (other.user?.id ?? other.user_id) : undefined;
   }
 
   const list = useMemo(() => {
@@ -169,8 +186,14 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     if (!currentUserId) return channels;
 
     const blockFiltered = channels.filter((ch) => {
-      const hasBlocked = channelHasBlockedMember(ch, currentUserId);
-      return showBlocked ? hasBlocked : !hasBlocked;
+      const is1to1 = isOneToOneChannel(ch, currentUserId);
+      if (!is1to1) {
+        return true;
+      }
+      const otherId = getOtherUserIdInChannel(ch, currentUserId);
+      const otherIsBlocked = otherId ? blockedSet.has(otherId) : false;
+      if (showBlocked) return otherIsBlocked;
+      return !otherIsBlocked;
     });
 
     if (!channelSearch.trim()) return blockFiltered;

@@ -21,17 +21,9 @@ export default function NewGroupPage() {
   const [groupName, setGroupName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentUserId = client?.userID ?? "";
-
-  useEffect(() => {
-    fetch("/api/me/block")
-      .then((r) => r.json())
-      .then((data: { blockedIds?: string[] }) => setBlockedIds(data.blockedIds ?? []))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!search.trim() || search.length < 2) {
@@ -45,9 +37,7 @@ export default function NewGroupPage() {
       )
         .then((r) => r.json())
         .then((data: { users?: SearchUser[] }) => {
-          const users = (data.users ?? []).filter(
-            (u) => u._id !== currentUserId && !blockedIds.includes(u._id)
-          );
+          const users = (data.users ?? []).filter((u) => u._id !== currentUserId);
           setSearchUsers(users);
         })
         .catch(() => setSearchUsers([]));
@@ -56,28 +46,23 @@ export default function NewGroupPage() {
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
-  }, [search, currentUserId, blockedIds]);
+  }, [search, currentUserId]);
 
   const toggleSelected = useCallback((id: string) => {
-    if (blockedIds.includes(id)) return;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  }, [blockedIds]);
+  }, []);
 
   const selectedCount = selectedIds.size;
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!client?.userID || selectedCount === 0) return;
-    const toAdd = Array.from(selectedIds).filter((id) => !blockedIds.includes(id));
-    if (toAdd.length === 0) {
-      setError("Select at least one person who is not blocked.");
-      return;
-    }
+    const toAdd = Array.from(selectedIds);
     setError("");
     setLoading(true);
     try {
@@ -95,7 +80,7 @@ export default function NewGroupPage() {
           return;
         }
         const streamId = data.streamUserId as string;
-        if (!blockedIds.includes(streamId)) streamUserIds.push(streamId);
+        streamUserIds.push(streamId);
       }
       if (streamUserIds.length === 0) {
         setError("No valid members to add.");
@@ -170,20 +155,16 @@ export default function NewGroupPage() {
             ? searchUsers.map((u) => {
                 const id = u._id;
                 const name = u.fullName ?? u.name ?? id;
-                const isBlocked = blockedIds.includes(id);
                 const selected = selectedIds.has(id);
                 return (
                   <li key={id}>
                     <button
                       type="button"
                       onClick={() => toggleSelected(id)}
-                      disabled={isBlocked}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
-                        isBlocked
-                          ? "opacity-50 cursor-not-allowed"
-                          : selected
-                            ? "bg-[var(--ig-border-light)]"
-                            : "hover:bg-[var(--ig-border-light)]/50"
+                        selected
+                          ? "bg-[var(--ig-border-light)]"
+                          : "hover:bg-[var(--ig-border-light)]/50"
                       }`}
                     >
                       <div className="w-10 h-10 rounded-full bg-[var(--ig-border-light)] flex items-center justify-center shrink-0 overflow-hidden">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getStreamServerClient } from "@/lib/stream-server";
 import { sendPushToUserAsync } from "@/lib/pushSend";
+import { BlockModel } from "@/lib/db";
 
 const STREAM_SECRET = process.env.STREAM_SECRET || "";
 
@@ -150,15 +151,27 @@ export async function POST(request: NextRequest) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
     const url = base ? `${base}/app/channel/${channelId}` : `/app/channel/${channelId}`;
 
+    const isOneToOneDm = channelType === "messaging" && memberIds.length === 1;
+    let recipientsToNotify = memberIds;
+    if (isOneToOneDm && memberIds.length > 0) {
+      const recipientId = memberIds[0];
+      const recipientBlockedSender = await BlockModel.exists({
+        userId: recipientId,
+        blockedUserId: senderId,
+      });
+      if (recipientBlockedSender) recipientsToNotify = [];
+    }
+
     console.log("[webhooks/stream] message.new push dispatch", {
       channelId,
       channelType,
-      recipients: memberIds.length,
+      recipients: recipientsToNotify.length,
       senderId,
       senderName,
-      memberSample: memberIds.slice(0, 3),
+      memberSample: recipientsToNotify.slice(0, 3),
+      dmPushSuppressed: isOneToOneDm && recipientsToNotify.length === 0,
     });
-    for (const userId of memberIds) {
+    for (const userId of recipientsToNotify) {
       sendPushToUserAsync(userId, {
         title: senderName,
         body: text || "New message",

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { Channel, useChatContext } from "stream-chat-react";
+import { Channel, useChatContext, useChannelStateContext } from "stream-chat-react";
 import { ChannelWithThreadLayout } from "@/components/chat/ChannelWithThreadLayout";
 import { CustomChannelHeader } from "@/components/chat/CustomChannelHeader";
 import { EmptyChannelState } from "@/components/chat/EmptyChannelState";
@@ -12,7 +12,63 @@ import { EventChannelInfoProvider, type EventChannelInfo } from "@/components/ch
 import { ChannelErrorBoundary } from "@/components/chat/ChannelErrorBoundary";
 import { EventChannelMessageSystem } from "@/components/chat/EventChannelMessageSystem";
 import { FilteredChannelStateWrapper } from "@/components/chat/FilteredChannelStateWrapper";
+import { BlockedChatPlaceholder } from "@/components/chat/BlockedChatPlaceholder";
 import { getDraft } from "@/lib/draftStorage";
+
+function isOneToOneChannel(members: Record<string, unknown>, currentUserId: string): boolean {
+  const entries = Object.values(members) as { user_id?: string; user?: { id?: string } }[];
+  const ids = Array.from(new Set(entries.map((m) => m.user?.id ?? m.user_id).filter(Boolean)));
+  const otherIds = ids.filter((id) => id !== currentUserId);
+  return ids.length === 2 && otherIds.length === 1;
+}
+
+function getOtherUserId(members: Record<string, unknown>, currentUserId: string): string | undefined {
+  const entries = Object.values(members) as { user_id?: string; user?: { id?: string } }[];
+  const other = entries.find((m) => {
+    const id = m.user?.id ?? m.user_id;
+    return id && id !== currentUserId;
+  });
+  return other ? (other.user?.id ?? other.user_id) : undefined;
+}
+
+function BlockedGuard({ children }: { children: React.ReactNode }) {
+  const { channel } = useChannelStateContext();
+  const { client } = useChatContext();
+  const currentUserId = client?.userID ?? "";
+  const [blockedIds, setBlockedIds] = useState<string[]>([]);
+
+  const refreshBlocked = useCallback(() => {
+    fetch("/api/me/block")
+      .then((r) => r.json())
+      .then((data: { blockedIds?: string[] }) => setBlockedIds(data.blockedIds ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    refreshBlocked();
+  }, [refreshBlocked]);
+
+  useEffect(() => {
+    function onBlockedUpdated(e: Event) {
+      const detail = (e as CustomEvent<{ blockedUserId?: string; unblockedUserId?: string }>).detail;
+      if (detail?.blockedUserId) {
+        setBlockedIds((prev) => (prev.includes(detail.blockedUserId!) ? prev : [...prev, detail.blockedUserId!]));
+      } else if (detail?.unblockedUserId) {
+        setBlockedIds((prev) => prev.filter((id) => id !== detail.unblockedUserId));
+      }
+    }
+    window.addEventListener("blocked-users-updated", onBlockedUpdated);
+    return () => window.removeEventListener("blocked-users-updated", onBlockedUpdated);
+  }, []);
+
+  const members = channel?.state?.members ?? {};
+  const is1to1 = isOneToOneChannel(members, currentUserId);
+  const otherUserId = getOtherUserId(members, currentUserId);
+  const isBlocked = is1to1 && otherUserId && blockedIds.includes(otherUserId);
+
+  if (isBlocked) return <BlockedChatPlaceholder />;
+  return <>{children}</>;
+}
 
 export default function ChannelPage() {
   const params = useParams();
@@ -67,9 +123,11 @@ export default function ChannelPage() {
           maxNumberOfFiles={10}
           optionalMessageInputProps={{ getDefaultValue: () => getDraft(cid) }}
         >
-          <FilteredChannelStateWrapper>
-            <ChannelWithThreadLayout />
-          </FilteredChannelStateWrapper>
+          <BlockedGuard>
+            <FilteredChannelStateWrapper>
+              <ChannelWithThreadLayout />
+            </FilteredChannelStateWrapper>
+          </BlockedGuard>
         </Channel>
       </EventChannelInfoProvider>
     </ChannelErrorBoundary>
