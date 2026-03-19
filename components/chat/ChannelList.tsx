@@ -137,9 +137,16 @@ function getPinnedStorageKey(userId: string): string {
 }
 
 function getSafeUnreadCount(channel: StreamChannel): number {
-  const unread = (channel.state?.membership as { unread_count?: number } | undefined)?.unread_count ?? 0;
-  if (!Number.isFinite(unread)) return 0;
-  return Math.max(0, Math.floor(unread));
+  const fromMembership = (channel.state?.membership as { unread_count?: number } | undefined)?.unread_count;
+  if (Number.isFinite(fromMembership)) return Math.max(0, Math.floor(fromMembership as number));
+
+  const countUnread = (channel as unknown as { countUnread?: () => number }).countUnread;
+  if (typeof countUnread === "function") {
+    const fromMethod = countUnread.call(channel);
+    if (Number.isFinite(fromMethod)) return Math.max(0, Math.floor(fromMethod));
+  }
+
+  return 0;
 }
 
 function compareChannelsByRecencyThenUnread(a: StreamChannel, b: StreamChannel): number {
@@ -689,8 +696,8 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                               @you
                             </span>
                           )}
-                          {!isTyping && hasUnread && <span className="w-1.5 h-1.5 rounded-full bg-[var(--ig-link)]" aria-hidden />}
-                          {!isTyping && hasUnread && (
+                          {hasUnread && <span className="w-1.5 h-1.5 rounded-full bg-[var(--ig-link)]" aria-hidden />}
+                          {hasUnread && (
                             <span
                               className={`shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-semibold px-1.5 ${muted ? "bg-[var(--ig-text-secondary)]" : "bg-[var(--ig-link)]"}`}
                               aria-label={`${unreadCount} unread`}

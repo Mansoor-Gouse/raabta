@@ -334,6 +334,8 @@ export function EliteEventsClient({
     if (index < 0 || !scrollContainerRef.current) return;
     const pageWidth = scrollContainerRef.current.offsetWidth;
     setActiveSection(key);
+    // Keep tab highlight + underline in sync immediately on tap.
+    setScrollProgress(index);
     scrollContainerRef.current.scrollTo({ left: index * pageWidth, behavior: "smooth" });
   }, []);
 
@@ -489,7 +491,9 @@ export function EliteEventsClient({
         const currentRaw = currentW > 0 ? currentEl.scrollLeft / currentW : 0;
         const index = Math.round(Math.max(0, Math.min(currentRaw, maxIndex)));
         const key = SECTION_KEYS[index];
-        if (key !== activeSection) setActiveSection(key);
+        // Snap both text state and underline to the same resolved section.
+        setActiveSection(key);
+        setScrollProgress(index);
       }, 120);
     };
     el.addEventListener("scroll", handleScroll, { passive: true });
@@ -512,12 +516,13 @@ export function EliteEventsClient({
     const pageWidth = el.offsetWidth;
     el.scrollTo({ left: index * pageWidth, behavior: "auto" });
     setActiveSection(key);
+    setScrollProgress(index);
   }, [showSectionTabsAndPanels, initialSection]);
 
   const showTabsAndContentShell = loading || showSectionTabsAndPanels;
   const activeIndex = SECTION_KEYS.indexOf(activeSection);
   const visualIndex =
-    activeIndex >= 0 ? Math.round(scrollProgress || activeIndex) : Math.round(scrollProgress || 0);
+    activeIndex >= 0 ? Math.round(scrollProgress) : Math.round(scrollProgress || 0);
 
   return (
     <div className="elite-events min-h-full bg-[var(--ig-bg)] flex flex-col">
