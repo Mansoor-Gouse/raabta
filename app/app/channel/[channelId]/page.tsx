@@ -13,6 +13,7 @@ import { ChannelErrorBoundary } from "@/components/chat/ChannelErrorBoundary";
 import { EventChannelMessageSystem } from "@/components/chat/EventChannelMessageSystem";
 import { FilteredChannelStateWrapper } from "@/components/chat/FilteredChannelStateWrapper";
 import { BlockedChatPlaceholder } from "@/components/chat/BlockedChatPlaceholder";
+import { ViewOnceMessage } from "@/components/chat/ViewOnceMessage";
 import { getDraft } from "@/lib/draftStorage";
 
 function isOneToOneChannel(members: Record<string, unknown>, currentUserId: string): boolean {
@@ -165,6 +166,7 @@ export default function ChannelPage() {
           enrichURLForPreview
           HeaderComponent={CustomChannelHeader}
           Input={CustomMessageInputWithRichMedia}
+          Message={ViewOnceMessage}
           MessageStatus={MessageStatusTicks}
           MessageSystem={EventChannelMessageSystem}
           multipleUploads

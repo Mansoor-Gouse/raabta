@@ -4,7 +4,13 @@ import { useState, useCallback } from "react";
 import { MessageSimple, useMessageContext, useChannelActionContext, useChatContext, useComponentContext } from "stream-chat-react";
 import { SharedPostCard, type PostShareAttachment } from "./SharedPostCard";
 
-type CustomData = { view_once?: boolean; view_once_consumed_by?: string[] };
+type CustomData = {
+  view_once?: boolean;
+  view_once_consumed_by?: string[];
+  forwardedFromMessageId?: string;
+  forwardedFromChannelId?: string;
+  forwardedFromSenderId?: string;
+};
 
 function getPostShareAttachment(message: { attachments?: Array<{ type?: string } & Record<string, unknown>> }): (PostShareAttachment & Record<string, unknown>) | null {
   const attachments = message.attachments ?? [];
@@ -33,6 +39,7 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
   const customData = (message.customData || {}) as CustomData;
   const consumedBy = customData.view_once_consumed_by || [];
   const consumed = !!currentUserId && consumedBy.includes(currentUserId);
+  const isForwarded = !!customData.forwardedFromMessageId;
 
   const handleTapToView = useCallback(() => {
     if (!currentUserId || consumed) return;
@@ -74,6 +81,18 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
   const isSender = isMyMessage?.() ?? false;
 
   if (!isViewOnce) {
+    if (isForwarded) {
+      return (
+        <div className="str-chat__message str-chat__message-simple">
+          <div className="px-3 pb-1">
+            <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] bg-[var(--ig-border-light)] text-[var(--ig-text-secondary)]">
+              Forwarded
+            </span>
+          </div>
+          <MessageSimple {...props} />
+        </div>
+      );
+    }
     return <MessageSimple {...props} />;
   }
 

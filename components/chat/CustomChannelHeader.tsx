@@ -71,6 +71,9 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
 
   const typingMap = (channel?.state as { typing?: Record<string, unknown> } | undefined)?.typing ?? {};
   const isOtherTyping = isOneToOne && otherMemberId ? !!typingMap[otherMemberId] : false;
+  const groupTypingCount = !isOneToOne
+    ? Object.keys(typingMap).filter((id) => id !== currentUserId).length
+    : 0;
   const otherIsOnline = isOneToOne && otherMemberId ? !!watchers[otherMemberId] : false;
   const lastActive = otherMemberEntry?.user?.last_active;
   const lastSeenText = isOneToOne && !otherIsOnline && lastActive ? formatLastSeen(lastActive) : null;
@@ -163,15 +166,21 @@ export function CustomChannelHeader(props: ChannelHeaderProps) {
               </span>
             ) : null
           ) : isGroup ? (
-            <button
-              type="button"
-              onClick={() => groupMembersOpen?.setOpen(true)}
-              className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)]"
-              aria-label={`View group members (${memberCount} members)`}
-            >
-              {memberCount} members ·{" "}
-              {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
-            </button>
+            groupTypingCount > 0 ? (
+              <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-link)]">
+                {groupTypingCount} typing...
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => groupMembersOpen?.setOpen(true)}
+                className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs bg-[var(--ig-border-light)] text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ig-text)]"
+                aria-label={`View group members (${memberCount} members)`}
+              >
+                {memberCount} members ·{" "}
+                {String(t("{{ watcherCount }} online", { watcherCount: watcherCount }))}
+              </button>
+            )
           ) : (
             <>
               {!props.live &&

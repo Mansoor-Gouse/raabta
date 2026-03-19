@@ -1144,6 +1144,38 @@ BlockSchema.index({ userId: 1 });
 export const BlockModel =
   mongoose.models.Block || mongoose.model<IBlock>("Block", BlockSchema);
 
+// StarredMessage (user-specific starred messages)
+export interface IStarredMessage {
+  _id: string;
+  userId: string;
+  channelId: string;
+  messageId: string;
+  channelType?: "messaging" | "team";
+  senderId?: string;
+  senderName?: string;
+  textPreview?: string;
+  createdAt: Date;
+}
+
+const StarredMessageSchema = new mongoose.Schema<IStarredMessage>(
+  {
+    userId: { type: String, required: true },
+    channelId: { type: String, required: true },
+    messageId: { type: String, required: true },
+    channelType: { type: String, enum: ["messaging", "team"], required: false },
+    senderId: { type: String, required: false },
+    senderName: { type: String, required: false },
+    textPreview: { type: String, required: false },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+StarredMessageSchema.index({ userId: 1, messageId: 1, channelId: 1 }, { unique: true });
+StarredMessageSchema.index({ userId: 1, createdAt: -1 });
+
+export const StarredMessageModel =
+  mongoose.models.StarredMessage || mongoose.model<IStarredMessage>("StarredMessage", StarredMessageSchema);
+
 // Report (content/member reports for moderation)
 export interface IReport {
   _id: string;

@@ -145,6 +145,13 @@ export default function ChatsPage() {
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg bg-[var(--ig-bg-primary)] border border-[var(--ig-border)] min-w-[160px] z-20">
+                  <Link
+                    href="/app/starred"
+                    onClick={() => setMenuOpen(false)}
+                    className="block w-full text-left px-4 py-2.5 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]"
+                  >
+                    Starred messages
+                  </Link>
                   {showArchived ? (
                     <button
                       type="button"

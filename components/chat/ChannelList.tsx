@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef, useImperativeHandle, forwardRef } from "react";
+import { Fragment, useEffect, useState, useMemo, useCallback, useRef, useImperativeHandle, forwardRef } from "react";
 import { useChatContext } from "stream-chat-react";
 import type { Channel as StreamChannel } from "stream-chat";
 import Link from "next/link";
@@ -83,6 +83,12 @@ function isLastMessageFromMe(channel: StreamChannel, currentUserId: string): boo
 
 const baseFilters = { type: "messaging" as const };
 const LIST_REFRESH_DEBOUNCE_MS = 250;
+const PINNED_STORAGE_PREFIX = "chat:pinned:";
+const MAX_PINNED_CHATS = 3;
+
+function getPinnedStorageKey(userId: string): string {
+  return `${PINNED_STORAGE_PREFIX}${userId}`;
+}
 
 function getSafeUnreadCount(channel: StreamChannel): number {
   const unread = (channel.state?.membership as { unread_count?: number } | undefined)?.unread_count ?? 0;
@@ -143,6 +149,8 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const [internalShowArchived, setInternalShowArchived] = useState(false);
   const showArchived = controlledShowArchived !== undefined ? controlledShowArchived : internalShowArchived;
   const setShowArchived = onShowArchivedChange ?? setInternalShowArchived;
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [pinnedChannelIds, setPinnedChannelIds] = useState<string[]>([]);
   const [swipedChannelId, setSwipedChannelId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<{ channelId: string; offset: number } | null>(null);
   const [pullY, setPullY] = useState(0);
@@ -234,7 +242,37 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     };
   }, []);
 
+  useEffect(() => {
+    if (!client?.userID) {
+      setPinnedChannelIds([]);
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(getPinnedStorageKey(client.userID));
+      if (!raw) {
+        setPinnedChannelIds([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      const list = Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+      setPinnedChannelIds(Array.from(new Set(list)));
+    } catch (err) {
+      console.warn("[chat-list] failed to load pinned channels", err);
+      setPinnedChannelIds([]);
+    }
+  }, [client?.userID]);
+
+  useEffect(() => {
+    if (!client?.userID) return;
+    try {
+      window.localStorage.setItem(getPinnedStorageKey(client.userID), JSON.stringify(pinnedChannelIds));
+    } catch (err) {
+      console.warn("[chat-list] failed to persist pinned channels", err);
+    }
+  }, [client?.userID, pinnedChannelIds]);
+
   const blockedSet = useMemo(() => new Set(blockedUserIds ?? []), [blockedUserIds]);
+  const pinnedSet = useMemo(() => new Set(pinnedChannelIds), [pinnedChannelIds]);
 
   /** True only for 1:1 messaging DMs (exactly two members, and channel type is `messaging`). */
   function isOneToOneChannel(ch: StreamChannel, currentUserId: string): boolean {
@@ -281,10 +319,20 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
       return !otherIsBlocked;
     });
 
-    if (!channelSearch.trim()) return blockFiltered;
-    const q = channelSearch.trim().toLowerCase();
-    return blockFiltered.filter((ch) => getChannelDisplayName(ch, currentUserId).toLowerCase().includes(q));
-  }, [channels, channelSearch, client?.userID, showBlocked, blockedSet]);
+    const unreadFiltered = showUnreadOnly
+      ? blockFiltered.filter((ch) => getSafeUnreadCount(ch) > 0)
+      : blockFiltered;
+
+    const searched = !channelSearch.trim()
+      ? unreadFiltered
+      : unreadFiltered.filter((ch) => getChannelDisplayName(ch, currentUserId).toLowerCase().includes(channelSearch.trim().toLowerCase()));
+    return [...searched].sort((a, b) => {
+      const aPinned = pinnedSet.has(a.id ?? "");
+      const bPinned = pinnedSet.has(b.id ?? "");
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
+      return compareChannelsByRecencyThenUnread(a, b);
+    });
+  }, [channels, channelSearch, client?.userID, showBlocked, blockedSet, showUnreadOnly, pinnedSet]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const el = scrollRef.current;
@@ -309,6 +357,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
 
   const isEmpty = list.length === 0 && !channelSearch.trim();
   const showEmptyState = isEmpty;
+  const pinnedCount = list.filter((ch) => pinnedSet.has(ch.id ?? "")).length;
 
   return (
     <div
@@ -347,6 +396,13 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                     className="text-xs text-[var(--ig-text-secondary)] hover:opacity-80"
                   >
                     Archived
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUnreadOnly((prev) => !prev)}
+                    className={`text-xs ${showUnreadOnly ? "text-[var(--ig-link)] font-semibold" : "text-[var(--ig-text-secondary)]"} hover:opacity-80`}
+                  >
+                    Unread
                   </button>
                   <Link
                     href="/app/search"
@@ -430,7 +486,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                   : "No chats match your search."}
             </li>
           )}
-          {list.map((channel) => {
+          {list.map((channel, index) => {
             const isActive = pathname === `/app/channel/${channel.id}`;
             const lastMessage = channel.state?.messages?.[0];
             const isFromMe = lastMessage?.user_id === client.userID;
@@ -463,6 +519,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
               !isFromMe &&
               !!lastMessage?.text &&
               (textLower.includes(`@${client.userID!.toLowerCase()}`) || (meName ? textLower.includes(`@${meName}`) : false));
+            const isRecent = !!time && Date.now() - time.getTime() <= 10 * 60 * 1000;
 
             const isEvent = isEventChannel(channel);
             const channelImage = isEvent ? getChannelDisplayImage(channel) : undefined;
@@ -518,10 +575,31 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                           {previewLine}
                         </span>
                         <div className="shrink-0 flex items-center gap-1">
+                          {muted && (
+                            <span
+                              className="inline-flex items-center justify-center text-[var(--ig-text-secondary)]"
+                              aria-label="Muted chat"
+                              title="Muted chat"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9v6m0 0l-3 3m3-3h3a4 4 0 004-4V7a4 4 0 00-4-4H9v6zM3 3l18 18" />
+                              </svg>
+                            </span>
+                          )}
+                          {mentionsCurrentUser && (
+                            <span className="text-[10px] font-semibold text-[var(--ig-link)] px-1.5 py-0.5 rounded-full bg-[var(--ig-border-light)]">
+                              @you
+                            </span>
+                          )}
+                          {!hasUnread && isRecent && (
+                            <span className="text-[10px] font-semibold text-[var(--ig-link)] px-1.5 py-0.5 rounded-full bg-[var(--ig-border-light)]">
+                              NEW
+                            </span>
+                          )}
                           {hasUnread && <span className="w-1.5 h-1.5 rounded-full bg-[var(--ig-link)]" aria-hidden />}
                           {hasUnread && (
                             <span
-                              className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--ig-link)] text-white text-[10px] font-semibold px-1.5"
+                              className={`shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-semibold px-1.5 ${muted ? "bg-[var(--ig-text-secondary)]" : "bg-[var(--ig-link)]"}`}
                               aria-label={`${unreadCount} unread`}
                             >
                               {unreadCount > 99 ? "99+" : unreadCount}
@@ -536,57 +614,102 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
             );
 
             const cid = channel.id ?? "";
+            const isPinned = pinnedSet.has(cid);
             return (
-              <ChatListSwipeRow
-                key={cid}
-                channelId={cid}
-                showArchived={showArchived}
-                muted={muted}
-                hasUnread={hasUnread}
-                swipedChannelId={swipedChannelId}
-                dragOffset={dragState && dragState.channelId === cid ? dragState.offset : 0}
-                onSwipeStart={() => {
-                  setSwipedChannelId(null);
-                }}
-                onDrag={(id, offset) => {
-                  setDragState(offset > 0 && id != null ? { channelId: id, offset } : null);
-                }}
-                onSwipedOpen={(id) => {
-                  setSwipedChannelId(id);
-                  setDragState(null);
-                }}
-                onArchive={async () => {
-                  try {
-                    await channel.hide();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-                onUnarchive={async () => {
-                  try {
-                    await channel.show();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-                onMute={async () => {
-                  try {
-                    await channel.mute();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-                onUnmute={async () => {
-                  try {
-                    await channel.unmute();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-                onActionDone={fetchChannels}
-              >
-                {rowContent}
-              </ChatListSwipeRow>
+              <Fragment key={cid}>
+                {index === 0 && pinnedCount > 0 && (
+                  <li className="px-4 py-1.5 text-[10px] uppercase tracking-wide font-semibold text-[var(--ig-text-secondary)] bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+                    Pinned
+                  </li>
+                )}
+                {index === pinnedCount && pinnedCount > 0 && (
+                  <li className="px-4 py-1.5 text-[10px] uppercase tracking-wide font-semibold text-[var(--ig-text-secondary)] bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]">
+                    All chats
+                  </li>
+                )}
+                <ChatListSwipeRow
+                  key={cid}
+                  channelId={cid}
+                  showArchived={showArchived}
+                  muted={muted}
+                  hasUnread={hasUnread}
+                  pinned={isPinned}
+                  swipedChannelId={swipedChannelId}
+                  dragOffset={dragState && dragState.channelId === cid ? dragState.offset : 0}
+                  onSwipeStart={() => {
+                    setSwipedChannelId(null);
+                  }}
+                  onDrag={(id, offset) => {
+                    setDragState(offset > 0 && id != null ? { channelId: id, offset } : null);
+                  }}
+                  onSwipedOpen={(id) => {
+                    setSwipedChannelId(id);
+                    setDragState(null);
+                  }}
+                  onArchive={async () => {
+                    try {
+                      await channel.hide();
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  onUnarchive={async () => {
+                    try {
+                      await channel.show();
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  onMute={async () => {
+                    try {
+                      await channel.mute();
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  onUnmute={async () => {
+                    try {
+                      await channel.unmute();
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  onMarkRead={async () => {
+                    try {
+                      await channel.markRead();
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  onMarkUnread={async () => {
+                    try {
+                      const last = channel.state?.messages?.[0] as { id?: string } | undefined;
+                      if (last?.id && typeof (channel as unknown as { markUnread?: (opts: { message_id: string }) => Promise<unknown> }).markUnread === "function") {
+                        await (channel as unknown as { markUnread: (opts: { message_id: string }) => Promise<unknown> }).markUnread({
+                          message_id: last.id,
+                        });
+                      }
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  onPin={async () => {
+                    if (!cid) return;
+                    setPinnedChannelIds((prev) => {
+                      if (prev.includes(cid)) return prev;
+                      if (prev.length >= MAX_PINNED_CHATS) return prev;
+                      return [...prev, cid];
+                    });
+                  }}
+                  onUnpin={async () => {
+                    if (!cid) return;
+                    setPinnedChannelIds((prev) => prev.filter((id) => id !== cid));
+                  }}
+                  onActionDone={fetchChannels}
+                >
+                  {rowContent}
+                </ChatListSwipeRow>
+              </Fragment>
             );
           })}
         </ul>

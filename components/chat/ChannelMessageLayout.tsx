@@ -23,7 +23,7 @@ import { OfflinePendingMessages } from "./OfflinePendingMessages";
  * - In 1:1 channels, avatars are hidden via data-dm for a cleaner look.
  */
 export function ChannelMessageLayout() {
-  const messageActions = ["reply", "react", "edit", "delete", "pin", "quote", "flag", "mute"] as const;
+  const messageActions = ["reply", "react", "edit", "delete", "markUnread", "pin", "quote", "flag", "mute"] as const;
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const { channel } = useChannelStateContext();
   const { markRead } = useChannelActionContext();
@@ -130,6 +130,70 @@ export function ChannelMessageLayout() {
     return () => input.removeEventListener("focus", scrollInputIntoView);
   }, []);
 
+  const customMessageActions = useMemo(
+    () => ({
+      Forward: (message: { id?: string; text?: string; user?: { id?: string } }) => {
+        if (typeof window === "undefined") return;
+        window.dispatchEvent(
+          new CustomEvent("chat-forward-request", {
+            detail: {
+              messageId: message?.id,
+              text: message?.text ?? "",
+              senderId: message?.user?.id,
+              sourceChannelId: channel?.id ?? "",
+            },
+          })
+        );
+      },
+      "Star message": async (message: { id?: string; text?: string; user?: { id?: string; name?: string } }) => {
+        if (!message?.id || !channel?.id) return;
+        const res = await fetch("/api/me/starred-messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messageId: message.id,
+            channelId: channel.id,
+            channelType: channel.type === "team" ? "team" : "messaging",
+            senderId: message.user?.id,
+            senderName: message.user?.name,
+            textPreview: message.text ?? "",
+          }),
+        });
+        if (!res.ok) {
+          console.warn("[starred] failed to star message", {
+            messageId: message.id,
+            channelId: channel.id,
+            status: res.status,
+          });
+        } else {
+          console.info("[starred] message starred", {
+            messageId: message.id,
+            channelId: channel.id,
+          });
+        }
+      },
+      "Unstar message": async (message: { id?: string }) => {
+        if (!message?.id || !channel?.id) return;
+        const res = await fetch(`/api/me/starred-messages/${encodeURIComponent(message.id)}?channelId=${encodeURIComponent(channel.id)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          console.warn("[starred] failed to unstar message", {
+            messageId: message.id,
+            channelId: channel.id,
+            status: res.status,
+          });
+        } else {
+          console.info("[starred] message unstarred", {
+            messageId: message.id,
+            channelId: channel.id,
+          });
+        }
+      },
+    }),
+    [channel?.id]
+  );
+
   return (
     <div
       className="channel-message-root flex flex-1 flex-col min-h-0"
@@ -143,6 +207,7 @@ export function ChannelMessageLayout() {
             head={<></>}
             headerPosition={0}
             messageActions={[...messageActions]}
+            customMessageActions={customMessageActions}
             messages={safeMessages}
             disableDateSeparator
             hideNewMessageSeparator

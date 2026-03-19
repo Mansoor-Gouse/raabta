@@ -2,7 +2,7 @@
 
 import React, { useCallback, useRef, useState } from "react";
 
-const ACTIONS_WIDTH = 140;
+const ACTIONS_WIDTH = 280;
 const SNAP_THRESHOLD = 70;
 
 export type ChatListSwipeRowProps = {
@@ -12,6 +12,7 @@ export type ChatListSwipeRowProps = {
   showArchived: boolean;
   muted: boolean;
   hasUnread: boolean;
+  pinned: boolean;
   /** Which channel row is currently open (swiped). */
   swipedChannelId: string | null;
   /** Currently dragging this channel with this offset (0–140). */
@@ -26,6 +27,10 @@ export type ChatListSwipeRowProps = {
   onUnarchive: () => void;
   onMute: () => void;
   onUnmute: () => void;
+  onMarkRead: () => void;
+  onMarkUnread: () => void;
+  onPin: () => void;
+  onUnpin: () => void;
   /** After an action, parent may refresh list. */
   onActionDone: () => void;
 };
@@ -62,6 +67,7 @@ export function ChatListSwipeRow({
   showArchived,
   muted,
   hasUnread,
+  pinned,
   swipedChannelId,
   dragOffset,
   onSwipeStart,
@@ -71,6 +77,10 @@ export function ChatListSwipeRow({
   onUnarchive,
   onMute,
   onUnmute,
+  onMarkRead,
+  onMarkUnread,
+  onPin,
+  onUnpin,
   onActionDone,
 }: ChatListSwipeRowProps) {
   const startX = useRef(0);
@@ -200,6 +210,36 @@ export function ChatListSwipeRow({
                 label="Mute"
                 iconPath="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 17.31C15.55 18.37 13.85 19 12 19zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z"
                 onClick={() => runAction(onMute)}
+                className="text-[var(--ig-text)]"
+              />
+            )}
+            {hasUnread ? (
+              <ActionButton
+                label="Read"
+                iconPath="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                onClick={() => runAction(onMarkRead)}
+                className="text-[var(--ig-text)]"
+              />
+            ) : (
+              <ActionButton
+                label="Unread"
+                iconPath="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                onClick={() => runAction(onMarkUnread)}
+                className="text-[var(--ig-text)]"
+              />
+            )}
+            {pinned ? (
+              <ActionButton
+                label="Unpin"
+                iconPath="M15 4V2H9v2H5v2h14V4h-4zm-1 4h-4v5.17l-1.59 1.58L10 16.34l2-2 2 2 1.41-1.41L14 13.17V8zM5 20h14v-2H5v2z"
+                onClick={() => runAction(onUnpin)}
+                className="text-[var(--ig-text)]"
+              />
+            ) : (
+              <ActionButton
+                label="Pin"
+                iconPath="M15 4V2H9v2H5v2h14V4h-4zm-1 4h-4v6l-2 2v2h8v-2l-2-2V8z"
+                onClick={() => runAction(onPin)}
                 className="text-[var(--ig-text)]"
               />
             )}
