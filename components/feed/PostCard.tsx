@@ -71,6 +71,7 @@ export function PostCard({
   const imgRef = useRef<HTMLImageElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [mediaLoaded, setMediaLoaded] = useState(false);
+  const [mediaAspectRatio, setMediaAspectRatio] = useState<string>("16 / 10");
   const [mediaFullScreenOpen, setMediaFullScreenOpen] = useState(false);
 
   const isAuthor = currentUserId && post.authorId === currentUserId;
@@ -200,6 +201,7 @@ export function PostCard({
   useEffect(() => {
     const key = `${mediaIndex}:${media ?? ""}`;
     if (prevMediaKeyRef.current !== null && prevMediaKeyRef.current !== key) setMediaLoaded(false);
+    if (prevMediaKeyRef.current !== null && prevMediaKeyRef.current !== key) setMediaAspectRatio("16 / 10");
     prevMediaKeyRef.current = key;
   }, [mediaIndex, media]);
 
@@ -360,7 +362,8 @@ export function PostCard({
       {/* 4. Main image — rectangular (omit when text-only post) */}
       {post.mediaUrls.length > 0 && (
         <div
-          className="relative aspect-[16/10] w-full bg-black cursor-default"
+          className="relative w-full bg-black cursor-default"
+          style={{ aspectRatio: mediaAspectRatio, minHeight: "160px" }}
           onClick={handleMediaClick}
           onDoubleClick={(e) => e.preventDefault()}
           role="button"
@@ -386,6 +389,12 @@ export function PostCard({
                     mediaLoaded ? "opacity-100" : "opacity-0"
                   }`}
                   onLoad={() => setMediaLoaded(true)}
+                  onLoadCapture={(e) => {
+                    const target = e.currentTarget;
+                    if (target?.naturalWidth > 0 && target?.naturalHeight > 0) {
+                      setMediaAspectRatio(`${target.naturalWidth} / ${target.naturalHeight}`);
+                    }
+                  }}
                   onError={() => setMediaLoaded(true)}
                 />
               ) : (
@@ -407,6 +416,12 @@ export function PostCard({
                     onPause={() => setVideoPlaying(false)}
                     onEnded={() => setVideoPlaying(false)}
                     onLoadedData={() => setMediaLoaded(true)}
+                    onLoadedMetadata={(e) => {
+                      const v = e.currentTarget;
+                      if (v.videoWidth > 0 && v.videoHeight > 0) {
+                        setMediaAspectRatio(`${v.videoWidth} / ${v.videoHeight}`);
+                      }
+                    }}
                     onError={() => setMediaLoaded(true)}
                   />
                   <div

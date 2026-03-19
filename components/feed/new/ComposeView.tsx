@@ -68,7 +68,10 @@ export function ComposeView({
           aria-modal="true"
           aria-label="Post preview"
         >
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md post-flow-animate-in">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md max-h-[calc(100dvh-6rem)] overflow-auto post-flow-animate-in"
+          >
             <PostPreviewCard
               mediaUrls={previewMediaUrls.length > 0 ? previewMediaUrls : []}
               caption={caption}

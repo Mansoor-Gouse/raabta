@@ -34,7 +34,7 @@ export function PostPreviewCard({
   }, [firstUrl]);
 
   return (
-    <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden max-w-md mx-auto shadow-sm">
+    <article className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden max-w-md mx-auto shadow-sm max-h-[calc(100dvh-6rem)]">
       {/* Author block — matches PostCard: squary avatar, name, time */}
       <header className="flex items-center gap-3 px-4 py-2.5">
         <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-bg-primary)]">
@@ -67,7 +67,7 @@ export function PostPreviewCard({
       {mediaUrls.length > 0 && (
         <div
           className="relative w-full bg-black overflow-hidden"
-          style={{ aspectRatio: mediaAspectRatio, minHeight: "120px" }}
+          style={{ aspectRatio: mediaAspectRatio, minHeight: "90px", maxHeight: "42vh" }}
         >
           {firstUrl ? (
             <>
