@@ -31,17 +31,33 @@ function getOtherUserId(members: Record<string, unknown>, currentUserId: string)
   return other ? (other.user?.id ?? other.user_id) : undefined;
 }
 
-function BlockedGuard({ children }: { children: React.ReactNode }) {
+function BlockedGuard({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  // Blocking UI/restrictions should only apply to 1:1 messaging DMs.
+  enabled: boolean;
+}) {
   const { channel } = useChannelStateContext();
   const { client } = useChatContext();
   const currentUserId = client?.userID ?? "";
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
+  const [blockedLoaded, setBlockedLoaded] = useState(false);
+  const [blockedFetchFailed, setBlockedFetchFailed] = useState(false);
 
-  const refreshBlocked = useCallback(() => {
-    fetch("/api/me/block")
-      .then((r) => r.json())
-      .then((data: { blockedIds?: string[] }) => setBlockedIds(data.blockedIds ?? []))
-      .catch(() => {});
+  const refreshBlocked = useCallback(async () => {
+    try {
+      const r = await fetch("/api/me/block");
+      const data = (await r.json()) as { blockedIds?: string[] };
+      setBlockedIds(data.blockedIds ?? []);
+      setBlockedFetchFailed(false);
+    } catch {
+      // Status unknown: default to restricted UI for safety.
+      setBlockedFetchFailed(true);
+    } finally {
+      setBlockedLoaded(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -62,11 +78,26 @@ function BlockedGuard({ children }: { children: React.ReactNode }) {
   }, []);
 
   const members = channel?.state?.members ?? {};
-  const is1to1 = isOneToOneChannel(members, currentUserId);
+  const is1to1 = enabled && isOneToOneChannel(members, currentUserId);
   const otherUserId = getOtherUserId(members, currentUserId);
-  const isBlocked = is1to1 && otherUserId && blockedIds.includes(otherUserId);
+  const isBlocked = is1to1 && !!otherUserId && blockedIds.includes(otherUserId);
 
   if (isBlocked) return <BlockedChatPlaceholder />;
+  if (!enabled || !is1to1) return <>{children}</>;
+  if (!blockedLoaded) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6 bg-[var(--ig-bg-primary)]">
+        <p className="text-sm text-[var(--ig-text-secondary)]">Checking chat access…</p>
+      </div>
+    );
+  }
+  if (blockedFetchFailed) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6 bg-[var(--ig-bg-primary)] text-center">
+        <p className="text-sm text-[var(--ig-text-secondary)]">Unable to verify block status. Try again later.</p>
+      </div>
+    );
+  }
   return <>{children}</>;
 }
 
@@ -123,7 +154,7 @@ export default function ChannelPage() {
           maxNumberOfFiles={10}
           optionalMessageInputProps={{ getDefaultValue: () => getDraft(cid) }}
         >
-          <BlockedGuard>
+          <BlockedGuard enabled={channelType === "messaging"}>
             <FilteredChannelStateWrapper>
               <ChannelWithThreadLayout />
             </FilteredChannelStateWrapper>

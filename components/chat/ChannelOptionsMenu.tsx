@@ -14,7 +14,7 @@ export function ChannelOptionsMenu() {
   const members = channel?.state?.members ?? {};
   const memberCount = Object.keys(members).length;
   const isGroup = memberCount > 2;
-  const isOneToOne = memberCount === 2;
+  const isOneToOne = memberCount === 2 && channel?.type === "messaging";
   const currentUserId = client?.userID ?? "";
   type MemberEntry = { user_id?: string; user?: { id?: string } };
   const otherMember = Object.values(members).find((m: unknown) => ((m as MemberEntry).user_id ?? (m as MemberEntry).user?.id) !== currentUserId) as MemberEntry | undefined;

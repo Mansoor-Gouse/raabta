@@ -48,7 +48,7 @@ export default function NewChatPage() {
 
   // Load recent 1:1 chat partners from Stream channels
   useEffect(() => {
-    if (!client?.userID) return;
+    if (!client?.userID || !blockedLoaded) return;
     const loadRecent = async () => {
       try {
         const channels = await client.queryChannels(
@@ -61,11 +61,20 @@ export default function NewChatPage() {
           const members = ch.state?.members ?? {};
           const otherId = Object.keys(members).find((id) => id !== client.userID);
           if (!otherId) continue;
-          const member = members[otherId] as { user?: { id?: string; name?: string; image?: string } };
+
+          const member = members[otherId] as {
+            user?: { id?: string; name?: string; image?: string };
+          };
           const user = member?.user;
+          const candidateId = user?.id ?? otherId;
+          if (!candidateId) continue;
+
+          // Keep blocked users out of the "recent" list for consistency.
+          if (blockedIds.includes(candidateId)) continue;
+
           if (user && !others.some((o) => o._id === user.id)) {
             others.push({
-              _id: user.id ?? otherId,
+              _id: candidateId,
               name: user.name,
               profileImage: user.image,
             });
@@ -77,7 +86,7 @@ export default function NewChatPage() {
       }
     };
     loadRecent();
-  }, [client?.userID]);
+  }, [client?.userID, blockedLoaded, blockedIds]);
 
   // Debounced user search
   useEffect(() => {
@@ -154,7 +163,11 @@ export default function NewChatPage() {
 
   const startChatWithUser = useCallback(
     async (user: SearchUser) => {
-      if (!client?.userID || blockedIds.includes(user._id)) return;
+      if (!client?.userID) return;
+      if (blockedIds.includes(user._id)) {
+        setError("You have blocked this user. Unblock in Settings to start a chat.");
+        return;
+      }
       setError("");
       setLoading(true);
       setDropdownOpen(false);
@@ -174,7 +187,7 @@ export default function NewChatPage() {
         }
         const otherUserId = data.streamUserId as string;
         if (blockedIds.includes(otherUserId)) {
-          setError("You have blocked this user.");
+          setError("You have blocked this user. Unblock in Settings to start a chat.");
           setLoading(false);
           return;
         }

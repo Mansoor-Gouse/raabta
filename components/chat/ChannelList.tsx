@@ -75,6 +75,27 @@ function isLastMessageFromMe(channel: StreamChannel, currentUserId: string): boo
 }
 
 const baseFilters = { type: "messaging" as const };
+const LIST_REFRESH_DEBOUNCE_MS = 250;
+
+function getSafeUnreadCount(channel: StreamChannel): number {
+  const unread = (channel.state?.membership as { unread_count?: number } | undefined)?.unread_count ?? 0;
+  if (!Number.isFinite(unread)) return 0;
+  return Math.max(0, Math.floor(unread));
+}
+
+function compareChannelsByRecencyThenUnread(a: StreamChannel, b: StreamChannel): number {
+  const ta = getLastMessageTime(a)?.getTime() ?? 0;
+  const tb = getLastMessageTime(b)?.getTime() ?? 0;
+  if (tb !== ta) return tb - ta;
+
+  const ua = getSafeUnreadCount(a);
+  const ub = getSafeUnreadCount(b);
+  if (ub !== ua) return ub - ua;
+
+  const aId = a.id ?? "";
+  const bId = b.id ?? "";
+  return aId.localeCompare(bId);
+}
 
 export type ChannelListRef = { refresh: () => void };
 
@@ -120,10 +141,12 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   const [pullY, setPullY] = useState(0);
   const pullStartY = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchChannels = useCallback(() => {
+  const fetchChannels = useCallback((options?: { silent?: boolean }) => {
     if (!client?.userID) return;
-    setLoading(true);
+    const silent = options?.silent === true;
+    if (!silent) setLoading(true);
     const base = {
       members: { $in: [client.userID] },
       ...(showArchived ? { hidden: true } : {}),
@@ -135,15 +158,13 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
       .then(([messaging, team]) => {
         const byId = new Map<string, StreamChannel>();
         [...messaging, ...team].forEach((c) => byId.set(c.id, c));
-        const merged = Array.from(byId.values()).sort((a, b) => {
-          const ta = getLastMessageTime(a)?.getTime() ?? 0;
-          const tb = getLastMessageTime(b)?.getTime() ?? 0;
-          return tb - ta;
-        });
+        const merged = Array.from(byId.values()).sort(compareChannelsByRecencyThenUnread);
         setChannels(merged);
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!silent) setLoading(false);
+      });
   }, [client, showArchived]);
 
   useEffect(() => {
@@ -153,10 +174,52 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
   // Parent (chats page) calls refresh() when user navigates back from a channel so unread counts stay in sync.
   useImperativeHandle(ref, () => ({ refresh: fetchChannels }), [fetchChannels]);
 
+  const scheduleRefresh = useCallback(
+    (options?: { silent?: boolean }) => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = setTimeout(() => {
+        refreshTimerRef.current = null;
+        fetchChannels(options);
+      }, LIST_REFRESH_DEBOUNCE_MS);
+    },
+    [fetchChannels]
+  );
+
+  useEffect(() => {
+    if (!client) return;
+    const onMessageNew = () => scheduleRefresh({ silent: true });
+    const onMarkRead = () => scheduleRefresh({ silent: true });
+    const onMarkUnread = () => scheduleRefresh({ silent: true });
+    const onAddedToChannel = () => scheduleRefresh({ silent: true });
+    const onRemovedFromChannel = () => scheduleRefresh({ silent: true });
+
+    client.on("message.new", onMessageNew);
+    client.on("notification.mark_read", onMarkRead);
+    client.on("notification.mark_unread", onMarkUnread);
+    client.on("notification.added_to_channel", onAddedToChannel);
+    client.on("notification.removed_from_channel", onRemovedFromChannel);
+
+    return () => {
+      client.off("message.new", onMessageNew);
+      client.off("notification.mark_read", onMarkRead);
+      client.off("notification.mark_unread", onMarkUnread);
+      client.off("notification.added_to_channel", onAddedToChannel);
+      client.off("notification.removed_from_channel", onRemovedFromChannel);
+    };
+  }, [client, scheduleRefresh]);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    };
+  }, []);
+
   const blockedSet = useMemo(() => new Set(blockedUserIds ?? []), [blockedUserIds]);
 
-  /** True only for two-member (1:1) channels; groups and event channels are not 1:1. */
+  /** True only for 1:1 messaging DMs (exactly two members, and channel type is `messaging`). */
   function isOneToOneChannel(ch: StreamChannel, currentUserId: string): boolean {
+    // Blocking is a DM-only feature.
+    if (ch.type !== "messaging") return false;
     const members = ch.state?.members ?? {};
     const memberEntries = Object.values(members) as { user_id?: string; user?: { id?: string } }[];
     const distinctUserIds = Array.from(
@@ -188,7 +251,9 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
     const blockFiltered = channels.filter((ch) => {
       const is1to1 = isOneToOneChannel(ch, currentUserId);
       if (!is1to1) {
-        return true;
+        // Messages tab shows everything except blocked 1:1 DMs.
+        // Blocked tab shows ONLY blocked 1:1 DMs.
+        return !showBlocked;
       }
       const otherId = getOtherUserIdInChannel(ch, currentUserId);
       const otherIsBlocked = otherId ? blockedSet.has(otherId) : false;
@@ -368,7 +433,7 @@ export const ChannelList = forwardRef<ChannelListRef, ChannelListProps>(function
                   : preview;
             const muted = (channel.state?.membership as { channel_muted?: boolean } | undefined)?.channel_muted ?? false;
             const time = getLastMessageTime(channel);
-            const unreadCount = (channel.state?.membership as { unread_count?: number } | undefined)?.unread_count ?? 0;
+            const unreadCount = getSafeUnreadCount(channel);
             const hasUnread = unreadCount > 0;
 
             const isEvent = isEventChannel(channel);
