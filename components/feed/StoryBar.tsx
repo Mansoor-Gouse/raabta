@@ -130,15 +130,18 @@ export function StoryBar() {
   const [items, setItems] = useState<RawStatusItem[]>([]);
   const [me, setMe] = useState<Me>(null);
   const [viewerSessionIndex, setViewerSessionIndex] = useState<number | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
 
   const fetchStatus = useCallback(() => {
+    setStatusLoading(true);
     fetch("/api/status")
       .then((r) => r.json())
       .then((data) => {
         const list = (data.status || []) as RawStatusItem[];
         setItems(list);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setStatusLoading(false));
   }, []);
 
   useEffect(() => {
@@ -228,7 +231,35 @@ export function StoryBar() {
   return (
     <>
       <div className="shrink-0 px-4 py-3">
-        <ul className="flex flex-col gap-0">
+        {statusLoading ? (
+          <ul className="flex flex-col gap-0" aria-label="Loading stories" aria-busy="true">
+            <li>
+              <div className="w-full flex items-center gap-3 py-2.5 rounded-lg">
+                <div className={ringSizeClass + " animate-pulse"} style={{ boxSizing: "border-box" }}>
+                  <div className="w-full h-full rounded-[6px] bg-[var(--ig-border-light)]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="h-4 w-28 bg-[var(--ig-border-light)] rounded animate-pulse" />
+                  <div className="h-3 w-16 bg-[var(--ig-border-light)] rounded animate-pulse mt-2" />
+                </div>
+              </div>
+            </li>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li key={i}>
+                <div className="w-full flex items-center gap-3 py-2.5 rounded-lg">
+                  <div className={ringSizeClass + " animate-pulse"} style={{ boxSizing: "border-box" }}>
+                    <div className="w-full h-full rounded-[6px] bg-[var(--ig-border-light)]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="h-4 w-24 bg-[var(--ig-border-light)] rounded animate-pulse" />
+                    <div className="h-3 w-14 bg-[var(--ig-border-light)] rounded animate-pulse mt-2" />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="flex flex-col gap-0">
           {/* Your story row */}
           <li>
             {hasOwnStory ? (
@@ -307,7 +338,8 @@ export function StoryBar() {
               </button>
             </li>
           ))}
-        </ul>
+          </ul>
+        )}
       </div>
 
       {viewerSessionIndex !== null && sessions.length > 0 && (

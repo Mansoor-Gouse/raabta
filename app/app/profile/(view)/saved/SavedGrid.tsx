@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { VideoThumb } from "@/components/media/VideoThumb";
+
+function isVideoUrl(url: string): boolean {
+  return /\.(mp4|webm|ogg|mov|mkv|avi)$/i.test(url);
+}
 
 type PostThumb = { _id: string; mediaUrls: string[] };
 
@@ -57,11 +62,15 @@ export function SavedGrid() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-black text-white">
-                <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
+              isVideoUrl(post.mediaUrls[0]) ? (
+                <VideoThumb src={post.mediaUrls[0]} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-[var(--elite-border-light)] text-[var(--elite-text-muted)]">
+                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              )
             )
           ) : (
             <div className="w-full h-full bg-[var(--elite-border-light)]" />
