@@ -132,7 +132,7 @@ export function FeedEventsScrollView() {
         data-rope-global-header
         className={[
           "shrink-0 sticky top-0 z-30 overflow-hidden transition-[max-height] duration-200 ease-out",
-          isFeedRoute && feedReelActive ? "bg-transparent" : "bg-[var(--ig-bg-primary)]",
+          isFeedRoute && feedReelActive ? "bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md" : "bg-[var(--ig-bg-primary)]",
           isFeedRoute && feedChromeHidden ? "max-h-0" : "max-h-[64px]",
         ].join(" ")}
       >

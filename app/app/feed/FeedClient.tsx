@@ -265,7 +265,9 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
         data-rope-feed-tabs
         className={[
           "sticky top-0 z-10 shrink-0 border-b overflow-hidden",
-          feedReelActive ? "bg-transparent border-transparent" : "bg-[var(--ig-bg-primary)] border-[var(--ig-border-light)]",
+          feedReelActive
+            ? "bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md border-[var(--ig-border-light)]/20"
+            : "bg-[var(--ig-bg-primary)] border-[var(--ig-border-light)]",
           "transition-[max-height,opacity] duration-200 ease-out",
           tabsHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-[120px] opacity-100 pointer-events-auto",
         ].join(" ")}

@@ -366,7 +366,9 @@ export function PostCard({
           onClick={() => onOpenLikes?.(post._id)}
           className={[
             "w-full flex items-center gap-2 px-4 py-1.5 hover:bg-[var(--ig-border-light)]/40 transition-colors",
-            reelActive ? "relative z-5 bg-transparent border-b border-transparent" : "border-b border-[var(--ig-border-light)]",
+            reelActive
+              ? "relative z-5 bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md border-b border-transparent"
+              : "border-b border-[var(--ig-border-light)]",
           ].join(" ")}
           data-rope-card-header
         >
@@ -391,7 +393,7 @@ export function PostCard({
       <header
         className={[
           "flex items-center gap-3 px-4 py-2.5",
-          reelActive ? "relative z-5 bg-transparent" : "",
+          reelActive ? "relative z-5 bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md" : "",
         ].join(" ")}
         data-rope-card-header
       >
