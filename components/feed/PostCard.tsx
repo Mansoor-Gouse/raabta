@@ -217,14 +217,18 @@ export function PostCard({
   const currentIsVideo = media ? isVideoUrl(media) : false;
   const postHasVideo = post.mediaUrls.some((u) => isVideoUrl(u));
 
-  // Reel-like mode: when a feed video is playing and the card is in view.
-  // Used to make the global header transparent and shift the media under it.
-  // IMPORTANT: activate based on media type (video) instead of playback state.
+  // Layout mode for "reel-style" video cards.
+  // IMPORTANT: This must NOT depend on `inView`/playback; otherwise the card layout
+  // visibly shifts when `reelActive` toggles as the user scrolls.
+  const reelLayoutActive = postHasVideo && currentIsVideo && !mediaFullScreenOpen;
+
+  // Playback-in-view mode used for coordinating other chrome (global header/tabs)
+  // via the `rope:feedReelActive` event.
   const reelActive = postHasVideo && currentIsVideo && inView && !mediaFullScreenOpen;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!reelActive) {
+    if (!reelLayoutActive) {
       setReelOffsetPx(0);
       return;
     }
@@ -249,7 +253,7 @@ export function PostCard({
     computeOffset();
     window.addEventListener("resize", computeOffset);
     return () => window.removeEventListener("resize", computeOffset);
-  }, [reelActive]);
+  }, [reelLayoutActive]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -366,7 +370,7 @@ export function PostCard({
           onClick={() => onOpenLikes?.(post._id)}
           className={[
             "w-full flex items-center gap-2 px-4 py-1.5 hover:bg-[var(--ig-border-light)]/40 transition-colors",
-            reelActive
+            reelLayoutActive
               ? "relative z-[9] bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent border-b border-transparent"
               : "border-b border-[var(--ig-border-light)]",
           ].join(" ")}
@@ -376,7 +380,7 @@ export function PostCard({
             <div
               className={[
                 "w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-border-light)] flex items-center justify-center text-[10px] font-semibold",
-                reelActive ? "text-white" : "text-[var(--ig-text-secondary)]",
+                reelLayoutActive ? "text-white" : "text-[var(--ig-text-secondary)]",
               ].join(" ")}
             >
               {likedSampleInitial}
@@ -385,7 +389,7 @@ export function PostCard({
               <div
                 className={[
                   "w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-bg-primary)] flex items-center justify-center text-[10px] font-semibold",
-                  reelActive ? "text-white" : "text-[var(--ig-text-secondary)]",
+                  reelLayoutActive ? "text-white" : "text-[var(--ig-text-secondary)]",
                 ].join(" ")}
               >
                 +{likeCount - 1}
@@ -395,7 +399,7 @@ export function PostCard({
           <div
             className={[
               "flex-1 min-w-0 text-left text-xs font-medium",
-              reelActive ? "text-white" : "text-[var(--ig-text)]",
+              reelLayoutActive ? "text-white" : "text-[var(--ig-text)]",
             ].join(" ")}
           >
             <span className="font-semibold">{likedSampleName}</span>
@@ -408,7 +412,7 @@ export function PostCard({
       <header
         className={[
           "flex items-center gap-3 px-4 py-2.5",
-          reelActive ? "relative z-[9] bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent" : "",
+          reelLayoutActive ? "relative z-[9] bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent" : "",
         ].join(" ")}
         data-rope-card-header
       >
@@ -431,7 +435,7 @@ export function PostCard({
               href={`/app/members/${post.authorId}`}
               className={[
                 "font-semibold text-sm hover:opacity-80 truncate",
-                reelActive ? "text-white" : "text-[var(--ig-text)]",
+                reelLayoutActive ? "text-white" : "text-[var(--ig-text)]",
               ].join(" ")}
             >
               {post.authorName}
@@ -445,7 +449,7 @@ export function PostCard({
               <span
                 className={[
                   "inline-flex items-center",
-                  reelActive ? "text-white/80" : "text-[var(--ig-text-secondary)]",
+                  reelLayoutActive ? "text-white/80" : "text-[var(--ig-text-secondary)]",
                 ].join(" ")}
                 title="From your Trusted Circle"
               >
@@ -453,7 +457,7 @@ export function PostCard({
               </span>
             )}
           </div>
-          <div className={["flex items-center text-xs mt-0.5", reelActive ? "text-white/70" : "text-[var(--ig-text-secondary)]"].join(" ")}>
+          <div className={["flex items-center text-xs mt-0.5", reelLayoutActive ? "text-white/70" : "text-[var(--ig-text-secondary)]"].join(" ")}>
             <time dateTime={post.createdAt}>{timeLabel}</time>
           </div>
         </div>
@@ -525,13 +529,13 @@ export function PostCard({
         <div
           className={[
             "relative w-full bg-black cursor-default",
-            reelActive ? "z-[0]" : "",
+            reelLayoutActive ? "z-[0]" : "",
           ].join(" ")}
           style={{
             aspectRatio: mediaAspectRatio,
             minHeight: "160px",
-            transform: reelActive && reelOffsetPx ? `translateY(-${reelOffsetPx}px)` : undefined,
-            willChange: reelActive ? "transform" : undefined,
+            transform: reelLayoutActive && reelOffsetPx ? `translateY(-${reelOffsetPx}px)` : undefined,
+            willChange: reelLayoutActive ? "transform" : undefined,
           }}
           onClick={handleMediaClick}
           onDoubleClick={(e) => e.preventDefault()}

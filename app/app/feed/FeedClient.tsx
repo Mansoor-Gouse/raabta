@@ -264,10 +264,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
       <div
         data-rope-feed-tabs
         className={[
-          "sticky top-0 z-10 shrink-0 border-b overflow-hidden",
-          feedReelActive
-            ? "bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md border-[var(--ig-border-light)]/20"
-            : "bg-[var(--ig-bg-primary)] border-[var(--ig-border-light)]",
+          "sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] overflow-hidden",
           "transition-[max-height,opacity] duration-200 ease-out",
           tabsHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-[120px] opacity-100 pointer-events-auto",
         ].join(" ")}
@@ -278,35 +275,36 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
           </div>
         )}
         {/* Segment control: sliding underline follows scroll */}
-        <div
-          role="tablist"
-          aria-label="Feed sections"
-          className="relative flex bg-[var(--ig-bg-primary)]"
-        >
-          {SEGMENTS.map((label, i) => (
-            <button
-              key={label}
-              type="button"
-              role="tab"
-              aria-selected={activeIndex === i}
-              aria-controls={`feed-panel-${i}`}
-              id={`feed-tab-${i}`}
-              onClick={() => scrollToIndex(i as SegmentIndex)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-                activeIndex === i ? "text-[var(--ig-text)]" : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-          <div
-            className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
-            style={{
-              width: `${100 / SEGMENTS.length}%`,
-              left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
-            }}
-            aria-hidden
-          />
+        <div role="tablist" aria-label="Feed sections" className="no-scrollbar overflow-x-auto">
+          <div className="relative flex min-w-full">
+            {SEGMENTS.map((label, i) => (
+              <button
+                key={label}
+                type="button"
+                role="tab"
+                aria-selected={activeIndex === i}
+                aria-controls={`feed-panel-${i}`}
+                id={`feed-tab-${i}`}
+                onClick={() => scrollToIndex(i as SegmentIndex)}
+                disabled={loading}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors min-h-[44px] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--elite-accent)] focus-visible:ring-inset ${
+                  activeIndex === i
+                    ? "text-[var(--ig-text)]"
+                    : "text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
+                } ${loading ? "pointer-events-none" : ""}`}
+              >
+                {label}
+              </button>
+            ))}
+            <div
+              className="absolute bottom-0 h-0.5 bg-[var(--ig-text)]"
+              style={{
+                width: `${100 / SEGMENTS.length}%`,
+                left: `${scrollProgress * (100 / SEGMENTS.length)}%`,
+              }}
+              aria-hidden
+            />
+          </div>
         </div>
       </div>
 

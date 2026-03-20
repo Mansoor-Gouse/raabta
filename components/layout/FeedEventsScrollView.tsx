@@ -142,7 +142,7 @@ export function FeedEventsScrollView() {
           <h1
             className={[
               "feed-title-font text-lg font-semibold",
-              isFeedRoute && feedReelActive ? "text-white" : "text-[var(--ig-text)]",
+              "text-[var(--ig-text)]",
             ].join(" ")}
           >
             The Rope
