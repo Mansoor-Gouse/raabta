@@ -534,8 +534,9 @@ export function PostCard({
           style={{
             aspectRatio: mediaAspectRatio,
             minHeight: "160px",
-            transform: reelLayoutActive && reelOffsetPx ? `translateY(-${reelOffsetPx}px)` : undefined,
-            willChange: reelLayoutActive ? "transform" : undefined,
+            // Use negative margin instead of translateY so we don't leave
+            // "ghost space" below the media when reel layout is active.
+            marginTop: reelLayoutActive && reelOffsetPx ? -reelOffsetPx : undefined,
           }}
           onClick={handleMediaClick}
           onDoubleClick={(e) => e.preventDefault()}
@@ -602,7 +603,7 @@ export function PostCard({
                     type="button"
                     onClick={toggleMute}
                     aria-label={isMuted ? "Unmute video" : "Mute video"}
-                    className="absolute bottom-3 right-3 z-10 pointer-events-auto p-2 rounded-full bg-black/40 text-white backdrop-blur-sm"
+                    className="absolute bottom-4 right-3 z-30 pointer-events-auto p-2 rounded-full bg-black/40 text-white backdrop-blur-sm"
                   >
                     {isMuted ? (
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -654,7 +655,8 @@ export function PostCard({
 
               {caption && reelLayoutActive && (
                 <div
-                  className="absolute inset-x-0 bottom-0 px-4 pr-14 pb-3 pt-6 z-20 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+                  // Keep this overlay away from the mute button area so taps still work.
+                  className="absolute left-0 right-12 bottom-0 px-4 pb-3 pt-6 z-20 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <p className="text-sm text-white break-words" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
