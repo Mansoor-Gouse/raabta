@@ -234,7 +234,15 @@ export function PostCard({
       // (We intentionally do not include the Posts/Stories tab row here to avoid
       // an overly aggressive shift.)
       const globalHeader = document.querySelector("[data-rope-global-header]") as HTMLElement | null;
-      const offset = globalHeader?.offsetHeight ?? 0;
+      const card = cardRef.current;
+      const internalHeaderEls = card?.querySelectorAll("[data-rope-card-header]") ?? [];
+      let internalHeaderHeight = 0;
+      internalHeaderEls.forEach((el) => {
+        const node = el as HTMLElement;
+        internalHeaderHeight += node.offsetHeight || 0;
+      });
+
+      const offset = (globalHeader?.offsetHeight ?? 0) + internalHeaderHeight;
       setReelOffsetPx(offset);
     };
 
@@ -358,8 +366,9 @@ export function PostCard({
           onClick={() => onOpenLikes?.(post._id)}
           className={[
             "w-full flex items-center gap-2 px-4 py-1.5 hover:bg-[var(--ig-border-light)]/40 transition-colors",
-            reelActive ? "relative z-20 bg-transparent border-b border-white/10" : "border-b border-[var(--ig-border-light)]",
+            reelActive ? "relative z-5 bg-transparent border-b border-transparent" : "border-b border-[var(--ig-border-light)]",
           ].join(" ")}
+          data-rope-card-header
         >
           <div className="flex -space-x-2">
             <div className="w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-border-light)] flex items-center justify-center text-[10px] font-semibold text-[var(--ig-text-secondary)]">
@@ -382,8 +391,9 @@ export function PostCard({
       <header
         className={[
           "flex items-center gap-3 px-4 py-2.5",
-          reelActive ? "relative z-20 bg-transparent" : "",
+          reelActive ? "relative z-5 bg-transparent" : "",
         ].join(" ")}
+        data-rope-card-header
       >
         <Link href={`/app/members/${post.authorId}`} className="shrink-0">
           <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-bg-primary)]">
@@ -560,7 +570,7 @@ export function PostCard({
                     type="button"
                     onClick={toggleMute}
                     aria-label={isMuted ? "Unmute video" : "Mute video"}
-                    className="absolute top-2 right-2 z-10 pointer-events-auto p-2 rounded-full bg-black/40 text-white backdrop-blur-sm"
+                    className="absolute bottom-3 right-3 z-10 pointer-events-auto p-2 rounded-full bg-black/40 text-white backdrop-blur-sm"
                   >
                     {isMuted ? (
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
