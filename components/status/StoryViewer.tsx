@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 import { StoryProgressBars } from "./StoryProgressBars";
 import { StoryViewersDrawer } from "./StoryViewersDrawer";
 import type { TextOverlay } from "@/types/status";
+import { StoryShareSheet, type StoryShareSheetStory } from "@/components/status/StoryShareSheet";
 
 const IMAGE_DURATION_MS = 5000;
 
@@ -85,6 +86,7 @@ export function StoryViewer({
   const [reactionJustSet, setReactionJustSet] = useState<string | null>(null);
   const [viewersDrawerOpen, setViewersDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [storyShareOpen, setStoryShareOpen] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -99,6 +101,10 @@ export function StoryViewer({
 
   useEffect(() => {
     setMediaReady(false);
+  }, [currentStatus?._id]);
+
+  useEffect(() => {
+    setStoryShareOpen(false);
   }, [currentStatus?._id]);
 
   // Preload adjacent media so next/prev load instantly from cache (second time is fast)
@@ -551,6 +557,23 @@ export function StoryViewer({
                 </button>
               </>
             )}
+            {!isOwnStory && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStoryShareOpen(true);
+                }}
+                className="p-2 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Share story"
+                title="Share"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12l-7-7-7 7" />
+                </svg>
+              </button>
+            )}
             <div className="relative">
               <button
                 type="button"
@@ -604,6 +627,23 @@ export function StoryViewer({
           onClose={() => setViewersDrawerOpen(false)}
           statusId={isOwnStory ? currentStatus?._id : undefined}
           onDeleteStatus={isOwnStory ? handleDeleteStatus : undefined}
+        />
+
+        <StoryShareSheet
+          open={storyShareOpen}
+          onClose={() => setStoryShareOpen(false)}
+          story={
+            currentStatus && session
+              ? {
+                  statusId: currentStatus._id,
+                  mediaUrl: currentStatus.mediaUrl,
+                  type: currentStatus.type,
+                  caption: currentStatus.caption ?? "",
+                  authorName: session.userName ?? "Someone",
+                  authorImage: session.userImage ?? null,
+                }
+              : null
+          }
         />
 
         {/* Reaction strip: bottom center, above safe area */}

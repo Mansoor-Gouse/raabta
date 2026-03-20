@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageSimple, useMessageContext, useChannelActionContext, useChatContext, useComponentContext, useChannelStateContext } from "stream-chat-react";
 import { SharedPostCard, type PostShareAttachment } from "./SharedPostCard";
+import { SharedStoryCard, type StoryShareAttachment } from "./SharedStoryCard";
 
 type CustomData = {
   view_once?: boolean;
@@ -35,6 +36,14 @@ function getPostShareAttachment(message: { attachments?: Array<{ type?: string }
   const attachments = message.attachments ?? [];
   const found = attachments.find((a) => a.type === "post_share");
   return found ? (found as PostShareAttachment & Record<string, unknown>) : null;
+}
+
+function getStoryShareAttachment(
+  message: { attachments?: Array<{ type?: string } & Record<string, unknown>> }
+): (StoryShareAttachment & Record<string, unknown>) | null {
+  const attachments = message.attachments ?? [];
+  const found = attachments.find((a) => a.type === "story_share");
+  return found ? (found as StoryShareAttachment & Record<string, unknown>) : null;
 }
 
 /**
@@ -80,6 +89,7 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
   }, [currentUserId, consumed, message, consumedBy, updateMessage]);
 
   const postShareAttachment = getPostShareAttachment(message);
+  const storyShareAttachment = getStoryShareAttachment(message);
   const messageText = typeof message.text === "string" ? message.text : "";
   const messageId = typeof message.id === "string" ? message.id : "";
   const ownReactionTypes = new Set<ReactionType>(
@@ -285,7 +295,13 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
         setShowLongPressSheet(true);
       }}
     >
-      {postShareAttachment ? (
+      {storyShareAttachment ? (
+        <StoryShareMessage
+          storyShareAttachment={storyShareAttachment}
+          isSender={isMyMessage?.() ?? false}
+          MessageStatusComponent={MessageStatusComponent}
+        />
+      ) : postShareAttachment ? (
         <PostShareMessage
           postShareAttachment={postShareAttachment}
           isSender={isMyMessage?.() ?? false}
@@ -297,7 +313,7 @@ export function ViewOnceMessage(props: React.ComponentProps<typeof MessageSimple
     </div>
   );
 
-  if (postShareAttachment) {
+  if (postShareAttachment || storyShareAttachment) {
     return (
       <>
         {messageBody}
@@ -458,6 +474,36 @@ function PostShareMessage({
     <div className={rootClassName}>
       <div className={`str-chat__message-inner str-chat__message-simple-inner flex items-end gap-2 ${isSender ? "flex-row-reverse" : ""}`}>
         <SharedPostCard attachment={postShareAttachment} />
+        {MessageStatusComponent && (
+          <span className="inline-flex items-center shrink-0 self-end pb-0.5">
+            <MessageStatusComponent />
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StoryShareMessage({
+  storyShareAttachment,
+  isSender,
+  MessageStatusComponent,
+}: {
+  storyShareAttachment: StoryShareAttachment & Record<string, unknown>;
+  isSender: boolean;
+  MessageStatusComponent?: React.ComponentType;
+}) {
+  const rootClassName = [
+    "str-chat__message",
+    "str-chat__message-simple",
+    "str-chat__message--has-attachment",
+    isSender ? "str-chat__message--me str-chat__message-simple--me" : "str-chat__message--other",
+  ].join(" ");
+
+  return (
+    <div className={rootClassName}>
+      <div className={`str-chat__message-inner str-chat__message-simple-inner flex items-end gap-2 ${isSender ? "flex-row-reverse" : ""}`}>
+        <SharedStoryCard attachment={storyShareAttachment} />
         {MessageStatusComponent && (
           <span className="inline-flex items-center shrink-0 self-end pb-0.5">
             <MessageStatusComponent />

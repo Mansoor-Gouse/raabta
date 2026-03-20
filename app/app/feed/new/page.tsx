@@ -8,6 +8,12 @@ import type { Visibility } from "@/components/feed/new/CaptionStep";
 import { ComposeView } from "@/components/feed/new/ComposeView";
 import { CropEditor } from "@/components/feed/new/CropEditor";
 import { profileToPostVisibility } from "@/lib/visibility";
+import { upload } from "@vercel/blob/client";
+
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+const MAX_TOTAL_UPLOAD_BYTES = 300 * 1024 * 1024; // 300 MB guardrail
+const MAX_VIDEO_DURATION_SECONDS = 60; // Standard feed videos
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -64,24 +70,74 @@ export default function NewPostPage() {
     try {
       let mediaUrls: string[] = [];
       if (items.length > 0) {
-        const formData = new FormData();
-        items.forEach((item) => {
-          const fileToUpload =
-            item.editedBlob
-              ? new File([item.editedBlob], item.file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })
-              : item.file;
-          formData.append("files", fileToUpload);
-        });
-        const uploadRes = await fetch("/api/posts/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok) {
-          setError(uploadData.error || "Upload failed.");
-          return;
+        const urls: string[] = [];
+        let totalUploadBytes = 0;
+
+        const getVideoDurationSeconds = (file: File) =>
+          new Promise<number>((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const v = document.createElement("video");
+            v.preload = "metadata";
+            v.muted = true;
+            v.playsInline = true;
+            v.onloadedmetadata = () => {
+              const d = v.duration;
+              URL.revokeObjectURL(url);
+              v.remove();
+              if (!Number.isFinite(d)) reject(new Error("Invalid duration"));
+              else resolve(d);
+            };
+            v.onerror = () => {
+              URL.revokeObjectURL(url);
+              v.remove();
+              reject(new Error("Could not read duration"));
+            };
+            v.src = url;
+          });
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          const asImage = item.type === "image";
+
+          const fileToUpload = item.editedBlob
+            ? new File([item.editedBlob], item.file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })
+            : item.file;
+
+          if (asImage && fileToUpload.size > MAX_IMAGE_SIZE_BYTES) {
+            setError(`Image ${fileToUpload.name} exceeds ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024} MB limit`);
+            return;
+          }
+          if (!asImage && fileToUpload.size > MAX_VIDEO_SIZE_BYTES) {
+            setError(`Video ${fileToUpload.name} exceeds ${MAX_VIDEO_SIZE_BYTES / 1024 / 1024} MB limit`);
+            return;
+          }
+
+          totalUploadBytes += fileToUpload.size ?? 0;
+          if (totalUploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
+            setError("Total upload is too large. Please reduce the number/size of files.");
+            return;
+          }
+
+          const ext = (fileToUpload.name.split(".").pop() || (asImage ? "jpg" : "mp4")).toLowerCase();
+          const blobPath = `posts/${Date.now()}-${i}-${Math.random().toString(16).slice(2)}.${ext}`;
+
+          if (!asImage) {
+            const durationSec = await getVideoDurationSeconds(fileToUpload);
+            if (durationSec > MAX_VIDEO_DURATION_SECONDS) {
+              setError(`Video is too long for posts (max ${MAX_VIDEO_DURATION_SECONDS}s).`);
+              return;
+            }
+          }
+
+          // Upload directly to Vercel Blob to avoid 413 from serverless request body limits.
+          const uploadResult = await upload(blobPath, fileToUpload, {
+            access: "public",
+            handleUploadUrl: "/api/posts/client-upload",
+          });
+          urls.push(uploadResult.url);
         }
-        mediaUrls = uploadData.mediaUrls ?? [];
+
+        mediaUrls = urls;
         if (mediaUrls.length === 0) {
           setError("No media uploaded.");
           return;

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import { CropEditor } from "@/components/feed/new/CropEditor";
+import { upload } from "@vercel/blob/client";
 import {
   type TextOverlay,
   DEFAULT_TEXT_OVERLAY,
@@ -29,6 +30,11 @@ type SelectedItem = {
 };
 
 const MAX_ITEMS = 10;
+// Instagram-like guardrails (stories split into segments; hard enforcement is on our side).
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+const MAX_TOTAL_UPLOAD_BYTES = 250 * 1024 * 1024; // memory/UX guardrail for multi-item selections
+const MAX_VIDEO_DURATION_SECONDS = 60; // Stories max (single segment) is up to 60s
 
 const IMAGE_EXTS = /\.(jpe?g|png|gif|webp|heic|heif)$/i;
 const VIDEO_EXTS = /\.(mp4|webm|mov|m4v|quicktime)$/i;
@@ -75,6 +81,14 @@ export default function NewStatusPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [shareShake, setShareShake] = useState(false);
+  const searchParams = useSearchParams();
+  const fromPostId = searchParams.get("fromPostId");
+  const [fromPostLoading, setFromPostLoading] = useState(false);
+  const [fromPostAllowed, setFromPostAllowed] = useState(true);
+  const [fromPostAuthorName, setFromPostAuthorName] = useState<string>("");
+  const [fromPostAuthorImage, setFromPostAuthorImage] = useState<string | null>(null);
+  const [fromPostCaption, setFromPostCaption] = useState<string>("");
+  const lockVisibilityForFromPost = !!fromPostId;
   const [isSelecting, setIsSelecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +153,160 @@ export default function NewStatusPage() {
     router.push("/app/feed");
   }, [router, editedPreviewUrl]);
 
+  useEffect(() => {
+    if (!fromPostId) return;
+    let cancelled = false;
+
+    (async () => {
+      setFromPostLoading(true);
+      setFromPostAllowed(true);
+      setFromPostAuthorName("");
+      setFromPostAuthorImage(null);
+      setFromPostCaption("");
+      setError("");
+
+      // Clear any existing editor state before prefilling.
+      setSelectedItems((prev) => {
+        prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+        return [];
+      });
+      setEditedPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return "";
+      });
+      setEditedBlob(null);
+      setPrimaryId(null);
+      setCaptionByItemId({});
+      setTextOverlaysByItemId({});
+      setSelectedOverlayId(null);
+      setShowCropOverlay(false);
+
+      try {
+        const res = await fetch(`/api/posts/${fromPostId}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to load post");
+        const post = (await res.json()) as {
+          authorName?: string;
+          authorImage?: string | null;
+          mediaUrls?: string[];
+          caption?: string;
+          visibility?: string;
+        };
+        if (cancelled) return;
+
+        const postVisibility = post.visibility ?? "network";
+        const allowed = postVisibility === "network";
+        setFromPostAllowed(allowed);
+
+        setFromPostAuthorName(post.authorName ?? "");
+        setFromPostAuthorImage(post.authorImage ?? null);
+        setFromPostCaption(post.caption ?? "");
+
+        // Story visibility is always forced to Everyone when coming from a post.
+        setVisibility("everyone");
+
+        if (!allowed) {
+          setError("Only posts shared with Everyone can be added to a story.");
+        }
+
+        const urls = (post.mediaUrls ?? []).filter(Boolean).slice(0, MAX_ITEMS);
+        if (urls.length === 0) return;
+
+        const nextItems: SelectedItem[] = [];
+        let totalBytes = 0;
+        for (let i = 0; i < urls.length; i++) {
+          const url = urls[i];
+          const blob = await fetch(url).then((r) => r.blob());
+          if (cancelled) return;
+
+          const isVideoFromUrl = VIDEO_EXTS.test(url);
+          const isVideoFromBlob = blob.type?.startsWith("video/");
+          const isVideo = isVideoFromUrl || !!isVideoFromBlob;
+
+          totalBytes += blob.size ?? 0;
+          if (totalBytes > MAX_TOTAL_UPLOAD_BYTES) {
+            setFromPostAllowed(false);
+            setError("Selected media is too large. Please choose a shorter/smaller post.");
+            return;
+          }
+
+          if (isVideo && blob.size > MAX_VIDEO_SIZE_BYTES) {
+            setFromPostAllowed(false);
+            setError(`Video is too large. Max ${Math.floor(MAX_VIDEO_SIZE_BYTES / 1024 / 1024)} MB.`);
+            return;
+          }
+          if (!isVideo && blob.size > MAX_IMAGE_SIZE_BYTES) {
+            setFromPostAllowed(false);
+            setError(`Image is too large. Max ${Math.floor(MAX_IMAGE_SIZE_BYTES / 1024 / 1024)} MB.`);
+            return;
+          }
+
+          const ext = isVideo ? "mp4" : "jpg";
+          const fileType = isVideo
+            ? blob.type?.startsWith("video/") ? blob.type : "video/mp4"
+            : blob.type?.startsWith("image/") ? blob.type : "image/jpeg";
+
+          const file = new File([blob], `story-${Date.now()}-${i}.${ext}`, { type: fileType });
+          const previewUrl = URL.createObjectURL(blob);
+
+          nextItems.push({
+            id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            file,
+            previewUrl,
+            isVideo,
+            videoDuration: null,
+          });
+        }
+
+        if (cancelled) return;
+        setSelectedItems(nextItems);
+        setPrimaryId(nextItems[0]?.id ?? null);
+
+        // Prefill video duration checks so share button can be disabled early.
+        nextItems.forEach((it) => {
+          if (!it.isVideo) return;
+          const vid = document.createElement("video");
+          vid.preload = "metadata";
+          vid.muted = true;
+          vid.onloadedmetadata = () => {
+            const durationSec = vid.duration;
+            if (Number.isFinite(durationSec) && durationSec > MAX_VIDEO_DURATION_SECONDS) {
+              setFromPostAllowed(false);
+              setError(`Video is too long for Stories (max ${MAX_VIDEO_DURATION_SECONDS}s).`);
+            }
+            if (Number.isFinite(durationSec)) {
+              const m = Math.floor(durationSec / 60);
+              const s = Math.floor(durationSec % 60);
+              setSelectedItems((curr) =>
+                curr.map((c) =>
+                  c.id === it.id ? { ...c, videoDuration: `${m}:${s.toString().padStart(2, "0")}` } : c
+                )
+              );
+            }
+            vid.remove();
+          };
+          vid.onerror = () => {
+            vid.remove();
+          };
+          vid.src = it.previewUrl;
+        });
+
+        const map: Record<string, string> = {};
+        nextItems.forEach((it) => {
+          map[it.id] = post.caption ?? "";
+        });
+        setCaptionByItemId(map);
+      } catch {
+        if (!cancelled) setError("Failed to load post preview for story.");
+      } finally {
+        if (!cancelled) setFromPostLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fromPostId]);
+
   const handleCameraClick = useCallback(() => {
     setError("");
     setIsSelecting(true);
@@ -169,13 +337,32 @@ export default function NewStatusPage() {
         setError("Please choose an image or video.");
         return;
       }
+      const incomingTotalBytes = incoming.reduce((acc, f) => acc + (f.size ?? 0), 0);
+      if (incomingTotalBytes > MAX_TOTAL_UPLOAD_BYTES) {
+        setError("Selected media is too large. Please reduce the number/size of files.");
+        return;
+      }
+      const filteredIncoming = incoming.filter((f) => {
+        if (isVideoFile(f)) return f.size <= MAX_VIDEO_SIZE_BYTES;
+        return f.size <= MAX_IMAGE_SIZE_BYTES;
+      });
+      if (filteredIncoming.length === 0) {
+        const maxMb = isVideoFile(incoming[0]) ? MAX_VIDEO_SIZE_BYTES / 1024 / 1024 : MAX_IMAGE_SIZE_BYTES / 1024 / 1024;
+        setError(`File too large. Max ${Math.floor(maxMb)} MB.`);
+        return;
+      }
+      if (filteredIncoming.length !== incoming.length) {
+        setError(
+          `Some files were skipped because they exceed the size limit (images: ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024} MB, videos: ${MAX_VIDEO_SIZE_BYTES / 1024 / 1024} MB).`
+        );
+      }
       setError("");
       setEditedBlob(null);
       setEditedPreviewUrl("");
 
       setSelectedItems((prev) => {
         const room = MAX_ITEMS - prev.length;
-        const toAdd = incoming.slice(0, room).map((file) => {
+        const toAdd = filteredIncoming.slice(0, room).map((file) => {
           const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
           const previewUrl = URL.createObjectURL(file);
           return {
@@ -193,6 +380,15 @@ export default function NewStatusPage() {
           const vid = document.createElement("video");
           vid.preload = "metadata";
           vid.onloadedmetadata = () => {
+            const durationSec = Number.isFinite(vid.duration) ? vid.duration : NaN;
+            if (Number.isFinite(durationSec) && durationSec > MAX_VIDEO_DURATION_SECONDS) {
+              // Remove too-long videos to prevent share/publish failures.
+              URL.revokeObjectURL(it.previewUrl);
+              setSelectedItems((curr) => curr.filter((c) => c.id !== it.id));
+              setError(`Video is too long for Stories (max ${MAX_VIDEO_DURATION_SECONDS}s).`);
+              vid.remove();
+              return;
+            }
             const m = Math.floor(vid.duration / 60);
             const s = Math.floor(vid.duration % 60);
             setSelectedItems((curr) =>
@@ -285,6 +481,12 @@ export default function NewStatusPage() {
   }, []);
 
   const handleShare = useCallback(async () => {
+    if (fromPostId && !fromPostAllowed) {
+      setError("Only posts shared with Everyone can be added to a story.");
+      setShareShake(true);
+      setTimeout(() => setShareShake(false), 400);
+      return;
+    }
     if (selectedItems.length === 0) {
       setError("Add at least one photo or video.");
       setShareShake(true);
@@ -302,6 +504,49 @@ export default function NewStatusPage() {
           })()
         : selectedItems;
 
+      // Enforce Instagram-like story video time limit to prevent publish issues.
+      for (const item of ordered) {
+        if (!item.isVideo) continue;
+
+        const parseDuration = (d?: string | null): number | null => {
+          if (!d) return null;
+          const parts = d.split(":");
+          if (parts.length !== 2) return null;
+          const m = Number(parts[0]);
+          const s = Number(parts[1]);
+          if (!Number.isFinite(m) || !Number.isFinite(s)) return null;
+          return m * 60 + s;
+        };
+
+        let durationSec = parseDuration(item.videoDuration ?? null);
+        if (durationSec == null) {
+          // Fallback: read metadata on-demand.
+          durationSec = await new Promise<number>((resolve, reject) => {
+            const v = document.createElement("video");
+            v.preload = "metadata";
+            v.muted = true;
+            v.onloadedmetadata = () => {
+              const d = v.duration;
+              if (!Number.isFinite(d)) reject(new Error("Invalid duration"));
+              else resolve(d);
+              v.remove();
+            };
+            v.onerror = () => {
+              reject(new Error("Could not read video duration"));
+              v.remove();
+            };
+            v.src = item.previewUrl;
+          });
+        }
+
+        if (durationSec > MAX_VIDEO_DURATION_SECONDS) {
+          setError(`Video is too long for Stories (max ${MAX_VIDEO_DURATION_SECONDS}s).`);
+          setShareShake(true);
+          setTimeout(() => setShareShake(false), 400);
+          return;
+        }
+      }
+
       const uploaded: Array<{
         mediaUrl: string;
         type: "image" | "video";
@@ -312,22 +557,26 @@ export default function NewStatusPage() {
 
       for (let i = 0; i < ordered.length; i++) {
         const item = ordered[i];
-        const formData = new FormData();
+        const asImage = isImageFile(item.file);
         let fileToUpload: File;
-        if (i === 0 && editedBlob && isImageFile(item.file)) {
+        if (i === 0 && editedBlob && asImage) {
           fileToUpload = new File([editedBlob], item.file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
         } else {
-          fileToUpload = fileForUpload(item.file, isImageFile(item.file));
+          fileToUpload = fileForUpload(item.file, asImage);
         }
-        formData.set("file", fileToUpload);
 
-        const uploadRes = await fetch("/api/status/upload", { method: "POST", body: formData });
-        if (!uploadRes.ok) {
-          const err = await uploadRes.json().catch(() => ({}));
-          setError((err as { error?: string }).error || "Upload failed. Please try again.");
-          return;
-        }
-        const { mediaUrl, type } = (await uploadRes.json()) as { mediaUrl: string; type: "image" | "video" };
+        const ext = (fileToUpload.name.split(".").pop() || (asImage ? "jpg" : "mp4")).toLowerCase();
+        const blobPath = `status/${Date.now()}-${i}-${Math.random().toString(16).slice(2)}.${ext}`;
+
+        // Upload directly from browser to Vercel Blob to avoid Vercel's 4.5MB
+        // serverless request body limit (prevents 413 for large videos).
+        const uploadResult = await upload(blobPath, fileToUpload, {
+          access: "public",
+          handleUploadUrl: "/api/status/client-upload",
+        });
+
+        const mediaUrl = uploadResult.url;
+        const type: "image" | "video" = asImage ? "image" : "video";
         const overlays = textOverlaysByItemId[item.id] ?? [];
         const transform = mediaTransformByItemId[item.id];
         const hasTransform = transform && (transform.scale !== 1 || transform.translateX !== 0 || transform.translateY !== 0);
@@ -830,6 +1079,43 @@ export default function NewStatusPage() {
                 aria-hidden
               />
             )}
+
+            {/* When creating a story from a post: show a post-like preview overlay */}
+            {fromPostId && (
+              <>
+                <div className="absolute top-4 left-4 z-30 pointer-events-none">
+                  <div className="flex items-center gap-2 rounded-xl bg-black/35 px-3 py-2">
+                    <div className="w-10 h-10 rounded-lg p-[1px] border border-white/20 flex items-center justify-center bg-black/20">
+                      <div className="w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-black/20">
+                        {fromPostAuthorImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={fromPostAuthorImage} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-base font-semibold text-white/80">
+                            {(fromPostAuthorName || "U").charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{fromPostAuthorName}</p>
+                      <p className="text-xs text-white/70">Now</p>
+                    </div>
+                  </div>
+                </div>
+
+                {primaryId && (captionByItemId[primaryId] ?? fromPostCaption) && (
+                  <div className="absolute left-0 right-0 bottom-0 z-30 px-4 pb-3 pointer-events-none">
+                    <div className="inline-block max-w-full rounded-2xl bg-black/45 px-3 py-2">
+                      <p className="text-sm text-white/95 truncate">
+                        {captionByItemId[primaryId] ?? fromPostCaption}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Text overlays — draggable, position in % */}
             {primaryId && primaryOverlays.length > 0 && (
               <div
@@ -1044,7 +1330,7 @@ export default function NewStatusPage() {
           <button
             type="button"
             onClick={handleShare}
-            disabled={saving || !hasMedia}
+            disabled={saving || !hasMedia || (!!fromPostId && !fromPostAllowed)}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-40 disabled:pointer-events-none active:scale-90 ${
               shareShake ? "animate-[shake_0.4s_ease-in-out]" : ""
             } ${hasMedia && !saving ? "bg-white text-black hover:bg-white/90 hover:scale-105 shadow-lg shadow-white/20" : "bg-white/20 text-white"}`}
@@ -1083,7 +1369,7 @@ export default function NewStatusPage() {
                 key={opt.value}
                 type="button"
                 onClick={() => setVisibility(opt.value)}
-                disabled={saving}
+                disabled={saving || lockVisibilityForFromPost}
                 className={`rounded-full flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-white/40 ${
                   visibility === opt.value ? "bg-white text-black" : "text-white/90 hover:text-white bg-white/15 hover:bg-white/25"
                 }`}
