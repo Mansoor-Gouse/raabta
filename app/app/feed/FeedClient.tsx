@@ -62,6 +62,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
 
   const [tabsHidden, setTabsHidden] = useState(false);
   const tabsHiddenRef = useRef(false);
+  const [feedReelActive, setFeedReelActive] = useState(false);
 
   const dispatchChromeHidden = useCallback((hidden: boolean) => {
     if (typeof window === "undefined") return;
@@ -80,10 +81,9 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
     if (panel) lastScrollTopRef.current = panel.scrollTop;
   }, [activeIndex]);
 
-  const handlePanelScroll = useCallback(() => {
-    const panel = activeIndexRef.current === 0 ? postsPanelRef.current : storiesPanelRef.current;
-    if (!panel) return;
-    const newTop = panel.scrollTop;
+  const handlePanelScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    // Use the actual scrolling element to avoid any ref/staleness issues.
+    const newTop = (e.currentTarget as HTMLElement).scrollTop;
     const delta = newTop - lastScrollTopRef.current;
     // Ignore true-zero and extremely tiny jitter, but allow small deltas
     // so hide/show triggers reliably.
@@ -100,6 +100,20 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
       setTabsHidden(false);
     }
   }, [isActive, dispatchChromeHidden]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent;
+      setFeedReelActive(!!ce.detail?.active);
+    };
+    window.addEventListener("rope:feedReelActive", handler as EventListener);
+    return () => window.removeEventListener("rope:feedReelActive", handler as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (!isActive) setFeedReelActive(false);
+  }, [isActive]);
 
   useEffect(() => {
     // Ensure chrome is restored on unmount.
@@ -248,8 +262,10 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
       {/* Sticky header inside feed panel: title (optional) + segment tabs */}
       <div
+        data-rope-feed-tabs
         className={[
-          "sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] overflow-hidden",
+          "sticky top-0 z-10 shrink-0 border-b overflow-hidden",
+          feedReelActive ? "bg-transparent border-transparent" : "bg-[var(--ig-bg-primary)] border-[var(--ig-border-light)]",
           "transition-[max-height,opacity] duration-200 ease-out",
           tabsHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-[120px] opacity-100 pointer-events-auto",
         ].join(" ")}

@@ -20,6 +20,7 @@ export function FeedEventsScrollView() {
   const isSyncingRef = useRef(false);
   const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [feedChromeHidden, setFeedChromeHidden] = useState(false);
+  const [feedReelActive, setFeedReelActive] = useState(false);
 
   const currentIndex = ROUTES.indexOf(pathname as (typeof ROUTES)[number]);
   const panelIndex: PanelIndex = (currentIndex >= 0 ? currentIndex : 0) as PanelIndex;
@@ -110,12 +111,28 @@ export function FeedEventsScrollView() {
     if (!isFeedRoute) setFeedChromeHidden(false);
   }, [isFeedRoute]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent;
+      setFeedReelActive(!!ce.detail?.active);
+    };
+    window.addEventListener("rope:feedReelActive", handler as EventListener);
+    return () => window.removeEventListener("rope:feedReelActive", handler as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (!isFeedRoute) setFeedReelActive(false);
+  }, [isFeedRoute]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--ig-bg)]">
       {/* Global sticky title header: stays fixed across sections */}
       <div
+        data-rope-global-header
         className={[
-          "shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)] overflow-hidden transition-[max-height] duration-200 ease-out",
+          "shrink-0 sticky top-0 z-30 overflow-hidden transition-[max-height] duration-200 ease-out",
+          isFeedRoute && feedReelActive ? "bg-transparent" : "bg-[var(--ig-bg-primary)]",
           isFeedRoute && feedChromeHidden ? "max-h-0" : "max-h-[64px]",
         ].join(" ")}
       >

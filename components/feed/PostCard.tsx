@@ -78,6 +78,7 @@ export function PostCard({
   const cardRef = useRef<HTMLElement | null>(null);
   const [inView, setInView] = useState(false);
   const userPausedRef = useRef(false);
+  const [reelOffsetPx, setReelOffsetPx] = useState(0);
 
   const isAuthor = currentUserId && post.authorId === currentUserId;
 
@@ -215,6 +216,38 @@ export function PostCard({
   const hasMultiple = post.mediaUrls.length > 1;
   const currentIsVideo = media ? isVideoUrl(media) : false;
 
+  // Reel-like mode: when a feed video is playing and the card is in view.
+  // Used to make the global header transparent and shift the media under it.
+  const reelActive = currentIsVideo && inView && videoPlaying && !mediaFullScreenOpen;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!reelActive) {
+      setReelOffsetPx(0);
+      return;
+    }
+
+    const computeOffset = () => {
+      const globalHeader = document.querySelector("[data-rope-global-header]") as HTMLElement | null;
+      const feedTabs = document.querySelector("[data-rope-feed-tabs]") as HTMLElement | null;
+      const offset = (globalHeader?.offsetHeight ?? 0) + (feedTabs?.offsetHeight ?? 0);
+      setReelOffsetPx(offset);
+    };
+
+    computeOffset();
+    window.addEventListener("resize", computeOffset);
+    return () => window.removeEventListener("resize", computeOffset);
+  }, [reelActive]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("rope:feedReelActive", {
+        detail: { active: reelActive },
+      })
+    );
+  }, [reelActive]);
+
   useEffect(() => {
     if (!currentIsVideo) setVideoPlaying(false);
     else videoRef.current?.pause();
@@ -310,7 +343,11 @@ export function PostCard({
   const likedSampleInitial = likedSampleName?.charAt(0)?.toUpperCase() || "?";
 
   return (
-    <article ref={cardRef as React.RefObject<HTMLElement>} className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm">
+    <article
+      ref={cardRef as React.RefObject<HTMLElement>}
+      className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm"
+      style={reelActive ? { paddingTop: reelOffsetPx } : undefined}
+    >
       {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
       {likedSampleName && likeCount > 0 && (
         <button
@@ -440,7 +477,12 @@ export function PostCard({
       {post.mediaUrls.length > 0 && (
         <div
           className="relative w-full bg-black cursor-default"
-          style={{ aspectRatio: mediaAspectRatio, minHeight: "160px" }}
+          style={{
+            aspectRatio: mediaAspectRatio,
+            minHeight: "160px",
+            transform: reelActive && reelOffsetPx ? `translateY(-${reelOffsetPx}px)` : undefined,
+            willChange: reelActive ? "transform" : undefined,
+          }}
           onClick={handleMediaClick}
           onDoubleClick={(e) => e.preventDefault()}
           role="button"
