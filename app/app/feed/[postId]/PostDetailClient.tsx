@@ -296,7 +296,6 @@ export function PostDetailClient({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <span className="text-lg font-semibold text-[var(--ig-text)]">Post</span>
           </div>
           <div className="relative" ref={menuRef}>
             <button
@@ -655,28 +654,6 @@ export function PostDetailClient({
               </React.Fragment>
             ))}
           </ul>
-
-          <form onSubmit={submitComment} className="flex gap-2 items-center">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder={replyingTo ? `Reply to @${replyingTo.authorName}` : "Add a comment..."}
-              className="flex-1 rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] px-3 py-2 text-sm text-[var(--ig-text)] placeholder:text-[var(--ig-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--ig-link)]"
-            />
-            {replyingTo && (
-              <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-[var(--ig-text-secondary)] shrink-0">
-                Cancel
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={!commentText.trim() || submitting}
-              className="text-sm font-semibold text-[var(--ig-link)] disabled:opacity-40 hover:opacity-80"
-            >
-              Post
-            </button>
-          </form>
         </div>
 
         <ShareSheet
