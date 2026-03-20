@@ -367,22 +367,37 @@ export function PostCard({
           className={[
             "w-full flex items-center gap-2 px-4 py-1.5 hover:bg-[var(--ig-border-light)]/40 transition-colors",
             reelActive
-              ? "relative z-5 bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md border-b border-transparent"
+              ? "relative z-[9] bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md border-b border-transparent"
               : "border-b border-[var(--ig-border-light)]",
           ].join(" ")}
           data-rope-card-header
         >
           <div className="flex -space-x-2">
-            <div className="w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-border-light)] flex items-center justify-center text-[10px] font-semibold text-[var(--ig-text-secondary)]">
+            <div
+              className={[
+                "w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-border-light)] flex items-center justify-center text-[10px] font-semibold",
+                reelActive ? "text-white" : "text-[var(--ig-text-secondary)]",
+              ].join(" ")}
+            >
               {likedSampleInitial}
             </div>
             {likeCount > 1 && (
-              <div className="w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-bg-primary)] flex items-center justify-center text-[10px] font-semibold text-[var(--ig-text-secondary)]">
+              <div
+                className={[
+                  "w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-bg-primary)] flex items-center justify-center text-[10px] font-semibold",
+                  reelActive ? "text-white" : "text-[var(--ig-text-secondary)]",
+                ].join(" ")}
+              >
                 +{likeCount - 1}
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0 text-left text-xs text-[var(--ig-text)]">
+          <div
+            className={[
+              "flex-1 min-w-0 text-left text-xs font-medium",
+              reelActive ? "text-white" : "text-[var(--ig-text)]",
+            ].join(" ")}
+          >
             <span className="font-semibold">{likedSampleName}</span>
             {likeCount > 1 ? ` and ${likeCount - 1} others` : " likes this"}
           </div>
@@ -393,7 +408,7 @@ export function PostCard({
       <header
         className={[
           "flex items-center gap-3 px-4 py-2.5",
-          reelActive ? "relative z-5 bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md" : "",
+          reelActive ? "relative z-[9] bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md" : "",
         ].join(" ")}
         data-rope-card-header
       >
@@ -414,7 +429,10 @@ export function PostCard({
           <div className="flex items-center gap-1.5 flex-wrap">
             <Link
               href={`/app/members/${post.authorId}`}
-              className="font-semibold text-sm text-[var(--ig-text)] hover:opacity-80 truncate"
+              className={[
+                "font-semibold text-sm hover:opacity-80 truncate",
+                reelActive ? "text-white" : "text-[var(--ig-text)]",
+              ].join(" ")}
             >
               {post.authorName}
             </Link>
@@ -424,12 +442,18 @@ export function PostCard({
               </span>
             )}
             {post.fromTrustedCircle && !post.fromInnerCircle && (
-              <span className="inline-flex items-center text-[var(--ig-text-secondary)]" title="From your Trusted Circle">
+              <span
+                className={[
+                  "inline-flex items-center",
+                  reelActive ? "text-white/80" : "text-[var(--ig-text-secondary)]",
+                ].join(" ")}
+                title="From your Trusted Circle"
+              >
                 <IconTrusted className="w-3.5 h-3.5 shrink-0" />
               </span>
             )}
           </div>
-          <div className="flex items-center text-xs text-[var(--ig-text-secondary)] mt-0.5">
+          <div className={["flex items-center text-xs mt-0.5", reelActive ? "text-white/70" : "text-[var(--ig-text-secondary)]"].join(" ")}>
             <time dateTime={post.createdAt}>{timeLabel}</time>
           </div>
         </div>
@@ -499,13 +523,15 @@ export function PostCard({
       {/* 4. Main image — rectangular (omit when text-only post) */}
       {post.mediaUrls.length > 0 && (
         <div
-          className="relative w-full bg-black cursor-default"
+          className={[
+            "relative w-full bg-black cursor-default",
+            reelActive ? "z-[0]" : "",
+          ].join(" ")}
           style={{
             aspectRatio: mediaAspectRatio,
             minHeight: "160px",
             transform: reelActive && reelOffsetPx ? `translateY(-${reelOffsetPx}px)` : undefined,
             willChange: reelActive ? "transform" : undefined,
-            zIndex: reelActive ? 0 : undefined,
           }}
           onClick={handleMediaClick}
           onDoubleClick={(e) => e.preventDefault()}

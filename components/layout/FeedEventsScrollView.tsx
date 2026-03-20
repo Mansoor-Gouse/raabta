@@ -133,11 +133,18 @@ export function FeedEventsScrollView() {
         className={[
           "shrink-0 sticky top-0 z-30 overflow-hidden transition-[max-height] duration-200 ease-out",
           isFeedRoute && feedReelActive ? "bg-gradient-to-b from-[var(--ig-bg-primary)]/85 to-transparent backdrop-blur-md" : "bg-[var(--ig-bg-primary)]",
-          isFeedRoute && feedChromeHidden ? "max-h-0" : "max-h-[64px]",
+          isFeedRoute && feedChromeHidden && !feedReelActive ? "max-h-0" : "max-h-[64px]",
         ].join(" ")}
       >
         <div className="flex items-center px-4 py-2.5">
-          <h1 className="feed-title-font text-lg font-semibold text-[var(--ig-text)]">The Rope</h1>
+          <h1
+            className={[
+              "feed-title-font text-lg font-semibold",
+              isFeedRoute && feedReelActive ? "text-white" : "text-[var(--ig-text)]",
+            ].join(" ")}
+          >
+            The Rope
+          </h1>
         </div>
       </div>
 
