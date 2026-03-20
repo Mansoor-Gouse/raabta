@@ -215,10 +215,12 @@ export function PostCard({
   const media = post.mediaUrls[mediaIndex];
   const hasMultiple = post.mediaUrls.length > 1;
   const currentIsVideo = media ? isVideoUrl(media) : false;
+  const postHasVideo = post.mediaUrls.some((u) => isVideoUrl(u));
 
   // Reel-like mode: when a feed video is playing and the card is in view.
   // Used to make the global header transparent and shift the media under it.
-  const reelActive = currentIsVideo && inView && videoPlaying && !mediaFullScreenOpen;
+  // IMPORTANT: activate based on media type (video) instead of playback state.
+  const reelActive = postHasVideo && currentIsVideo && inView && !mediaFullScreenOpen;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
