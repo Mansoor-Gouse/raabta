@@ -145,6 +145,13 @@ export function StoryBar() {
     fetchStatus();
   }, [fetchStatus]);
 
+  // Keep story UI in sync when we create a story from other parts of the app.
+  useEffect(() => {
+    const handler = () => fetchStatus();
+    window.addEventListener("rope:statusUpdated", handler as EventListener);
+    return () => window.removeEventListener("rope:statusUpdated", handler as EventListener);
+  }, [fetchStatus]);
+
   useEffect(() => {
     fetch("/api/me")
       .then((r) => r.json())

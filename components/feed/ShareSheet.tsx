@@ -12,6 +12,8 @@ export type ShareSheetPost = {
   authorImage?: string | null;
   mediaUrls: string[];
   caption?: string;
+  fromInnerCircle?: boolean;
+  fromTrustedCircle?: boolean;
 };
 
 type OtherUser = { name?: string; id?: string; image?: string };
@@ -65,6 +67,8 @@ export function ShareSheet({
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [addingToStory, setAddingToStory] = useState(false);
+  const [storyError, setStoryError] = useState<string | null>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentUserId = client?.userID ?? null;
@@ -224,11 +228,51 @@ export function ShareSheet({
     });
   }, [post]);
 
+  const handleAddToStory = useCallback(async () => {
+    if (!post || addingToStory) return;
+    if (!post.mediaUrls?.length) return;
+    setAddingToStory(true);
+    setStoryError(null);
+
+    const mediaUrl = post.mediaUrls[0];
+    const isImage = !!mediaUrl?.match(/\.(gif|webp|png|jpe?g|avif)$/i);
+    const type = isImage ? "image" : "video";
+
+    const visibility =
+      post.fromTrustedCircle ? ("trusted_circle" as const) : post.fromInnerCircle ? ("inner_circle" as const) : ("everyone" as const);
+
+    try {
+      await fetch("/api/status/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: [
+            {
+              mediaUrl,
+              type,
+              caption: post.caption?.trim().slice(0, 500) || "",
+            },
+          ],
+          visibility,
+        }),
+      });
+      setAddingToStory(false);
+      onClose();
+      window.dispatchEvent(new CustomEvent("rope:statusUpdated"));
+      router.refresh();
+    } catch {
+      setAddingToStory(false);
+      setStoryError("Could not add to story. Please try again.");
+    }
+  }, [post, addingToStory, onClose, router]);
+
   useEffect(() => {
     if (!open) {
       setSearch("");
       setSearchUsers([]);
       setSelectedKeys(new Set());
+      setAddingToStory(false);
+      setStoryError(null);
     }
   }, [open]);
 
@@ -389,6 +433,10 @@ export function ShareSheet({
             </button>
             <button
               type="button"
+              onClick={() => {
+                void handleAddToStory();
+              }}
+              disabled={addingToStory}
               className="shrink-0 flex flex-col items-center gap-1"
               aria-label="Add to story"
             >
@@ -397,7 +445,9 @@ export function ShareSheet({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">Story</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                {addingToStory ? "Adding…" : "Story"}
+              </span>
             </button>
             <button
               type="button"
@@ -417,6 +467,11 @@ export function ShareSheet({
             <p className="text-sm text-green-600 dark:text-green-400" role="status">Link copied to clipboard</p>
           )}
         </div>
+        {storyError && (
+          <div className="shrink-0 px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-red-600 dark:text-red-400">{storyError}</p>
+          </div>
+        )}
       </div>
     </>
   );
