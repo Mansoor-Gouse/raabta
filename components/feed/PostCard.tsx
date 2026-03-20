@@ -491,7 +491,7 @@ export function PostCard({
       </header>
 
       {/* 3. Caption / body text */}
-      {caption && (
+      {caption && !reelLayoutActive && (
         <div className="px-4 pb-2">
           <p className="text-sm text-[var(--ig-text)]" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
             {showCaptionPreview ? (
@@ -649,6 +649,34 @@ export function PostCard({
                       }`}
                     />
                   ))}
+                </div>
+              )}
+
+              {caption && reelLayoutActive && (
+                <div
+                  className="absolute inset-x-0 bottom-0 px-4 pr-14 pb-3 pt-6 z-20 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="text-sm text-white break-words" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
+                    {showCaptionPreview ? (
+                      <>
+                        {caption.slice(0, 120).trim()}
+                        {caption.length > 120 && "… "}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCaptionExpanded(true);
+                          }}
+                          className="text-[var(--ig-link)] font-medium hover:underline"
+                        >
+                          ... more
+                        </button>
+                      </>
+                    ) : (
+                      caption
+                    )}
+                  </p>
                 </div>
               )}
             </>
