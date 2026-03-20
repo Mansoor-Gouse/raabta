@@ -88,6 +88,8 @@ export default function NewStatusPage() {
   const [fromPostAuthorName, setFromPostAuthorName] = useState<string>("");
   const [fromPostAuthorImage, setFromPostAuthorImage] = useState<string | null>(null);
   const [fromPostCaption, setFromPostCaption] = useState<string>("");
+  const [fromPostCreatedAt, setFromPostCreatedAt] = useState<string | null>(null);
+  const [fromPostCaptionExpanded, setFromPostCaptionExpanded] = useState(false);
   const lockVisibilityForFromPost = !!fromPostId;
   const [isSelecting, setIsSelecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +138,31 @@ export default function NewStatusPage() {
   const canAddMore = selectedItems.length < MAX_ITEMS;
   const hasMedia = selectedItems.length > 0;
 
+  const timeAgo = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const s = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (s < 60) return "Just now";
+    if (s < 3600) return `${Math.floor(s / 60)}m`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h`;
+    if (s < 604800) return `${Math.floor(s / 86400)}d`;
+    return d.toLocaleDateString();
+  };
+
+  const fromPostTimeLabel = (() => {
+    if (!fromPostCreatedAt) return "Now";
+    const t = timeAgo(fromPostCreatedAt);
+    return t === "Just now" ? t : /^\d+[mhd]$/.test(t) ? `${t} ago` : t;
+  })();
+
+  const fromPostCaptionForPreview = fromPostId
+    ? primaryId
+      ? captionByItemId[primaryId] ?? fromPostCaption
+      : fromPostCaption
+    : "";
+  const fromPostCaptionNeedsExpand = fromPostCaptionForPreview.length > 120;
+  const fromPostShowCaptionPreview = fromPostCaptionNeedsExpand && !fromPostCaptionExpanded;
+
   const handleCancel = useCallback(() => {
     setSelectedItems((prev) => {
       prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
@@ -163,6 +190,8 @@ export default function NewStatusPage() {
       setFromPostAuthorName("");
       setFromPostAuthorImage(null);
       setFromPostCaption("");
+      setFromPostCreatedAt(null);
+      setFromPostCaptionExpanded(false);
       setError("");
 
       // Clear any existing editor state before prefilling.
@@ -187,6 +216,7 @@ export default function NewStatusPage() {
         const post = (await res.json()) as {
           authorName?: string;
           authorImage?: string | null;
+          createdAt?: string;
           mediaUrls?: string[];
           caption?: string;
           visibility?: string;
@@ -200,6 +230,7 @@ export default function NewStatusPage() {
         setFromPostAuthorName(post.authorName ?? "");
         setFromPostAuthorImage(post.authorImage ?? null);
         setFromPostCaption(post.caption ?? "");
+        setFromPostCreatedAt(post.createdAt ?? null);
 
         // Story visibility is always forced to Everyone when coming from a post.
         setVisibility("everyone");
@@ -1048,14 +1079,14 @@ export default function NewStatusPage() {
                   <img
                     src={displayUrl}
                     alt=""
-                    className="max-h-full w-full object-contain pointer-events-none"
+                    className="max-h-full w-full object-cover object-center pointer-events-none"
                     draggable={false}
                   />
                 ) : (
                   <video
                     key={primaryId}
                     src={primaryPreviewUrl}
-                    className="max-h-full w-full object-contain pointer-events-none"
+                    className="max-h-full w-full object-cover object-center pointer-events-none"
                     controls
                     playsInline
                     muted
@@ -1083,32 +1114,81 @@ export default function NewStatusPage() {
             {/* When creating a story from a post: show a post-like preview overlay */}
             {fromPostId && (
               <>
-                <div className="absolute top-4 left-4 z-30 pointer-events-none">
-                  <div className="flex items-center gap-2 rounded-xl bg-black/35 px-3 py-2">
-                    <div className="w-10 h-10 rounded-lg p-[1px] border border-white/20 flex items-center justify-center bg-black/20">
-                      <div className="w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-black/20">
+                <div className="absolute left-0 right-0 top-0 z-30 pointer-events-none">
+                  <header className="flex items-center gap-3 px-4 py-2.5">
+                    <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-bg-primary)]">
+                      <div className="w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-[var(--ig-bg-primary)]">
                         {fromPostAuthorImage ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={fromPostAuthorImage} alt="" className="w-full h-full object-cover" />
+                          <img src={fromPostAuthorImage} alt="" className="w-full h-full rounded-[5px] object-cover" />
                         ) : (
-                          <span className="text-base font-semibold text-white/80">
+                          <span className="text-base font-semibold text-[var(--ig-text-secondary)]">
                             {(fromPostAuthorName || "U").charAt(0).toUpperCase()}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{fromPostAuthorName}</p>
-                      <p className="text-xs text-white/70">Now</p>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-semibold text-sm text-[var(--ig-text)] truncate">{fromPostAuthorName}</p>
+                      </div>
+                      <div className="flex items-center text-xs mt-0.5 text-[var(--ig-text-secondary)]">
+                        <time dateTime={fromPostCreatedAt ?? undefined}>{fromPostTimeLabel}</time>
+                      </div>
                     </div>
-                  </div>
+                  </header>
                 </div>
 
-                {primaryId && (captionByItemId[primaryId] ?? fromPostCaption) && (
-                  <div className="absolute left-0 right-0 bottom-0 z-30 px-4 pb-3 pointer-events-none">
+                {fromPostCaptionForPreview && hasMedia && !fromPostCaptionExpanded && (
+                  <div
+                    className="absolute left-0 right-12 bottom-0 px-4 pb-3 pt-6 z-30 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <p
+                      className="text-sm text-white break-words"
+                      style={{
+                        lineHeight: 1.35,
+                        ...(fromPostShowCaptionPreview
+                          ? ({
+                              display: "-webkit-box",
+                              WebkitLineClamp: 1,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            } as any)
+                          : undefined),
+                      }}
+                    >
+                      {fromPostShowCaptionPreview ? (
+                        <>
+                          {fromPostCaptionForPreview.slice(0, 120).trim()}
+                          {fromPostCaptionForPreview.length > 120 && "… "}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFromPostCaptionExpanded(true);
+                            }}
+                            className="text-[var(--ig-link)] font-medium hover:underline"
+                          >
+                            See more
+                          </button>
+                        </>
+                      ) : (
+                        fromPostCaptionForPreview
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {fromPostCaptionForPreview && hasMedia && fromPostCaptionExpanded && (
+                  <div
+                    className="absolute left-0 right-0 bottom-0 z-30 px-4 pb-3 pt-4 pointer-events-none"
+                    aria-hidden
+                  >
                     <div className="inline-block max-w-full rounded-2xl bg-black/45 px-3 py-2">
-                      <p className="text-sm text-white/95 truncate">
-                        {captionByItemId[primaryId] ?? fromPostCaption}
+                      <p className="text-sm text-white/95 break-words" style={{ lineHeight: 1.35 }}>
+                        {fromPostCaptionForPreview}
                       </p>
                     </div>
                   </div>
