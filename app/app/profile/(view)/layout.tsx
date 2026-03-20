@@ -4,7 +4,6 @@ import { getSession } from "@/lib/auth";
 import { ProfileTabs } from "../ProfileTabs";
 import { ProfileViewHeader } from "../ProfileViewHeader";
 import { ProfileViewHeaderSkeleton } from "../ProfileViewHeaderSkeleton";
-import { ProfileContentSkeleton } from "../ProfileContentSkeleton";
 
 export default async function ProfileViewLayout({
   children,
@@ -20,9 +19,7 @@ export default async function ProfileViewLayout({
         <ProfileViewHeader />
       </Suspense>
       <ProfileTabs />
-      <Suspense fallback={<ProfileContentSkeleton />}>
-        {children}
-      </Suspense>
+      {children}
     </div>
   );
 }

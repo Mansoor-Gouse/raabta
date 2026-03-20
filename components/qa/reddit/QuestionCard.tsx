@@ -89,36 +89,39 @@ export function QuestionCard({
           )}
         </Link>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
+        <div className="mt-3 flex flex-nowrap items-center justify-between gap-2 text-[12px] text-[var(--qa-action)]">
+          <div className="flex flex-nowrap items-center gap-1 min-w-0">
             <button
               type="button"
-              className="qa-action-btn"
+              className="qa-action-btn px-2 py-1 flex items-center gap-1 whitespace-nowrap"
               onClick={() => {}}
               aria-label="Answers"
             >
-              <span className="inline-flex items-center gap-1.5">
-                <IconComment className="w-4 h-4" />
-                <span className="font-semibold tabular-nums">{q.answerCount}</span>
-                <span>Answers</span>
+              <IconComment className="w-4 h-4" />
+              <span className="font-semibold tabular-nums min-w-[18px] text-center">
+                {q.answerCount}
               </span>
             </button>
-            <button type="button" className="qa-action-btn" onClick={onShare}>
-              <span className="inline-flex items-center gap-1.5">
-                <IconShare className="w-4 h-4" />
-                <span>Share</span>
-              </span>
+            <button
+              type="button"
+              className="qa-action-btn px-2 py-1 whitespace-nowrap"
+              onClick={onShare}
+              aria-label="Share"
+            >
+              <IconShare className="w-4 h-4" />
             </button>
-            <button type="button" className="qa-action-btn" onClick={onSave}>
-              <span className="inline-flex items-center gap-1.5">
-                <IconBookmark className="w-4 h-4" filled={!!saved} />
-                <span>{saved ? "Saved" : "Save"}</span>
-              </span>
+            <button
+              type="button"
+              className="qa-action-btn px-2 py-1 whitespace-nowrap"
+              onClick={onSave}
+              aria-label={saved ? "Saved" : "Save"}
+            >
+              <IconBookmark className="w-4 h-4" filled={!!saved} />
             </button>
           </div>
           <button
             type="button"
-            className="qa-action-btn"
+            className="qa-action-btn px-2 py-1 whitespace-nowrap"
             onClick={onMore}
             aria-label="More"
           >

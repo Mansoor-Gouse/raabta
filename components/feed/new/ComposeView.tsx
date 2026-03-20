@@ -92,6 +92,18 @@ export function ComposeView({
       <div className="flex-1 overflow-hidden">
         <div className="flex-1 overflow-auto p-4">
           <div className="max-w-xl mx-auto space-y-5">
+          {/* Media */}
+          <div className="post-flow-section p-4">
+            <p className="post-flow-section-title mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l1.5-2.5h15L21 7v14H3V7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 13l2 2 4-5 3 3v6H5v-6l3-0z" />
+              </svg>
+              Media
+            </p>
+            <MediaStrip items={items} onItemsChange={onItemsChange} onEditImage={onEditImage} />
+          </div>
+
           {/* Post content — elevated card with label */}
           <div className="post-flow-section p-4">
             <label htmlFor="compose-caption" className="post-flow-section-title block mb-3 flex items-center gap-2">
@@ -110,7 +122,7 @@ export function ComposeView({
                   if (v.length <= CAPTION_MAX_LENGTH) onCaptionChange(v);
                 }}
                 rows={5}
-                placeholder="What do you want to share? Write your caption, then attach media below."
+                placeholder="What do you want to share?"
                 maxLength={CAPTION_MAX_LENGTH}
                 className="post-flow-input w-full min-h-[128px] resize-y py-3.5 px-4 text-[0.9375rem] leading-relaxed rounded-xl border-0 bg-transparent focus:ring-0 focus:shadow-none placeholder:text-[var(--ig-text-tertiary)]"
                 aria-describedby="compose-caption-count"
@@ -148,18 +160,6 @@ export function ComposeView({
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Media */}
-          <div className="post-flow-section p-4">
-            <p className="post-flow-section-title mb-3 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l1.5-2.5h15L21 7v14H3V7z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 13l2 2 4-5 3 3v6H5v-6l3-0z" />
-              </svg>
-              Media
-            </p>
-            <MediaStrip items={items} onItemsChange={onItemsChange} onEditImage={onEditImage} />
           </div>
 
           {error && (

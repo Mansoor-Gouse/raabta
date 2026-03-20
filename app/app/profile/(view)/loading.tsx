@@ -1,13 +1,13 @@
-import { ProfileViewHeaderSkeleton } from "../ProfileViewHeaderSkeleton";
-import { ProfileTabs } from "../ProfileTabs";
-import { ProfileContentSkeleton } from "../ProfileContentSkeleton";
-
 export default function ProfileViewLoading() {
+  // Posts grid skeleton for `/app/profile` (this file is used when the profile root page is loading).
   return (
-    <div className="elite-events flex-1 overflow-y-auto min-h-full bg-[var(--elite-bg)] no-scrollbar">
-      <ProfileViewHeaderSkeleton />
-      <ProfileTabs />
-      <ProfileContentSkeleton />
+    <div className="grid grid-cols-3 gap-0.5 bg-[var(--elite-bg)]">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div
+          key={i}
+          className="aspect-square bg-[var(--elite-border-light)] animate-pulse"
+        />
+      ))}
     </div>
   );
 }

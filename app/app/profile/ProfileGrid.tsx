@@ -13,13 +13,29 @@ function isImageUrl(url: string): boolean {
 
 export function ProfileGrid() {
   const [posts, setPosts] = useState<PostThumb[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/me/posts")
       .then((r) => r.json())
       .then((data) => setPosts(data.posts || []))
-      .catch(() => {});
+      .catch(() => setPosts([]))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-3 gap-0.5 bg-[var(--elite-bg)]">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="aspect-square bg-[var(--elite-border-light)] animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
 
   if (posts.length === 0) {
     return (
