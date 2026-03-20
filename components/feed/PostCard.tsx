@@ -228,9 +228,11 @@ export function PostCard({
     }
 
     const computeOffset = () => {
+      // Shift video under the global sticky header only.
+      // (We intentionally do not include the Posts/Stories tab row here to avoid
+      // an overly aggressive shift.)
       const globalHeader = document.querySelector("[data-rope-global-header]") as HTMLElement | null;
-      const feedTabs = document.querySelector("[data-rope-feed-tabs]") as HTMLElement | null;
-      const offset = (globalHeader?.offsetHeight ?? 0) + (feedTabs?.offsetHeight ?? 0);
+      const offset = globalHeader?.offsetHeight ?? 0;
       setReelOffsetPx(offset);
     };
 
@@ -346,7 +348,6 @@ export function PostCard({
     <article
       ref={cardRef as React.RefObject<HTMLElement>}
       className="bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm"
-      style={reelActive ? { paddingTop: reelOffsetPx } : undefined}
     >
       {/* 1. Top row — Likes (only when inner/trusted liker sample is available) */}
       {likedSampleName && likeCount > 0 && (
