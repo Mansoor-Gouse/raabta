@@ -14,6 +14,7 @@ import {
   IconClap,
 } from "@/components/layout/InstagramIcons";
 import { ReportButton } from "@/components/report/ReportButton";
+import { useVideoMute } from "@/components/layout/VideoMuteContext";
 
 export type PostCardPost = {
   _id: string;
@@ -73,7 +74,7 @@ export function PostCard({
   const [mediaAspectRatio, setMediaAspectRatio] = useState<string>("16 / 10");
   const [mediaFullScreenOpen, setMediaFullScreenOpen] = useState(false);
   // Instagram-like behavior: attempt autoplay with audio (browser may block; we fall back).
-  const [isMuted, setIsMuted] = useState(false);
+  const { muted: isMuted, setMuted: setIsMuted } = useVideoMute();
   const cardRef = useRef<HTMLElement | null>(null);
   const [inView, setInView] = useState(false);
   const userPausedRef = useRef(false);
@@ -313,7 +314,7 @@ export function PostCard({
       videoRef.current?.pause();
       setVideoPlaying(false);
     }
-  }, [inView, currentIsVideo, mediaFullScreenOpen]);
+  }, [inView, currentIsVideo, mediaFullScreenOpen, setIsMuted]);
 
   const prevMediaKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -354,7 +355,7 @@ export function PostCard({
         videoRef.current.play().catch(() => {});
       }
     }
-  }, [inView, isMuted, mediaFullScreenOpen]);
+  }, [inView, isMuted, mediaFullScreenOpen, setIsMuted]);
 
   const totalReactions = likeCount;
   const repostCount: number = 0; // placeholder until backend supports it

@@ -14,6 +14,7 @@ import { StoryProgressBars } from "./StoryProgressBars";
 import { StoryViewersDrawer } from "./StoryViewersDrawer";
 import type { TextOverlay } from "@/types/status";
 import { StoryShareSheet, type StoryShareSheetStory } from "@/components/status/StoryShareSheet";
+import { useVideoMute } from "@/components/layout/VideoMuteContext";
 
 const IMAGE_DURATION_MS = 5000;
 
@@ -75,6 +76,7 @@ export function StoryViewer({
 }: StoryViewerProps) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
+  const { muted: globalMuted, setMuted: setGlobalMuted } = useVideoMute();
   const [sessionIndex, setSessionIndex] = useState(initialSessionIndex);
   const [statusIndex, setStatusIndex] = useState(initialStatusIndex);
   const [progress, setProgress] = useState(0);
@@ -216,9 +218,16 @@ export function StoryViewer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (isPaused || viewersDrawerOpen) video.pause();
-    else video.play().catch(() => {});
-  }, [isPaused, viewersDrawerOpen, currentStatus?._id]);
+    if (isPaused || viewersDrawerOpen) {
+      video.pause();
+      return;
+    }
+    video.muted = globalMuted;
+    video.play().catch(() => {
+      // If autoplay with audio is blocked, fall back to muted playback.
+      if (!globalMuted) setGlobalMuted(true);
+    });
+  }, [isPaused, viewersDrawerOpen, currentStatus?._id, globalMuted, setGlobalMuted]);
 
   useEffect(() => {
     if (!currentStatus || isPaused || viewersDrawerOpen) return;
@@ -431,7 +440,7 @@ export function StoryViewer({
                 style={transformStyle}
                 playsInline
                 autoPlay
-                muted={false}
+                muted={globalMuted}
                 controls={false}
                 onCanPlay={() => setMediaReady(true)}
               />
@@ -574,6 +583,38 @@ export function StoryViewer({
                 </svg>
               </button>
             )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const next = !globalMuted;
+                setGlobalMuted(next);
+                const v = videoRef.current;
+                if (v) {
+                  v.muted = next;
+                  if (!next && !isPaused && !viewersDrawerOpen) {
+                    v.play().catch(() => setGlobalMuted(true));
+                  }
+                }
+              }}
+              className="p-2 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label={globalMuted ? "Unmute story video" : "Mute story video"}
+              title={globalMuted ? "Unmute" : "Mute"}
+            >
+              {globalMuted ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5l-4 4H3v10h4l4 4V5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 9l-6 6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9l6 6" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5l-4 4H3v10h4l4 4V5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 9a5 5 0 010 6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 6a10 10 0 010 12" />
+                </svg>
+              )}
+            </button>
             <div className="relative">
               <button
                 type="button"

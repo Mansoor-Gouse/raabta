@@ -9,7 +9,16 @@ const DEBOUNCE_MS = 300;
 
 function getUnreadCount(channel: StreamChannel): number {
   const membership = channel.state?.membership as { unread_count?: number } | undefined;
-  return membership?.unread_count ?? 0;
+  const fromMembership = membership?.unread_count;
+  if (Number.isFinite(fromMembership)) {
+    return Math.max(0, Math.floor(fromMembership as number));
+  }
+  const countUnread = (channel as unknown as { countUnread?: () => number }).countUnread;
+  if (typeof countUnread === "function") {
+    const fromMethod = countUnread.call(channel);
+    if (Number.isFinite(fromMethod)) return Math.max(0, Math.floor(fromMethod));
+  }
+  return 0;
 }
 
 /**

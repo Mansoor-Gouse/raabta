@@ -12,6 +12,7 @@ import {
   IconMembers,
 } from "@/components/layout/InstagramIcons";
 import { UnreadMessagesBadge } from "@/components/chat/UnreadMessagesBadge";
+import { VideoMuteProvider } from "@/components/layout/VideoMuteContext";
 
 export type AppUser = { id: string; name?: string; image?: string | null };
 const AppUserContext = createContext<AppUser | null>(null);
@@ -200,9 +201,9 @@ export function AppShell({
 
       <div className="flex-1 flex flex-col min-w-0 relative h-dvh">
         <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
-          <AppUserContext.Provider value={user}>
-            {children}
-          </AppUserContext.Provider>
+          <VideoMuteProvider>
+            <AppUserContext.Provider value={user}>{children}</AppUserContext.Provider>
+          </VideoMuteProvider>
         </main>
 
         {/* Bottom navigation: hidden on channel/status/new-post flow; also hide while scrolling down in feed */}
