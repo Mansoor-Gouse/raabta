@@ -23,14 +23,20 @@ export function PostPreviewCard({
   authorImage,
 }: PostPreviewCardProps) {
   const firstUrl = mediaUrls[0];
+  const [captionExpanded, setCaptionExpanded] = useState(false);
   // Blob URLs often don't have file extensions, so extension-based detection breaks.
   // We try image first, then fall back to video if image decoding fails.
   const [mediaMode, setMediaMode] = useState<"image" | "video">("image");
   const [mediaAspectRatio, setMediaAspectRatio] = useState<string>("16 / 10");
 
+  const hasMedia = mediaUrls.length > 0;
+  const captionNeedsExpand = caption.length > 120;
+  const showCaptionPreview = captionNeedsExpand && !captionExpanded;
+
   useEffect(() => {
     setMediaMode("image");
     setMediaAspectRatio("16 / 10");
+    setCaptionExpanded(false);
   }, [firstUrl]);
 
   return (
@@ -54,11 +60,39 @@ export function PostPreviewCard({
         </div>
       </header>
 
-      {/* Caption — same structure as PostCard */}
-      {caption && (
+      {/* Caption: when collapsed and we have media, render as a bottom overlay (media-first).
+          When expanded (or text-only post), render below media. */}
+      {caption && (!hasMedia || captionExpanded) && (
         <div className="px-4 pb-2">
-          <p className="text-sm text-[var(--ig-text)]" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
-            {caption}
+          <p
+            className="text-sm text-[var(--ig-text)]"
+            style={{
+              lineHeight: CAPTION_LINE_HEIGHT,
+              ...(showCaptionPreview
+                ? ({
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  } as any)
+                : undefined),
+            }}
+          >
+            {showCaptionPreview ? (
+              <>
+                {caption.slice(0, 120).trim()}
+                {caption.length > 120 && "… "}
+                <button
+                  type="button"
+                  onClick={() => setCaptionExpanded(true)}
+                  className="text-[var(--ig-link)] font-medium hover:underline"
+                >
+                  See more
+                </button>
+              </>
+            ) : (
+              caption
+            )}
           </p>
         </div>
       )}
@@ -133,13 +167,54 @@ export function PostPreviewCard({
             </div>
           )}
           {mediaUrls.length > 1 && (
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5" aria-hidden>
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-30" aria-hidden>
               {mediaUrls.map((_, i) => (
                 <span
                   key={i}
                   className={`block rounded-full transition-all ${i === 0 ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"}`}
                 />
               ))}
+            </div>
+          )}
+
+          {caption && hasMedia && !captionExpanded && (
+            <div
+              className="absolute left-0 right-0 bottom-0 px-4 pb-3 pt-6 z-20 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p
+                className="text-sm text-white break-words"
+                style={{
+                  lineHeight: CAPTION_LINE_HEIGHT,
+                  ...(showCaptionPreview
+                    ? ({
+                        display: "-webkit-box",
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      } as any)
+                    : undefined),
+                }}
+              >
+                {showCaptionPreview ? (
+                  <>
+                    {caption.slice(0, 120).trim()}
+                    {caption.length > 120 && "… "}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCaptionExpanded(true);
+                      }}
+                      className="text-[var(--ig-link)] font-medium hover:underline"
+                    >
+                      See more
+                    </button>
+                  </>
+                ) : (
+                  caption
+                )}
+              </p>
             </div>
           )}
         </div>

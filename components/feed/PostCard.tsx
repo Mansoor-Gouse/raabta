@@ -64,7 +64,6 @@ export function PostCard({
   const [moreOpen, setMoreOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
   const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -149,11 +148,18 @@ export function PostCard({
 
   useEffect(() => {
     if (!moreOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMoreOpen(false);
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDeleteConfirm(false);
+        setMoreOpen(false);
+      }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", onEscape);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onEscape);
+      document.body.style.overflow = "";
+    };
   }, [moreOpen]);
 
   useEffect(() => {
@@ -462,31 +468,95 @@ export function PostCard({
             <time dateTime={post.createdAt}>{timeLabel}</time>
           </div>
         </div>
-        <div className="relative shrink-0" ref={menuRef}>
+        <div className="relative shrink-0">
           <button
             type="button"
-            onClick={() => { setMoreOpen((o) => !o); setDeleteConfirm(false); }}
+            onClick={() => {
+              setDeleteConfirm(false);
+              setMoreOpen((o) => !o);
+            }}
             className="p-1.5 text-[var(--ig-text-secondary)] hover:text-[var(--ig-text)]"
             aria-label="More options"
             aria-expanded={moreOpen}
           >
             <IconMore className="w-5 h-5" />
           </button>
+
           {moreOpen && (
-            <div className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-lg border border-[var(--ig-border)] bg-[var(--ig-bg-primary)] shadow-lg z-10">
-              {isAuthor ? (
-                <>
-                  <Link href={`/app/feed/${post._id}/edit`} className="block px-4 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)]" onClick={() => setMoreOpen(false)}>Edit</Link>
-                  <button type="button" onClick={handleDelete} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]">{deleteConfirm ? "Confirm delete?" : "Delete"}</button>
-                  {deleteConfirm && <button type="button" onClick={() => setDeleteConfirm(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>}
-                </>
-              ) : (
-                <>
-                  <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}><ReportButton targetType="post" targetId={post._id} /></div>
-                  <button type="button" onClick={() => setMoreOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]">Cancel</button>
-                </>
-              )}
-            </div>
+            <>
+              <div
+                className="fixed inset-0 z-40 bg-black/50"
+                onClick={() => {
+                  setDeleteConfirm(false);
+                  setMoreOpen(false);
+                }}
+                aria-hidden
+              />
+              <div
+                className="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[85vh] rounded-t-2xl bg-[var(--ig-bg-primary)] border-t border-[var(--ig-border-light)] shadow-[0_-4px_20px_rgba(0,0,0,0.12)]"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Post options"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="shrink-0 border-b border-[var(--ig-border-light)]">
+                  <div className="flex justify-center pt-2.5 pb-1" aria-hidden>
+                    <div className="w-9 h-1 rounded-full bg-[var(--ig-border)] cursor-grab active:cursor-grabbing" />
+                  </div>
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 bg-[var(--ig-bg)]">
+                  {isAuthor ? (
+                    <>
+                      <Link
+                        href={`/app/feed/${post._id}/edit`}
+                        onClick={() => {
+                          setDeleteConfirm(false);
+                          setMoreOpen(false);
+                        }}
+                        className="w-full block px-3 py-2 text-sm text-[var(--ig-text)] hover:bg-[var(--ig-border-light)] rounded-lg"
+                      >
+                        Edit
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="w-full block text-left px-3 py-2 text-sm rounded-lg text-[var(--ig-error)] hover:bg-[var(--ig-border-light)]"
+                      >
+                        {deleteConfirm ? "Confirm delete?" : "Delete"}
+                      </button>
+
+                      {deleteConfirm && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirm(false)}
+                          className="w-full block text-left px-3 py-2 text-sm rounded-lg text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                        <ReportButton targetType="post" targetId={post._id} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeleteConfirm(false);
+                          setMoreOpen(false);
+                        }}
+                        className="w-full block text-left px-3 py-2 text-sm rounded-lg text-[var(--ig-text-secondary)] hover:bg-[var(--ig-border-light)]"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </header>
@@ -503,7 +573,7 @@ export function PostCard({
               ...(showCaptionPreview
                 ? ({
                     display: "-webkit-box",
-                    WebkitLineClamp: 3,
+                    WebkitLineClamp: 1,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                   } as any)
@@ -682,7 +752,7 @@ export function PostCard({
                       ...(showCaptionPreview
                         ? ({
                             display: "-webkit-box",
-                            WebkitLineClamp: 3,
+                            WebkitLineClamp: 1,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
                           } as any)
