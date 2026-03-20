@@ -356,7 +356,10 @@ export function PostCard({
         <button
           type="button"
           onClick={() => onOpenLikes?.(post._id)}
-          className="w-full flex items-center gap-2 px-4 py-1.5 border-b border-[var(--ig-border-light)] hover:bg-[var(--ig-border-light)]/40 transition-colors"
+          className={[
+            "w-full flex items-center gap-2 px-4 py-1.5 hover:bg-[var(--ig-border-light)]/40 transition-colors",
+            reelActive ? "relative z-20 bg-transparent border-b border-white/10" : "border-b border-[var(--ig-border-light)]",
+          ].join(" ")}
         >
           <div className="flex -space-x-2">
             <div className="w-6 h-6 rounded-full border border-[var(--ig-bg-primary)] bg-[var(--ig-border-light)] flex items-center justify-center text-[10px] font-semibold text-[var(--ig-text-secondary)]">
@@ -376,7 +379,12 @@ export function PostCard({
       )}
 
       {/* 2. Author block */}
-      <header className="flex items-center gap-3 px-4 py-2.5">
+      <header
+        className={[
+          "flex items-center gap-3 px-4 py-2.5",
+          reelActive ? "relative z-20 bg-transparent" : "",
+        ].join(" ")}
+      >
         <Link href={`/app/members/${post.authorId}`} className="shrink-0">
           <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-bg-primary)]">
             <div className="w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-[var(--ig-bg-primary)]">
@@ -485,6 +493,7 @@ export function PostCard({
             minHeight: "160px",
             transform: reelActive && reelOffsetPx ? `translateY(-${reelOffsetPx}px)` : undefined,
             willChange: reelActive ? "transform" : undefined,
+            zIndex: reelActive ? 0 : undefined,
           }}
           onClick={handleMediaClick}
           onDoubleClick={(e) => e.preventDefault()}
