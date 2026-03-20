@@ -214,6 +214,7 @@ export function PostCard({
 
   const media = post.mediaUrls[mediaIndex];
   const hasMultiple = post.mediaUrls.length > 1;
+  const hasMedia = post.mediaUrls.length > 0;
   const currentIsVideo = media ? isVideoUrl(media) : false;
   const postHasVideo = post.mediaUrls.some((u) => isVideoUrl(u));
 
@@ -491,9 +492,24 @@ export function PostCard({
       </header>
 
       {/* 3. Caption / body text */}
-      {caption && !reelLayoutActive && (
+      {/* When there is media: collapsed caption is rendered as an overlay inside the media block.
+          Expanded caption switches back to the normal flow (below media) to avoid overlap. */}
+      {caption && (!hasMedia || captionExpanded) && (
         <div className="px-4 pb-2">
-          <p className="text-sm text-[var(--ig-text)]" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
+          <p
+            className="text-sm text-[var(--ig-text)]"
+            style={{
+              lineHeight: CAPTION_LINE_HEIGHT,
+              ...(showCaptionPreview
+                ? ({
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  } as any)
+                : undefined),
+            }}
+          >
             {showCaptionPreview ? (
               <>
                 {caption.slice(0, 120).trim()}
@@ -503,7 +519,7 @@ export function PostCard({
                   onClick={() => setCaptionExpanded(true)}
                   className="text-[var(--ig-link)] font-medium hover:underline"
                 >
-                  ... more
+                  See more
                 </button>
               </>
             ) : (
@@ -641,7 +657,7 @@ export function PostCard({
                 </>
               )}
               {hasMultiple && (
-                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none" aria-hidden>
+                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none z-30" aria-hidden>
                   {post.mediaUrls.map((_, i) => (
                     <span
                       key={i}
@@ -653,13 +669,26 @@ export function PostCard({
                 </div>
               )}
 
-              {caption && reelLayoutActive && (
+              {caption && hasMedia && !captionExpanded && (
                 <div
                   // Keep this overlay away from the mute button area so taps still work.
                   className="absolute left-0 right-12 bottom-0 px-4 pb-3 pt-6 z-20 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <p className="text-sm text-white break-words" style={{ lineHeight: CAPTION_LINE_HEIGHT }}>
+                  <p
+                    className="text-sm text-white break-words"
+                    style={{
+                      lineHeight: CAPTION_LINE_HEIGHT,
+                      ...(showCaptionPreview
+                        ? ({
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          } as any)
+                        : undefined),
+                    }}
+                  >
                     {showCaptionPreview ? (
                       <>
                         {caption.slice(0, 120).trim()}
@@ -672,7 +701,7 @@ export function PostCard({
                           }}
                           className="text-[var(--ig-link)] font-medium hover:underline"
                         >
-                          ... more
+                          See more
                         </button>
                       </>
                     ) : (
