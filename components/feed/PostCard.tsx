@@ -73,6 +73,8 @@ export function PostCard({
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [mediaAspectRatio, setMediaAspectRatio] = useState<string>("16 / 10");
   const [mediaFullScreenOpen, setMediaFullScreenOpen] = useState(false);
+  // Instagram-like behavior: attempt autoplay with audio (browser may block; we fall back).
+  const [isMuted, setIsMuted] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
   const [inView, setInView] = useState(false);
   const userPausedRef = useRef(false);
@@ -229,12 +231,26 @@ export function PostCard({
 
     if (inView) {
       if (!userPausedRef.current) {
-        videoRef.current?.play().then(() => {
-          setVideoPlaying(true);
-        }).catch(() => {
-          // Autoplay can be blocked; keep UI consistent.
-          setVideoPlaying(false);
-        });
+        videoRef.current
+          ?.play()
+          .then(() => {
+            setVideoPlaying(true);
+          })
+          .catch(() => {
+            // Autoplay with audio is blocked in many browsers.
+            // Fall back to muted autoplay so the video still plays.
+            setIsMuted(true);
+            try {
+              if (videoRef.current) {
+                videoRef.current.muted = true;
+                videoRef.current.play().then(() => setVideoPlaying(true)).catch(() => setVideoPlaying(false));
+              } else {
+                setVideoPlaying(false);
+              }
+            } catch {
+              setVideoPlaying(false);
+            }
+          });
       }
     } else {
       userPausedRef.current = false;
@@ -270,6 +286,19 @@ export function PostCard({
       setVideoPlaying(false);
     }
   }, []);
+
+  const toggleMute = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+      if (!nextMuted && inView && !videoRef.current.paused && !mediaFullScreenOpen) {
+        // Attempt to resume playback with sound if the card is visible.
+        videoRef.current.play().catch(() => {});
+      }
+    }
+  }, [inView, isMuted, mediaFullScreenOpen]);
 
   const totalReactions = likeCount;
   const repostCount: number = 0; // placeholder until backend supports it
@@ -458,7 +487,7 @@ export function PostCard({
                     }`}
                     playsInline
                     loop
-                    muted
+                    muted={isMuted}
                     onClick={toggleVideoPlay}
                     onPlay={() => setVideoPlaying(true)}
                     onPause={() => setVideoPlaying(false)}
@@ -472,6 +501,27 @@ export function PostCard({
                     }}
                     onError={() => setMediaLoaded(true)}
                   />
+                  {/* Mute / unmute button */}
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    aria-label={isMuted ? "Unmute video" : "Mute video"}
+                    className="absolute top-2 right-2 z-10 pointer-events-auto p-2 rounded-full bg-black/40 text-white backdrop-blur-sm"
+                  >
+                    {isMuted ? (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5l-4 4H3v6h4l4 4V5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M23 9l-5 5" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9l5 5" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5l-4 4H3v6h4l4 4V5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 8a8 8 0 010 8" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 10a4 4 0 010 4" />
+                      </svg>
+                    )}
+                  </button>
                   <div
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                     aria-hidden
@@ -555,6 +605,7 @@ export function PostCard({
                   controls
                   autoPlay
                   playsInline
+                  muted={isMuted}
                   onClick={(e) => e.stopPropagation()}
                 />
               );

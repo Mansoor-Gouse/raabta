@@ -85,14 +85,11 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
     if (!panel) return;
     const newTop = panel.scrollTop;
     const delta = newTop - lastScrollTopRef.current;
-    const absDelta = Math.abs(delta);
-    // Avoid reacting to tiny scroll jitter.
-    if (absDelta < 8) {
-      lastScrollTopRef.current = newTop;
-      return;
-    }
-    if (delta > 0) dispatchChromeHidden(true);
-    else dispatchChromeHidden(false);
+    // Ignore true-zero and extremely tiny jitter, but allow small deltas
+    // so hide/show triggers reliably.
+    if (delta === 0) return;
+    if (Math.abs(delta) < 1) return;
+    dispatchChromeHidden(delta > 0);
     lastScrollTopRef.current = newTop;
   }, [dispatchChromeHidden]);
 
