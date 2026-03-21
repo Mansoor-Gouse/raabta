@@ -97,7 +97,7 @@ export function FeedEventsScrollView() {
       {/* Global sticky title header: always visible while scrolling main strip */}
       <div
         data-rope-global-header
-        className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]"
+        className="shrink-0 sticky top-0 z-30 bg-[var(--ig-bg-primary)]"
       >
         <div className="flex items-center px-4 py-2.5">
           <h1

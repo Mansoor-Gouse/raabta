@@ -221,7 +221,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
       {/* Sticky header: optional title + Posts / Stories (always visible while scrolling). */}
       <div
         data-rope-feed-tabs
-        className="sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]"
+        className="sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)]"
       >
         {showTitle && (
           <div className="flex items-center px-4 py-2.5">
