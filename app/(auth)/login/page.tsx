@@ -76,7 +76,7 @@ export default function LoginPage() {
             <label htmlFor="phone" className="text-sm font-medium text-[#111827]">
               Mobile number
             </label>
-            <div className="group flex items-center gap-3 rounded-2xl border border-[#DADDE3] bg-[#F8FAFC] px-3 py-2 min-h-[56px] transition-colors focus-within:border-[#111827]/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0B0B0B]/10">
+            <div className="group flex items-center gap-3 rounded-2xl border border-[#DADDE3] bg-[#F8FAFC] px-3 py-2 min-h-[56px] transition-colors focus-within:border-[#0B0B0B] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0B0B0B]/25">
               <div className="inline-flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 border border-[#E5E7EB] text-sm font-medium text-[#111827]">
                 <span aria-hidden>🇮🇳</span>
                 <span>+91</span>

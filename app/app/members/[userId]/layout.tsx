@@ -4,7 +4,6 @@ import { getSession } from "@/lib/auth";
 import { MemberTabs } from "../MemberTabs";
 import { MemberViewHeader } from "../MemberViewHeader";
 import { MemberViewHeaderSkeleton } from "../MemberViewHeaderSkeleton";
-import { MemberContentSkeleton } from "../MemberContentSkeleton";
 
 export default async function MemberLayout({
   children,
@@ -23,9 +22,7 @@ export default async function MemberLayout({
         <MemberViewHeader profileUserId={profileUserId} />
       </Suspense>
       <MemberTabs userId={profileUserId} />
-      <Suspense fallback={<MemberContentSkeleton />}>
-        {children}
-      </Suspense>
+      {children}
     </div>
   );
 }

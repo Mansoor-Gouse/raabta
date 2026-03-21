@@ -1,4 +1,5 @@
 import { MemberEventsClient } from "../../MemberEventsClient";
+import { MemberSectionCarousel } from "../../MemberSectionCarousel";
 
 export default async function MemberEventsPage({
   params,
@@ -6,5 +7,9 @@ export default async function MemberEventsPage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = await params;
-  return <MemberEventsClient userId={userId} />;
+  return (
+    <MemberSectionCarousel userId={userId} section="events">
+      <MemberEventsClient userId={userId} />
+    </MemberSectionCarousel>
+  );
 }

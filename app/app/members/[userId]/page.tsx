@@ -1,4 +1,5 @@
 import { MemberPostsGrid } from "../MemberPostsGrid";
+import { MemberSectionCarousel } from "../MemberSectionCarousel";
 
 export default async function MemberProfilePage({
   params,
@@ -6,5 +7,9 @@ export default async function MemberProfilePage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = await params;
-  return <MemberPostsGrid userId={userId} />;
+  return (
+    <MemberSectionCarousel userId={userId} section="posts">
+      <MemberPostsGrid userId={userId} />
+    </MemberSectionCarousel>
+  );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { VideoThumb } from "@/components/media/VideoThumb";
 
 type PostThumb = { _id: string; mediaUrls: string[]; caption?: string };
 
@@ -9,6 +10,10 @@ const CAPTION_PREVIEW_LENGTH = 80;
 
 function isImageUrl(url: string): boolean {
   return /\.(gif|webp|png|jpe?g|avif)$/i.test(url);
+}
+
+function isVideoUrl(url: string): boolean {
+  return /\.(mp4|webm|ogg|mov|mkv|avi)$/i.test(url);
 }
 
 export function MemberPostsGrid({ userId }: { userId: string }) {
@@ -71,6 +76,8 @@ export function MemberPostsGrid({ userId }: { userId: string }) {
                 alt=""
                 className="w-full h-full object-cover"
               />
+            ) : hasMedia && firstMedia && isVideoUrl(firstMedia) ? (
+              <VideoThumb src={firstMedia} className="w-full h-full object-cover" />
             ) : hasMedia && firstMedia ? (
               <div className="w-full h-full flex items-center justify-center bg-[var(--elite-border-light)] text-[var(--elite-text-muted)]">
                 <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">

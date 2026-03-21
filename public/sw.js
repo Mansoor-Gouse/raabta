@@ -1,6 +1,11 @@
 /**
- * Service worker for Web Push. Shows notifications on push and opens app on click.
+ * Service worker for Web Push + PWA installability (fetch handler).
+ * Push handlers show notifications; fetch passes through so the app stays installable.
  */
+self.addEventListener("fetch", function (event) {
+  event.respondWith(fetch(event.request));
+});
+
 self.addEventListener("push", function (event) {
   if (!event.data) return;
   let payload;

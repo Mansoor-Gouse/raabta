@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { connectDB, User, PostModel, EventAttendeeModel, CircleRelationshipModel, BlockModel } from "@/lib/db";
 import { AddToCircleButton } from "@/components/circles/AddToCircleButton";
 import { MemberInsights } from "@/components/members/MemberInsights";
+import { MemberCoverImage } from "./MemberCoverImage";
 
 type Visibility = "everyone" | "trusted_circle" | "inner_circle";
 
@@ -86,37 +87,56 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
       ],
     }));
 
-  const [postsCount, eventsCount, myRelationship, theyHaveMeInInner, myInnerCount, myTrustedCount, profileInner, profileTrusted] =
-    await Promise.all([
-      canSeePosts ? PostModel.countDocuments({ authorId: profileUserId }).exec() : Promise.resolve(0),
-      canSeeEvents
-        ? EventAttendeeModel.countDocuments({ userId: profileUserId, status: "going" }).exec()
-        : Promise.resolve(0),
-      isOwnProfile
-        ? Promise.resolve(null)
-        : CircleRelationshipModel.findOne({ userId: myId, relatedUserId: profileOid }).select("circleType").lean().exec(),
-      isOwnProfile
-        ? Promise.resolve(null)
-        : CircleRelationshipModel.findOne({ userId: profileOid, relatedUserId: myId, circleType: "INNER" }).select("_id").lean().exec(),
-      isOwnProfile ? Promise.resolve(0) : CircleRelationshipModel.countDocuments({ userId: myId, circleType: "INNER" }).exec(),
-      isOwnProfile ? Promise.resolve(0) : CircleRelationshipModel.countDocuments({ userId: myId, circleType: "TRUSTED" }).exec(),
-      canSeeCircles
-        ? CircleRelationshipModel.find({ userId: profileOid, circleType: "INNER" })
-            .populate("relatedUserId", "fullName name profileImage image headline")
-            .sort({ createdAt: -1 })
-            .limit(8)
-            .lean()
-            .exec()
-        : Promise.resolve([]),
-      canSeeCircles
-        ? CircleRelationshipModel.find({ userId: profileOid, circleType: "TRUSTED" })
-            .populate("relatedUserId", "fullName name profileImage image headline")
-            .sort({ createdAt: -1 })
-            .limit(8)
-            .lean()
-            .exec()
-        : Promise.resolve([]),
-    ]);
+  const [
+    postsCount,
+    eventsCount,
+    myRelationship,
+    theyHaveMeInInner,
+    myInnerCount,
+    myTrustedCount,
+    profileInnerCount,
+    profileTrustedCount,
+    profileInner,
+    profileTrusted,
+  ] = await Promise.all([
+    canSeePosts ? PostModel.countDocuments({ authorId: profileUserId }).exec() : Promise.resolve(0),
+    canSeeEvents
+      ? EventAttendeeModel.countDocuments({ userId: profileUserId, status: "going" }).exec()
+      : Promise.resolve(0),
+    isOwnProfile
+      ? Promise.resolve(null)
+      : CircleRelationshipModel.findOne({ userId: myId, relatedUserId: profileOid }).select("circleType").lean().exec(),
+    isOwnProfile
+      ? Promise.resolve(null)
+      : CircleRelationshipModel.findOne({ userId: profileOid, relatedUserId: myId, circleType: "INNER" })
+          .select("_id")
+          .lean()
+          .exec(),
+    isOwnProfile ? Promise.resolve(0) : CircleRelationshipModel.countDocuments({ userId: myId, circleType: "INNER" }).exec(),
+    isOwnProfile ? Promise.resolve(0) : CircleRelationshipModel.countDocuments({ userId: myId, circleType: "TRUSTED" }).exec(),
+    canSeeCircles
+      ? CircleRelationshipModel.countDocuments({ userId: profileOid, circleType: "INNER" }).exec()
+      : Promise.resolve(0),
+    canSeeCircles
+      ? CircleRelationshipModel.countDocuments({ userId: profileOid, circleType: "TRUSTED" }).exec()
+      : Promise.resolve(0),
+    canSeeCircles
+      ? CircleRelationshipModel.find({ userId: profileOid, circleType: "INNER" })
+          .populate("relatedUserId", "fullName name profileImage image headline")
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .lean()
+          .exec()
+      : Promise.resolve([]),
+    canSeeCircles
+      ? CircleRelationshipModel.find({ userId: profileOid, circleType: "TRUSTED" })
+          .populate("relatedUserId", "fullName name profileImage image headline")
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .lean()
+          .exec()
+      : Promise.resolve([]),
+  ]);
 
   const currentCircle =
     myRelationship && (myRelationship as unknown as { circleType: string }).circleType === "INNER"
@@ -155,20 +175,15 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
   const innerMembers = (profileInner as unknown as Populated[]).map(toMember);
   const trustedMembers = (profileTrusted as unknown as Populated[]).map(toMember);
 
+  const memberBase = `/app/members/${profileUserId}`;
+
   return (
     <>
-      <div
-        className="h-32 sm:h-40 bg-[var(--elite-border-light)]"
-        style={{
-          backgroundImage: u.bannerImage ? `url(${u.bannerImage})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
+      <MemberCoverImage bannerImage={u.bannerImage} />
       <div className="px-4 pb-6 -mt-12 sm:-mt-16">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="relative shrink-0">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--elite-radius)] border-4 border-[var(--elite-bg)] bg-[var(--elite-border)] overflow-hidden flex items-center justify-center">
+            <div className="w-24 h-24 rounded-[var(--elite-radius)] border-4 border-[var(--elite-bg)] bg-[var(--elite-border)] overflow-hidden flex items-center justify-center">
               {avatar ? (
                 <img src={avatar} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -210,14 +225,26 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                   </p>
                 )}
               </div>
+              {!isOwnProfile && !isBlocked && (
+                <div className="flex flex-nowrap items-start gap-2 shrink-0">
+                  <AddToCircleButton
+                    relatedUserId={profileUserId}
+                    currentCircle={currentCircle}
+                    innerCount={myInnerCount}
+                    trustedCount={myTrustedCount}
+                    showMessage={false}
+                    inline
+                  />
+                </div>
+              )}
             </div>
             {mutualInner && (
               <span className="elite-body mt-2 inline-flex items-center rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2.5 py-0.5 text-xs font-medium text-[var(--elite-text)]">
                 Mutual Inner Circle
               </span>
             )}
-            {(canSeePosts || canSeeEvents) && (
-              <div className="flex items-center gap-6 mt-2">
+            {(canSeePosts || canSeeEvents || canSeeCircles) && (
+              <div className="flex items-center gap-6 mt-2 flex-wrap">
                 {canSeePosts && (
                   <div className="flex flex-col items-center">
                     <span className="elite-heading font-semibold text-base text-[var(--elite-text)] tabular-nums">
@@ -234,31 +261,133 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                     <span className="elite-body text-xs text-[var(--elite-text-muted)]">events</span>
                   </div>
                 )}
+                {canSeeCircles && (
+                  <>
+                    <Link
+                      href={`${memberBase}#inner`}
+                      className="elite-events flex flex-col items-center hover:opacity-80 transition-opacity"
+                      aria-label="Inner circle members"
+                    >
+                      <span className="elite-heading font-semibold text-base text-[var(--elite-text)] tabular-nums">
+                        {profileInnerCount}
+                      </span>
+                      <span className="elite-body text-xs text-[var(--elite-text-muted)]">inner</span>
+                    </Link>
+                    <Link
+                      href={`${memberBase}#trusted`}
+                      className="elite-events flex flex-col items-center hover:opacity-80 transition-opacity"
+                      aria-label="Trusted circle members"
+                    >
+                      <span className="elite-heading font-semibold text-base text-[var(--elite-text)] tabular-nums">
+                        {profileTrustedCount}
+                      </span>
+                      <span className="elite-body text-xs text-[var(--elite-text-muted)]">trusted</span>
+                    </Link>
+                  </>
+                )}
               </div>
             )}
-            {!isOwnProfile && (
-              <div className="flex flex-nowrap items-center gap-2 mt-3">
-                <AddToCircleButton
-                  relatedUserId={profileUserId}
-                  currentCircle={currentCircle}
-                  innerCount={myInnerCount}
-                  trustedCount={myTrustedCount}
-                  showMessage={!isBlocked}
-                />
-              </div>
+
+            {canSeeBio && (
+              <>
+                {u.location && (
+                  <p className="elite-body mt-4 text-sm text-[var(--elite-text-muted)] flex items-center gap-1">
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {u.location}
+                  </p>
+                )}
+                {(u.industries?.length ?? 0) > 0 && (
+                  <div className="mt-4">
+                    <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
+                      Industries
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {u.industries!.map((i) => (
+                        <span
+                          key={i}
+                          className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text-secondary)]"
+                        >
+                          {i}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(u.interests?.length ?? 0) > 0 && (
+                  <div className="mt-3">
+                    <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
+                      Interests
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {u.interests!.map((i) => (
+                        <span
+                          key={i}
+                          className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text)]"
+                        >
+                          {i}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(u.expertise?.length ?? 0) > 0 && (
+                  <div className="mt-3">
+                    <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
+                      Expertise
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {(u.expertise ?? []).map((e) => (
+                        <span
+                          key={e}
+                          className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text-secondary)]"
+                        >
+                          {e}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(u.concerns?.length ?? 0) > 0 && (
+                  <div className="mt-3">
+                    <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
+                      Concerns
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {u.concerns!.map((c) => (
+                        <span
+                          key={c}
+                          className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text-secondary)]"
+                        >
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(u.company || u.profession) && (
+                  <p className="elite-body mt-3 text-sm text-[var(--elite-text-secondary)]">
+                    {u.profession}
+                    {u.profession && u.company && " at "}
+                    {u.company}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
 
         {!isOwnProfile && <MemberInsights memberId={profileUserId} />}
 
-        {(innerMembers.length > 0 || trustedMembers.length > 0) && (
+        {canSeeCircles && (
           <div className="mt-6 space-y-4">
-            {innerMembers.length > 0 && (
-              <div>
-                <h3 className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
-                  Inner Circle
-                </h3>
+            <section id="inner" className="scroll-mt-28">
+              <h3 className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
+                Inner Circle
+              </h3>
+              {innerMembers.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap gap-3">
                   {innerMembers.map((m) => (
                     <li key={m.id}>
@@ -267,9 +396,9 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                         className="elite-events flex items-center gap-2 rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-1.5 text-sm text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
                       >
                         {m.image ? (
-                          <img src={m.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          <img src={m.image} alt="" className="h-8 w-8 rounded-[var(--elite-radius)] object-cover" />
                         ) : (
-                          <span className="elite-body flex h-8 w-8 items-center justify-center rounded-full bg-[var(--elite-border)] text-xs font-medium text-[var(--elite-text-secondary)]">
+                          <span className="elite-body flex h-8 w-8 items-center justify-center rounded-[var(--elite-radius)] bg-[var(--elite-border)] text-xs font-medium text-[var(--elite-text-secondary)]">
                             {m.name?.charAt(0)?.toUpperCase() || "?"}
                           </span>
                         )}
@@ -278,21 +407,23 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                     </li>
                   ))}
                 </ul>
-                {isOwnProfile && (
-                  <Link
-                    href="/app/profile/circles"
-                    className="elite-events mt-1 inline-block text-sm font-medium text-[var(--elite-accent)] hover:text-[var(--elite-accent-hover)] transition-colors"
-                  >
-                    View all
-                  </Link>
-                )}
-              </div>
-            )}
-            {trustedMembers.length > 0 && (
-              <div>
-                <h3 className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
-                  Trusted Circle
-                </h3>
+              ) : (
+                <p className="elite-body mt-2 text-sm text-[var(--elite-text-muted)]">No members in Inner Circle yet.</p>
+              )}
+              {isOwnProfile && innerMembers.length > 0 && (
+                <Link
+                  href="/app/profile/circles"
+                  className="elite-events mt-1 inline-block text-sm font-medium text-[var(--elite-accent)] hover:text-[var(--elite-accent-hover)] transition-colors"
+                >
+                  View all
+                </Link>
+              )}
+            </section>
+            <section id="trusted" className="scroll-mt-28">
+              <h3 className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
+                Trusted Circle
+              </h3>
+              {trustedMembers.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap gap-3">
                   {trustedMembers.map((m) => (
                     <li key={m.id}>
@@ -301,9 +432,9 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                         className="elite-events flex items-center gap-2 rounded-[var(--elite-radius)] border border-[var(--elite-border)] bg-[var(--elite-surface)] px-2 py-1.5 text-sm text-[var(--elite-text)] hover:border-[var(--elite-accent-muted)] transition-colors"
                       >
                         {m.image ? (
-                          <img src={m.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          <img src={m.image} alt="" className="h-8 w-8 rounded-[var(--elite-radius)] object-cover" />
                         ) : (
-                          <span className="elite-body flex h-8 w-8 items-center justify-center rounded-full bg-[var(--elite-border)] text-xs font-medium text-[var(--elite-text-secondary)]">
+                          <span className="elite-body flex h-8 w-8 items-center justify-center rounded-[var(--elite-radius)] bg-[var(--elite-border)] text-xs font-medium text-[var(--elite-text-secondary)]">
                             {m.name?.charAt(0)?.toUpperCase() || "?"}
                           </span>
                         )}
@@ -312,106 +443,19 @@ export async function MemberViewHeader({ profileUserId }: { profileUserId: strin
                     </li>
                   ))}
                 </ul>
-                {isOwnProfile && (
-                  <Link
-                    href="/app/profile/circles"
-                    className="elite-events mt-1 inline-block text-sm font-medium text-[var(--elite-accent)] hover:text-[var(--elite-accent-hover)] transition-colors"
-                  >
-                    View all
-                  </Link>
-                )}
-              </div>
-            )}
+              ) : (
+                <p className="elite-body mt-2 text-sm text-[var(--elite-text-muted)]">No members in Trusted Circle yet.</p>
+              )}
+              {isOwnProfile && trustedMembers.length > 0 && (
+                <Link
+                  href="/app/profile/circles"
+                  className="elite-events mt-1 inline-block text-sm font-medium text-[var(--elite-accent)] hover:text-[var(--elite-accent-hover)] transition-colors"
+                >
+                  View all
+                </Link>
+              )}
+            </section>
           </div>
-        )}
-
-        {canSeeBio && (
-          <>
-            {u.location && (
-              <p className="elite-body mt-4 text-sm text-[var(--elite-text-muted)] flex items-center gap-1">
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {u.location}
-              </p>
-            )}
-            {(u.industries?.length ?? 0) > 0 && (
-              <div className="mt-4">
-                <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
-                  Industries
-                </span>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {u.industries!.map((i) => (
-                    <span
-                      key={i}
-                      className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text-secondary)]"
-                    >
-                      {i}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(u.interests?.length ?? 0) > 0 && (
-              <div className="mt-3">
-                <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
-                  Interests
-                </span>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {u.interests!.map((i) => (
-                    <span
-                      key={i}
-                      className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text)]"
-                    >
-                      {i}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(u.expertise?.length ?? 0) > 0 && (
-              <div className="mt-3">
-                <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
-                  Expertise
-                </span>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {(u.expertise ?? []).map((e) => (
-                    <span
-                      key={e}
-                      className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text-secondary)]"
-                    >
-                      {e}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(u.concerns?.length ?? 0) > 0 && (
-              <div className="mt-3">
-                <span className="elite-body text-xs font-medium uppercase tracking-wide text-[var(--elite-text-muted)]">
-                  Concerns
-                </span>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {u.concerns!.map((c) => (
-                    <span
-                      key={c}
-                      className="elite-body inline-flex items-center rounded-full border border-[var(--elite-border)] bg-[var(--elite-surface)] px-3 py-1 text-xs font-medium text-[var(--elite-text-secondary)]"
-                    >
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(u.company || u.profession) && (
-              <p className="elite-body mt-3 text-sm text-[var(--elite-text-secondary)]">
-                {u.profession}
-                {u.profession && u.company && " at "}
-                {u.company}
-              </p>
-            )}
-          </>
         )}
       </div>
     </>

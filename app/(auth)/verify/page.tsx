@@ -197,7 +197,7 @@ function VerifyContent() {
               One-time password
             </label>
             <div
-              className="grid grid-cols-6 gap-2"
+              className="auth-otp-wrap grid grid-cols-6 gap-2 p-0.5 -m-0.5 transition-shadow"
               onClick={() => codeInputRef.current?.focus()}
             >
               {Array.from({ length: otpLength }).map((_, idx) => (
@@ -226,7 +226,7 @@ function VerifyContent() {
                 setCode(e.target.value.replace(/\D/g, "").slice(0, otpLength));
                 if (error) setError("");
               }}
-              className="absolute opacity-0 pointer-events-none"
+              className="auth-otp-input absolute opacity-0 pointer-events-none w-px h-px overflow-hidden"
               maxLength={otpLength}
               aria-describedby={error ? "verify-error" : "verify-help"}
               aria-invalid={!!error}

@@ -481,6 +481,30 @@ textarea:focus-visible {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
+/* Login / verify: black focus ring (overrides global blue) */
+.auth-flow input:focus-visible,
+.auth-flow button:focus-visible,
+.auth-flow a:focus-visible,
+.auth-flow [role="button"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #0b0b0b;
+}
+.auth-flow textarea:focus-visible {
+  outline: none;
+  border-color: #0b0b0b;
+  box-shadow: 0 0 0 2px rgba(11, 11, 11, 0.2);
+}
+
+/* OTP: ring around the digit grid, not the hidden input */
+.auth-flow input.auth-otp-input:focus-visible {
+  box-shadow: none;
+  outline: none;
+}
+.auth-flow .auth-otp-wrap:focus-within {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #0b0b0b;
+  border-radius: 0.75rem;
+}
+
 /* Mobile: message input fixed at bottom so keyboard pushes it up */
 @media (max-width: 767px) {
   .str-chat__main-panel {

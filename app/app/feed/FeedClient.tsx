@@ -56,29 +56,11 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRafRef = useRef<number | null>(null);
   const prevIndexRef = useRef<SegmentIndex>(0);
-  const lastScrollTopRef = useRef(0);
   const activeIndexRef = useRef<SegmentIndex>(0);
   const loadingMoreRef = useRef(false);
 
-  const [tabsHidden, setTabsHidden] = useState(false);
-  const tabsHiddenRef = useRef(false);
-  const [feedReelActive, setFeedReelActive] = useState(false);
-
-  const dispatchChromeHidden = useCallback((hidden: boolean) => {
-    if (typeof window === "undefined") return;
-    if (tabsHiddenRef.current === hidden) return;
-    tabsHiddenRef.current = hidden;
-    setTabsHidden(hidden);
-    window.dispatchEvent(new CustomEvent("rope:feedChromeHidden", { detail: { hidden } }));
-  }, []);
-
   useEffect(() => {
     activeIndexRef.current = activeIndex;
-  }, [activeIndex]);
-
-  useEffect(() => {
-    const panel = activeIndex === 0 ? postsPanelRef.current : storiesPanelRef.current;
-    if (panel) lastScrollTopRef.current = panel.scrollTop;
   }, [activeIndex]);
 
   /** Entering Stories: start at top so rings aren’t scrolled off-screen (esp. if outer scroll ever moved). */
@@ -90,46 +72,13 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
     }
   }, [activeIndex]);
 
-  const handlePanelScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
-    // Use the actual scrolling element to avoid any ref/staleness issues.
-    const newTop = (e.currentTarget as HTMLElement).scrollTop;
-    const delta = newTop - lastScrollTopRef.current;
-    // Ignore true-zero and extremely tiny jitter, but allow small deltas
-    // so hide/show triggers reliably.
-    if (delta === 0) return;
-    if (Math.abs(delta) < 1) return;
-    dispatchChromeHidden(delta > 0);
-    lastScrollTopRef.current = newTop;
-  }, [dispatchChromeHidden]);
-
   useEffect(() => {
-    // Reset chrome when feed panel becomes inactive.
-    if (!isActive) {
-      dispatchChromeHidden(false);
-      setTabsHidden(false);
-    }
-  }, [isActive, dispatchChromeHidden]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handler = (e: Event) => {
-      const ce = e as CustomEvent;
-      setFeedReelActive(!!ce.detail?.active);
-    };
-    window.addEventListener("rope:feedReelActive", handler as EventListener);
-    return () => window.removeEventListener("rope:feedReelActive", handler as EventListener);
-  }, []);
-
-  useEffect(() => {
-    if (!isActive) setFeedReelActive(false);
-  }, [isActive]);
-
-  useEffect(() => {
-    // Ensure chrome is restored on unmount.
     return () => {
-      dispatchChromeHidden(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("rope:feedChromeHidden", { detail: { hidden: false } }));
+      }
     };
-  }, [dispatchChromeHidden]);
+  }, []);
 
   const scrollToIndex = useCallback((index: SegmentIndex) => {
     const el = scrollRef.current;
@@ -269,14 +218,10 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--ig-bg)] relative">
-      {/* Sticky header inside feed panel: title (optional) + segment tabs */}
+      {/* Sticky header: optional title + Posts / Stories (always visible while scrolling). */}
       <div
         data-rope-feed-tabs
-        className={[
-          "sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)] overflow-hidden",
-          "transition-[max-height,opacity] duration-200 ease-out",
-          tabsHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-[120px] opacity-100 pointer-events-auto",
-        ].join(" ")}
+        className="sticky top-0 z-10 shrink-0 bg-[var(--ig-bg-primary)] border-b border-[var(--ig-border-light)]"
       >
         {showTitle && (
           <div className="flex items-center px-4 py-2.5">
@@ -332,7 +277,6 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
           aria-labelledby="feed-tab-0"
           aria-label="Posts"
           className="min-w-full flex-shrink-0 min-h-0 h-full snap-start overflow-y-auto overscroll-y-contain no-scrollbar bg-[var(--ig-bg)] px-3 pb-1 flex flex-col"
-          onScroll={handlePanelScroll}
         >
           {loading ? (
             <FeedPostsSkeleton />
@@ -428,7 +372,6 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
           aria-labelledby="feed-tab-1"
           aria-label="Stories"
           className="min-w-full flex-shrink-0 min-h-0 h-full snap-start overflow-y-auto overscroll-y-contain no-scrollbar bg-[var(--ig-bg-primary)] flex flex-col"
-          onScroll={handlePanelScroll}
         >
           <StoryBar />
         </section>

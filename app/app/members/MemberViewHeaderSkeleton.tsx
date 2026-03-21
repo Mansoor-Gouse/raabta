@@ -8,15 +8,13 @@ export function MemberViewHeaderSkeleton() {
           <div className="flex-1 min-w-0 space-y-2">
             <div className="h-6 w-48 max-w-[80%] rounded bg-[var(--elite-border-light)] animate-pulse" />
             <div className="h-4 w-32 rounded bg-[var(--elite-border-light)] animate-pulse" />
-            <div className="flex items-center gap-6 mt-2">
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="h-5 w-8 rounded bg-[var(--elite-border-light)] animate-pulse" />
-                <div className="h-3 w-10 rounded bg-[var(--elite-border-light)] animate-pulse" />
-              </div>
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="h-5 w-8 rounded bg-[var(--elite-border-light)] animate-pulse" />
-                <div className="h-3 w-10 rounded bg-[var(--elite-border-light)] animate-pulse" />
-              </div>
+            <div className="flex items-center gap-6 mt-2 flex-wrap">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-0.5">
+                  <div className="h-5 w-8 rounded bg-[var(--elite-border-light)] animate-pulse" />
+                  <div className="h-3 w-10 rounded bg-[var(--elite-border-light)] animate-pulse" />
+                </div>
+              ))}
             </div>
           </div>
         </div>

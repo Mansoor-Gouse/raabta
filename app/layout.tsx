@@ -1,10 +1,24 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
+import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 export const metadata: Metadata = {
   title: "The Rope",
   description: "A network of faith — connect with thoughtful, affluent, and influential Muslims.",
+  applicationName: "The Rope",
+  appleWebApp: {
+    capable: true,
+    title: "The Rope",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -13,6 +27,10 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F7F8FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0B0B" },
+  ],
   interactiveWidget: "resizes-content",
 };
 
@@ -31,6 +49,7 @@ export default function RootLayout({
       <body>
         <OfflineBanner />
         {children}
+        <PwaInstallPrompt />
       </body>
     </html>
   );
