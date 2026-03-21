@@ -61,8 +61,9 @@ export default function FirebasePhoneOtpForm() {
     let verifier: RecaptchaVerifier | null = null;
     try {
       const auth = getFirebaseAuth();
+      // Firebase Phone Auth requires reCAPTCHA on web. "compact" shows a small widget; "invisible" hides it (badge may still appear).
       verifier = new RecaptchaVerifier(auth, "firebase-recaptcha-container", {
-        size: "invisible",
+        size: "compact",
       });
       recaptchaVerifierRef.current = verifier;
     } catch (e) {
@@ -200,7 +201,16 @@ export default function FirebasePhoneOtpForm() {
 
   return (
     <>
-      <div id="firebase-recaptcha-container" className="sr-only" aria-hidden />
+      {/* Always mounted (Firebase requirement). Shown on phone step — placed above the form so it’s visible. */}
+      <div
+        id="firebase-recaptcha-container"
+        className={
+          step === "phone"
+            ? "mx-auto flex min-h-[78px] w-full max-w-[400px] justify-center px-4 pb-2 pt-4"
+            : "sr-only"
+        }
+        aria-hidden={step !== "phone"}
+      />
       {step === "name" ? (
       <main
         className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-6"
@@ -414,6 +424,10 @@ export default function FirebasePhoneOtpForm() {
             {loading ? "Sending…" : "Send code"}
           </button>
         </form>
+        <p className="text-center text-[11px] leading-relaxed text-[#9CA3AF] px-1">
+          SMS sign-in uses Google reCAPTCHA. Complete the challenge above this card, then tap Send
+          code.
+        </p>
         <p className="text-center">
           <Link
             href="/"
