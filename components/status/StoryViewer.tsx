@@ -15,6 +15,8 @@ import { StoryViewersDrawer } from "./StoryViewersDrawer";
 import type { TextOverlay } from "@/types/status";
 import { StoryShareSheet, type StoryShareSheetStory } from "@/components/status/StoryShareSheet";
 import { useVideoMute } from "@/components/layout/VideoMuteContext";
+import { StoryPostEmbed } from "@/components/feed/StoryPostEmbed";
+import type { PostCardPost } from "@/components/feed/PostCard";
 
 const IMAGE_DURATION_MS = 5000;
 
@@ -35,6 +37,8 @@ export type StatusItem = {
   caption?: string;
   textOverlays?: TextOverlay[];
   mediaTransform?: { scale: number; translateX: number; translateY: number };
+  /** When set, story was created from a feed post — render feed PostCard embed. */
+  sourcePostId?: string;
 };
 
 export type StorySession = {
@@ -90,6 +94,8 @@ export function StoryViewer({
   const [menuOpen, setMenuOpen] = useState(false);
   const [storyShareOpen, setStoryShareOpen] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
+  const [embedPost, setEmbedPost] = useState<PostCardPost | null>(null);
+  const [embedLoading, setEmbedLoading] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -106,8 +112,65 @@ export function StoryViewer({
   }, [currentStatus?._id]);
 
   useEffect(() => {
+    if (embedPost) setMediaReady(true);
+  }, [embedPost]);
+
+  useEffect(() => {
     setStoryShareOpen(false);
   }, [currentStatus?._id]);
+
+  useEffect(() => {
+    const sid = currentStatus?.sourcePostId;
+    if (!sid) {
+      setEmbedPost(null);
+      setEmbedLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setEmbedLoading(true);
+    setEmbedPost(null);
+    fetch(`/api/posts/${String(sid)}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (data: {
+          _id?: string;
+          authorId?: string;
+          authorName?: string;
+          authorImage?: string | null;
+          mediaUrls?: string[];
+          caption?: string;
+          createdAt?: string;
+          likeCount?: number;
+          commentCount?: number;
+          likedByMe?: boolean;
+          savedByMe?: boolean;
+        } | null) => {
+          if (cancelled || !data?._id || !data.authorId) return;
+          const urls = (data.mediaUrls ?? []).filter(Boolean);
+          const card: PostCardPost = {
+            _id: data._id,
+            authorId: data.authorId,
+            authorName: data.authorName ?? "Someone",
+            authorImage: data.authorImage ?? null,
+            mediaUrls: urls,
+            caption: data.caption ?? "",
+            createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString(),
+            likeCount: data.likeCount ?? 0,
+            commentCount: data.commentCount ?? 0,
+            likedByMe: data.likedByMe ?? false,
+            savedByMe: data.savedByMe ?? false,
+          };
+          setEmbedPost(card);
+        }
+      )
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setEmbedLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStatus?._id, currentStatus?.sourcePostId]);
 
   // Preload adjacent media so next/prev load instantly from cache (second time is fast)
   useEffect(() => {
@@ -402,7 +465,7 @@ export function StoryViewer({
 
         <div
           className="absolute inset-0 flex items-center justify-center overflow-hidden"
-          onClick={handleTap}
+          onClick={currentStatus.sourcePostId && embedPost ? undefined : handleTap}
           onTouchStart={handleTouchStart}
           onTouchMove={(e) => {
             handleLongPressEnd();
@@ -417,35 +480,72 @@ export function StoryViewer({
           onMouseUp={handleLongPressEnd}
           onMouseLeave={handleLongPressEnd}
         >
-          {(() => {
-            const t = currentStatus.mediaTransform ?? { scale: 1, translateX: 0, translateY: 0 };
-            const transformStyle = {
-              transformOrigin: "center center",
-              transform: `scale(${t.scale}) translate(${t.translateX}px, ${t.translateY}px)`,
-            };
-            return currentStatus.type === "image" ? (
-              <img
-                src={currentStatus.mediaUrl}
-                alt=""
-                className="max-h-full w-full object-contain select-none pointer-events-none"
-                style={transformStyle}
-                draggable={false}
-                onLoad={() => setMediaReady(true)}
+          {currentStatus.sourcePostId && embedLoading && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50">
+              <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
+          {currentStatus.sourcePostId && embedPost ? (
+            <div className="absolute inset-0 flex items-stretch">
+              <button
+                type="button"
+                className="w-[28%] min-w-[80px] h-full shrink-0 z-20 cursor-default bg-transparent border-0 p-0"
+                aria-label="Previous story"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goPrev();
+                }}
               />
-            ) : (
-              <video
-                ref={videoRef}
-                src={currentStatus.mediaUrl}
-                className="max-h-full w-full object-contain select-none pointer-events-none"
-                style={transformStyle}
-                playsInline
-                autoPlay
-                muted={globalMuted}
-                controls={false}
-                onCanPlay={() => setMediaReady(true)}
+              <div className="flex-1 min-w-0 flex items-center justify-center overflow-hidden pointer-events-none">
+                <div className="pointer-events-auto w-full max-w-md max-h-full overflow-y-auto p-2">
+                  <StoryPostEmbed post={embedPost} navigateOnTap externalVideoRef={videoRef} />
+                </div>
+              </div>
+              <button
+                type="button"
+                className="w-[28%] min-w-[80px] h-full shrink-0 z-20 cursor-default bg-transparent border-0 p-0"
+                aria-label="Next story"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  advance();
+                }}
               />
-            );
-          })()}
+            </div>
+          ) : (
+            (() => {
+              const t = currentStatus.mediaTransform ?? { scale: 1, translateX: 0, translateY: 0 };
+              const transformStyle = {
+                transformOrigin: "center center",
+                transform: `scale(${t.scale}) translate(${t.translateX}px, ${t.translateY}px)`,
+              };
+              return (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {currentStatus.type === "image" ? (
+                    <img
+                      src={currentStatus.mediaUrl}
+                      alt=""
+                      className="max-h-full w-full object-contain select-none pointer-events-none"
+                      style={transformStyle}
+                      draggable={false}
+                      onLoad={() => setMediaReady(true)}
+                    />
+                  ) : (
+                    <video
+                      ref={videoRef}
+                      src={currentStatus.mediaUrl}
+                      className="max-h-full w-full object-contain select-none pointer-events-none"
+                      style={transformStyle}
+                      playsInline
+                      autoPlay
+                      muted={globalMuted}
+                      controls={false}
+                      onCanPlay={() => setMediaReady(true)}
+                    />
+                  )}
+                </div>
+              );
+            })()
+          )}
         </div>
 
         {/* Text overlays — same % positioning as add flow */}
@@ -484,7 +584,7 @@ export function StoryViewer({
           </div>
         )}
 
-        {currentStatus.caption ? (
+        {currentStatus.caption && !currentStatus.sourcePostId ? (
           <div
             className="absolute left-0 right-0 z-20 px-4"
             style={{ bottom: "calc(5.25rem + var(--safe-area-inset-bottom))" }}
@@ -744,6 +844,12 @@ export function StoryViewer({
     isOwnStory,
     viewersDrawerOpen,
     menuOpen,
+    embedPost,
+    embedLoading,
+    goPrev,
+    advance,
+    globalMuted,
+    setGlobalMuted,
   ]);
 
   if (typeof document === "undefined" || !session || statuses.length === 0) return null;

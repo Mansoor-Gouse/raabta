@@ -25,6 +25,7 @@ function VerifyContent() {
   const [error, setError] = useState("");
   const codeInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const otpLength = 6;
 
   const finishLogin = useCallback(async () => {
     const deviceId = getDeviceId();
@@ -163,7 +164,7 @@ function VerifyContent() {
 
   return (
     <main
-      className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-6"
+      className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-[#F7F8FA] via-[#F3F4F7] to-[#ECEEF2]"
       style={{
         paddingTop: "calc(1.5rem + var(--safe-area-inset-top))",
         paddingBottom: "calc(1.5rem + var(--safe-area-inset-bottom))",
@@ -171,13 +172,16 @@ function VerifyContent() {
         paddingRight: "calc(1rem + var(--safe-area-inset-right))",
       }}
     >
-      <div className="w-full max-w-[400px] space-y-6 p-8 rounded-2xl bg-white border border-black/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="w-full max-w-[400px] space-y-6 p-7 sm:p-8 rounded-3xl bg-white/95 backdrop-blur border border-black/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl sm:text-3xl font-light text-[#0B0B0B] tracking-tight">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8A8F98]">
+            Confirm identity
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[#0B0B0B] tracking-tight">
             Verify
           </h1>
-          <p className="text-sm text-[#737373]">
-            Enter the code sent to your device.
+          <p className="text-sm text-[#6B7280]">
+            Enter the 6-digit code sent to <span className="font-medium text-[#111827]">{phone}</span>.
           </p>
         </div>
         <form
@@ -187,22 +191,49 @@ function VerifyContent() {
           }}
           className="space-y-5"
         >
-          <input
-            ref={codeInputRef}
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder="Verification code"
-            value={code}
-            onChange={(e) => {
-              setCode(e.target.value.replace(/\D/g, "").slice(0, 6));
-              if (error) setError("");
-            }}
-            className="w-full px-4 py-3.5 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] text-[#0B0B0B] placeholder:text-[#A3A3A3] text-center text-lg sm:text-xl tracking-[0.4em] min-h-[48px] focus:outline-none focus:border-[#1a1a1a]/40 focus:ring-2 focus:ring-[#0B0B0B]/10 transition-colors"
-            maxLength={6}
-            aria-describedby={error ? "verify-error" : undefined}
-            aria-invalid={!!error}
-          />
+          <div className="space-y-2">
+            <label htmlFor="otp-hidden-input" className="text-sm font-medium text-[#111827]">
+              One-time password
+            </label>
+            <div
+              className="grid grid-cols-6 gap-2"
+              onClick={() => codeInputRef.current?.focus()}
+            >
+              {Array.from({ length: otpLength }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-12 rounded-xl border text-center text-lg font-semibold leading-[48px] transition-colors ${
+                    code[idx]
+                      ? "border-[#111827]/45 bg-white text-[#0B0B0B]"
+                      : "border-[#DADDE3] bg-[#F8FAFC] text-[#9CA3AF]"
+                  }`}
+                  aria-hidden
+                >
+                  {code[idx] || "•"}
+                </div>
+              ))}
+            </div>
+            <input
+              id="otp-hidden-input"
+              ref={codeInputRef}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="Verification code"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value.replace(/\D/g, "").slice(0, otpLength));
+                if (error) setError("");
+              }}
+              className="absolute opacity-0 pointer-events-none"
+              maxLength={otpLength}
+              aria-describedby={error ? "verify-error" : "verify-help"}
+              aria-invalid={!!error}
+            />
+            <p id="verify-help" className="text-xs text-[#6B7280]">
+              Tip: You can paste the full code directly.
+            </p>
+          </div>
           {error && (
             <p id="verify-error" className="text-sm text-red-600" role="alert">
               {error}
@@ -210,8 +241,8 @@ function VerifyContent() {
           )}
           <button
             type="submit"
-            disabled={loading || code.length < 4}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium disabled:opacity-50 min-h-[48px] touch-manipulation transition-all duration-300 hover:from-[#2a2a2a] hover:to-[#1a1a1a] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:scale-[0.99]"
+            disabled={loading || code.length < otpLength}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#111827] to-[#0B0B0B] text-white font-medium disabled:opacity-50 min-h-[52px] touch-manipulation transition-all duration-300 hover:from-[#1F2937] hover:to-[#111827] hover:shadow-[0_8px_18px_rgba(0,0,0,0.2)] active:scale-[0.99]"
           >
             {loading ? "Verifying…" : "Verify"}
           </button>

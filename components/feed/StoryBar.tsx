@@ -11,6 +11,7 @@ type RawStatusItem = {
   type: "image" | "video";
   createdAt?: string;
   viewedByMe?: boolean;
+  sourcePostId?: string;
   caption?: string;
   textOverlays?: Array<{
     id: string;
@@ -90,6 +91,7 @@ function buildSessions(
         caption: s.caption,
         textOverlays: s.textOverlays,
         mediaTransform: s.mediaTransform,
+        ...(s.sourcePostId ? { sourcePostId: s.sourcePostId } : {}),
       })) as StatusItem[];
     sessions.push({
       userId: meId,
@@ -114,6 +116,7 @@ function buildSessions(
         caption: s.caption,
         textOverlays: s.textOverlays,
         mediaTransform: s.mediaTransform,
+        ...(s.sourcePostId ? { sourcePostId: s.sourcePostId } : {}),
       })) as StatusItem[];
     sessions.push({
       userId,

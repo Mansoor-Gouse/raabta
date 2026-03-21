@@ -227,6 +227,8 @@ export interface IStatus {
     scale?: number;
   }>;
   mediaTransform?: { scale: number; translateX: number; translateY: number };
+  /** When set, story was created from a feed post (embed UI + link to post). */
+  sourcePostId?: mongoose.Types.ObjectId;
   expiresAt: Date;
   createdAt: Date;
 }
@@ -248,6 +250,7 @@ const StatusSchema = new mongoose.Schema<IStatus>(
       translateX: { type: Number, default: 0 },
       translateY: { type: Number, default: 0 },
     },
+    sourcePostId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: false },
     expiresAt: { type: Date, required: true },
     createdAt: { type: Date, default: Date.now },
   },

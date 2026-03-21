@@ -4,6 +4,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import { CropEditor } from "@/components/feed/new/CropEditor";
+import { StoryPostEmbed } from "@/components/feed/StoryPostEmbed";
+import type { PostCardPost } from "@/components/feed/PostCard";
 import { upload } from "@vercel/blob/client";
 import {
   type TextOverlay,
@@ -27,6 +29,8 @@ type SelectedItem = {
   previewUrl: string;
   isVideo: boolean;
   videoDuration?: string | null;
+  /** From "add post to story": CDN URLs, no blob upload on share */
+  fromPostRemote?: boolean;
 };
 
 const MAX_ITEMS = 10;
@@ -85,11 +89,7 @@ export default function NewStatusPage() {
   const fromPostId = searchParams.get("fromPostId");
   const [fromPostLoading, setFromPostLoading] = useState(false);
   const [fromPostAllowed, setFromPostAllowed] = useState(true);
-  const [fromPostAuthorName, setFromPostAuthorName] = useState<string>("");
-  const [fromPostAuthorImage, setFromPostAuthorImage] = useState<string | null>(null);
-  const [fromPostCaption, setFromPostCaption] = useState<string>("");
-  const [fromPostCreatedAt, setFromPostCreatedAt] = useState<string | null>(null);
-  const [fromPostCaptionExpanded, setFromPostCaptionExpanded] = useState(false);
+  const [fromPostCard, setFromPostCard] = useState<PostCardPost | null>(null);
   const lockVisibilityForFromPost = !!fromPostId;
   const [isSelecting, setIsSelecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -135,37 +135,14 @@ export default function NewStatusPage() {
   const isImage = primaryFile ? isImageFile(primaryFile) : false;
   const isVideo = primaryFile ? isVideoFile(primaryFile) : false;
   const displayUrl = editedPreviewUrl || primaryPreviewUrl;
-  const canAddMore = selectedItems.length < MAX_ITEMS;
+  const canAddMore = !fromPostId && selectedItems.length < MAX_ITEMS;
   const hasMedia = selectedItems.length > 0;
-
-  const timeAgo = (date: string) => {
-    const d = new Date(date);
-    const now = new Date();
-    const s = Math.floor((now.getTime() - d.getTime()) / 1000);
-    if (s < 60) return "Just now";
-    if (s < 3600) return `${Math.floor(s / 60)}m`;
-    if (s < 86400) return `${Math.floor(s / 3600)}h`;
-    if (s < 604800) return `${Math.floor(s / 86400)}d`;
-    return d.toLocaleDateString();
-  };
-
-  const fromPostTimeLabel = (() => {
-    if (!fromPostCreatedAt) return "Now";
-    const t = timeAgo(fromPostCreatedAt);
-    return t === "Just now" ? t : /^\d+[mhd]$/.test(t) ? `${t} ago` : t;
-  })();
-
-  const fromPostCaptionForPreview = fromPostId
-    ? primaryId
-      ? captionByItemId[primaryId] ?? fromPostCaption
-      : fromPostCaption
-    : "";
-  const fromPostCaptionNeedsExpand = fromPostCaptionForPreview.length > 120;
-  const fromPostShowCaptionPreview = fromPostCaptionNeedsExpand && !fromPostCaptionExpanded;
 
   const handleCancel = useCallback(() => {
     setSelectedItems((prev) => {
-      prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      prev.forEach((it) => {
+        if (it.previewUrl.startsWith("blob:")) URL.revokeObjectURL(it.previewUrl);
+      });
       return [];
     });
     if (editedPreviewUrl) URL.revokeObjectURL(editedPreviewUrl);
@@ -175,6 +152,7 @@ export default function NewStatusPage() {
     setCaptionByItemId({});
     setTextOverlaysByItemId({});
     setSelectedOverlayId(null);
+    setFromPostCard(null);
     setError("");
     setShowCropOverlay(false);
     router.push("/app/feed");
@@ -187,16 +165,14 @@ export default function NewStatusPage() {
     (async () => {
       setFromPostLoading(true);
       setFromPostAllowed(true);
-      setFromPostAuthorName("");
-      setFromPostAuthorImage(null);
-      setFromPostCaption("");
-      setFromPostCreatedAt(null);
-      setFromPostCaptionExpanded(false);
+      setFromPostCard(null);
       setError("");
 
       // Clear any existing editor state before prefilling.
       setSelectedItems((prev) => {
-        prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+        prev.forEach((it) => {
+          if (it.previewUrl.startsWith("blob:")) URL.revokeObjectURL(it.previewUrl);
+        });
         return [];
       });
       setEditedPreviewUrl((prev) => {
@@ -214,12 +190,18 @@ export default function NewStatusPage() {
         const res = await fetch(`/api/posts/${fromPostId}`, { credentials: "include" });
         if (!res.ok) throw new Error("Failed to load post");
         const post = (await res.json()) as {
+          _id: string;
+          authorId: string;
           authorName?: string;
           authorImage?: string | null;
           createdAt?: string;
           mediaUrls?: string[];
           caption?: string;
           visibility?: string;
+          likeCount?: number;
+          commentCount?: number;
+          likedByMe?: boolean;
+          savedByMe?: boolean;
         };
         if (cancelled) return;
 
@@ -227,10 +209,21 @@ export default function NewStatusPage() {
         const allowed = postVisibility === "network";
         setFromPostAllowed(allowed);
 
-        setFromPostAuthorName(post.authorName ?? "");
-        setFromPostAuthorImage(post.authorImage ?? null);
-        setFromPostCaption(post.caption ?? "");
-        setFromPostCreatedAt(post.createdAt ?? null);
+        const urls = (post.mediaUrls ?? []).filter(Boolean).slice(0, MAX_ITEMS);
+        const card: PostCardPost = {
+          _id: post._id,
+          authorId: post.authorId,
+          authorName: post.authorName ?? "Someone",
+          authorImage: post.authorImage ?? null,
+          mediaUrls: urls,
+          caption: post.caption ?? "",
+          createdAt: post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString(),
+          likeCount: post.likeCount ?? 0,
+          commentCount: post.commentCount ?? 0,
+          likedByMe: post.likedByMe ?? false,
+          savedByMe: post.savedByMe ?? false,
+        };
+        setFromPostCard(card);
 
         // Story visibility is always forced to Everyone when coming from a post.
         setVisibility("everyone");
@@ -239,62 +232,31 @@ export default function NewStatusPage() {
           setError("Only posts shared with Everyone can be added to a story.");
         }
 
-        const urls = (post.mediaUrls ?? []).filter(Boolean).slice(0, MAX_ITEMS);
         if (urls.length === 0) return;
 
-        const nextItems: SelectedItem[] = [];
-        let totalBytes = 0;
-        for (let i = 0; i < urls.length; i++) {
-          const url = urls[i];
-          const blob = await fetch(url).then((r) => r.blob());
-          if (cancelled) return;
+        const firstUrl = urls[0];
+        const isVideo = !firstUrl.match(/\.(gif|webp|png|jpe?g|avif)$/i);
+        const itemId = `frompost-${fromPostId}-${Date.now()}`;
+        const dummyFile = new File([], isVideo ? "remote.mp4" : "remote.jpg", {
+          type: isVideo ? "video/mp4" : "image/jpeg",
+        });
 
-          const isVideoFromUrl = VIDEO_EXTS.test(url);
-          const isVideoFromBlob = blob.type?.startsWith("video/");
-          const isVideo = isVideoFromUrl || !!isVideoFromBlob;
-
-          totalBytes += blob.size ?? 0;
-          if (totalBytes > MAX_TOTAL_UPLOAD_BYTES) {
-            setFromPostAllowed(false);
-            setError("Selected media is too large. Please choose a shorter/smaller post.");
-            return;
-          }
-
-          if (isVideo && blob.size > MAX_VIDEO_SIZE_BYTES) {
-            setFromPostAllowed(false);
-            setError(`Video is too large. Max ${Math.floor(MAX_VIDEO_SIZE_BYTES / 1024 / 1024)} MB.`);
-            return;
-          }
-          if (!isVideo && blob.size > MAX_IMAGE_SIZE_BYTES) {
-            setFromPostAllowed(false);
-            setError(`Image is too large. Max ${Math.floor(MAX_IMAGE_SIZE_BYTES / 1024 / 1024)} MB.`);
-            return;
-          }
-
-          const ext = isVideo ? "mp4" : "jpg";
-          const fileType = isVideo
-            ? blob.type?.startsWith("video/") ? blob.type : "video/mp4"
-            : blob.type?.startsWith("image/") ? blob.type : "image/jpeg";
-
-          const file = new File([blob], `story-${Date.now()}-${i}.${ext}`, { type: fileType });
-          const previewUrl = URL.createObjectURL(blob);
-
-          nextItems.push({
-            id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-            file,
-            previewUrl,
+        const nextItems: SelectedItem[] = [
+          {
+            id: itemId,
+            file: dummyFile,
+            previewUrl: firstUrl,
             isVideo,
             videoDuration: null,
-          });
-        }
+            fromPostRemote: true,
+          },
+        ];
 
         if (cancelled) return;
         setSelectedItems(nextItems);
-        setPrimaryId(nextItems[0]?.id ?? null);
+        setPrimaryId(itemId);
 
-        // Prefill video duration checks so share button can be disabled early.
-        nextItems.forEach((it) => {
-          if (!it.isVideo) return;
+        if (isVideo) {
           const vid = document.createElement("video");
           vid.preload = "metadata";
           vid.muted = true;
@@ -309,7 +271,7 @@ export default function NewStatusPage() {
               const s = Math.floor(durationSec % 60);
               setSelectedItems((curr) =>
                 curr.map((c) =>
-                  c.id === it.id ? { ...c, videoDuration: `${m}:${s.toString().padStart(2, "0")}` } : c
+                  c.id === itemId ? { ...c, videoDuration: `${m}:${s.toString().padStart(2, "0")}` } : c
                 )
               );
             }
@@ -318,13 +280,10 @@ export default function NewStatusPage() {
           vid.onerror = () => {
             vid.remove();
           };
-          vid.src = it.previewUrl;
-        });
+          vid.src = firstUrl;
+        }
 
-        const map: Record<string, string> = {};
-        nextItems.forEach((it) => {
-          map[it.id] = post.caption ?? "";
-        });
+        const map: Record<string, string> = { [itemId]: post.caption ?? "" };
         setCaptionByItemId(map);
       } catch {
         if (!cancelled) setError("Failed to load post preview for story.");
@@ -414,7 +373,7 @@ export default function NewStatusPage() {
             const durationSec = Number.isFinite(vid.duration) ? vid.duration : NaN;
             if (Number.isFinite(durationSec) && durationSec > MAX_VIDEO_DURATION_SECONDS) {
               // Remove too-long videos to prevent share/publish failures.
-              URL.revokeObjectURL(it.previewUrl);
+              if (it.previewUrl.startsWith("blob:")) URL.revokeObjectURL(it.previewUrl);
               setSelectedItems((curr) => curr.filter((c) => c.id !== it.id));
               setError(`Video is too long for Stories (max ${MAX_VIDEO_DURATION_SECONDS}s).`);
               vid.remove();
@@ -441,7 +400,7 @@ export default function NewStatusPage() {
   const removeItem = useCallback((id: string) => {
     setSelectedItems((prev) => {
       const target = prev.find((p) => p.id === id);
-      if (target) URL.revokeObjectURL(target.previewUrl);
+      if (target?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(target.previewUrl);
       const next = prev.filter((p) => p.id !== id);
       setPrimaryId((prevPrimary) => (prevPrimary === id ? next[0]?.id ?? null : prevPrimary));
       return next;
@@ -480,7 +439,9 @@ export default function NewStatusPage() {
       return;
     }
     setSelectedItems((prev) => {
-      prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      prev.forEach((it) => {
+        if (it.previewUrl.startsWith("blob:")) URL.revokeObjectURL(it.previewUrl);
+      });
       return [];
     });
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -584,10 +545,27 @@ export default function NewStatusPage() {
         caption?: string;
         textOverlays?: TextOverlay[];
         mediaTransform?: { scale: number; translateX: number; translateY: number };
+        sourcePostId?: string;
       }> = [];
 
       for (let i = 0; i < ordered.length; i++) {
         const item = ordered[i];
+        if (fromPostId && item.fromPostRemote) {
+          const itemCaption = (captionByItemId[item.id] ?? "").trim().slice(0, 500);
+          const overlays = textOverlaysByItemId[item.id] ?? [];
+          const transform = mediaTransformByItemId[item.id];
+          const hasTransform = transform && (transform.scale !== 1 || transform.translateX !== 0 || transform.translateY !== 0);
+          uploaded.push({
+            sourcePostId: fromPostId,
+            mediaUrl: item.previewUrl,
+            type: item.isVideo ? "video" : "image",
+            ...(itemCaption ? { caption: itemCaption } : {}),
+            ...(overlays.length > 0 ? { textOverlays: overlays } : {}),
+            ...(hasTransform ? { mediaTransform: transform } : {}),
+          });
+          continue;
+        }
+
         const asImage = isImageFile(item.file);
         let fileToUpload: File;
         if (i === 0 && editedBlob && asImage) {
@@ -638,19 +616,36 @@ export default function NewStatusPage() {
     } finally {
       setSaving(false);
     }
-  }, [selectedItems, primaryId, editedBlob, captionByItemId, visibility, router, textOverlaysByItemId, mediaTransformByItemId]);
+  }, [
+    selectedItems,
+    primaryId,
+    editedBlob,
+    captionByItemId,
+    visibility,
+    router,
+    textOverlaysByItemId,
+    mediaTransformByItemId,
+    fromPostId,
+    fromPostAllowed,
+  ]);
 
   useEffect(() => {
     return () => {
       if (selectingTimeoutRef.current) clearTimeout(selectingTimeoutRef.current);
-      if (editedPreviewUrl) URL.revokeObjectURL(editedPreviewUrl);
-      selectedItems.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      if (editedPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(editedPreviewUrl);
+      selectedItems.forEach((it) => {
+        if (it.previewUrl.startsWith("blob:")) URL.revokeObjectURL(it.previewUrl);
+      });
     };
   }, [editedPreviewUrl, selectedItems]);
 
   useEffect(() => {
     setSelectedOverlayId(null);
   }, [primaryId]);
+
+  useEffect(() => {
+    if (fromPostId && selectedItems.length === 0) setFromPostCard(null);
+  }, [fromPostId, selectedItems.length]);
 
   const primaryIndex = primaryId ? selectedItems.findIndex((it) => it.id === primaryId) : 0;
   const setPrimaryByIndex = useCallback(
@@ -1022,6 +1017,12 @@ export default function NewStatusPage() {
 
       {/* Primary preview — full bleed, padding so floating bar doesn’t cover */}
       <div className="flex-1 min-h-0 flex flex-col bg-black relative overflow-hidden pb-[160px]">
+        {fromPostId && fromPostLoading && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/70">
+            <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <p className="text-sm text-white/90">Loading post…</p>
+          </div>
+        )}
         {!hasMedia ? (
           <button
             type="button"
@@ -1064,38 +1065,47 @@ export default function NewStatusPage() {
           </button>
         ) : (
           <>
-            <div ref={previewContainerRef} className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
+            {fromPostCard ? (
               <div
-                className="absolute inset-0 flex items-center justify-center touch-none select-none"
-                style={{
-                  transformOrigin: "center center",
-                  transform: (() => {
-                    const t = getMediaTransform(primaryId ?? null);
-                    return `scale(${t.scale}) translate(${t.translateX}px, ${t.translateY}px)`;
-                  })(),
-                }}
+                ref={previewContainerRef}
+                className="absolute inset-0 z-[12] overflow-y-auto flex items-center justify-center p-3 bg-black"
               >
-                {isImage ? (
-                  <img
-                    src={displayUrl}
-                    alt=""
-                    className="max-h-full w-full object-cover object-center pointer-events-none"
-                    draggable={false}
-                  />
-                ) : (
-                  <video
-                    key={primaryId}
-                    src={primaryPreviewUrl}
-                    className="max-h-full w-full object-cover object-center pointer-events-none"
-                    controls
-                    playsInline
-                    muted
-                  />
-                )}
+                <StoryPostEmbed post={fromPostCard} navigateOnTap={false} className="w-full max-w-md shadow-2xl" />
               </div>
-            </div>
-            {/* Media pan/zoom gesture layer — always present when hasMedia */}
-            {hasMedia && (
+            ) : (
+              <div ref={previewContainerRef} className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
+                <div
+                  className="absolute inset-0 flex items-center justify-center touch-none select-none"
+                  style={{
+                    transformOrigin: "center center",
+                    transform: (() => {
+                      const t = getMediaTransform(primaryId ?? null);
+                      return `scale(${t.scale}) translate(${t.translateX}px, ${t.translateY}px)`;
+                    })(),
+                  }}
+                >
+                  {isImage ? (
+                    <img
+                      src={displayUrl}
+                      alt=""
+                      className="max-h-full w-full object-cover object-center pointer-events-none"
+                      draggable={false}
+                    />
+                  ) : (
+                    <video
+                      key={primaryId}
+                      src={primaryPreviewUrl}
+                      className="max-h-full w-full object-cover object-center pointer-events-none"
+                      controls
+                      playsInline
+                      muted
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+            {/* Media pan/zoom gesture layer — not used for post embed preview */}
+            {hasMedia && !fromPostCard && (
               <div
                 className="absolute inset-0 z-10 touch-none select-none"
                 style={{ pointerEvents: "auto" }}
@@ -1111,95 +1121,10 @@ export default function NewStatusPage() {
               />
             )}
 
-            {/* When creating a story from a post: show a post-like preview overlay */}
-            {fromPostId && (
-              <>
-                <div className="absolute left-0 right-0 top-0 z-30 pointer-events-none">
-                  <header className="flex items-center gap-3 px-4 py-2.5">
-                    <div className="w-12 h-12 rounded-lg p-[1px] border border-[var(--ig-border)] flex items-center justify-center shrink-0 bg-[var(--ig-bg-primary)]">
-                      <div className="w-full h-full rounded-[5px] flex items-center justify-center overflow-hidden bg-[var(--ig-bg-primary)]">
-                        {fromPostAuthorImage ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={fromPostAuthorImage} alt="" className="w-full h-full rounded-[5px] object-cover" />
-                        ) : (
-                          <span className="text-base font-semibold text-[var(--ig-text-secondary)]">
-                            {(fromPostAuthorName || "U").charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="font-semibold text-sm text-[var(--ig-text)] truncate">{fromPostAuthorName}</p>
-                      </div>
-                      <div className="flex items-center text-xs mt-0.5 text-[var(--ig-text-secondary)]">
-                        <time dateTime={fromPostCreatedAt ?? undefined}>{fromPostTimeLabel}</time>
-                      </div>
-                    </div>
-                  </header>
-                </div>
-
-                {fromPostCaptionForPreview && hasMedia && !fromPostCaptionExpanded && (
-                  <div
-                    className="absolute left-0 right-12 bottom-0 px-4 pb-3 pt-6 z-30 pointer-events-auto bg-gradient-to-t from-black/70 via-black/30 to-transparent"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <p
-                      className="text-sm text-white break-words"
-                      style={{
-                        lineHeight: 1.35,
-                        ...(fromPostShowCaptionPreview
-                          ? ({
-                              display: "-webkit-box",
-                              WebkitLineClamp: 1,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            } as any)
-                          : undefined),
-                      }}
-                    >
-                      {fromPostShowCaptionPreview ? (
-                        <>
-                          {fromPostCaptionForPreview.slice(0, 120).trim()}
-                          {fromPostCaptionForPreview.length > 120 && "… "}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFromPostCaptionExpanded(true);
-                            }}
-                            className="text-[var(--ig-link)] font-medium hover:underline"
-                          >
-                            See more
-                          </button>
-                        </>
-                      ) : (
-                        fromPostCaptionForPreview
-                      )}
-                    </p>
-                  </div>
-                )}
-
-                {fromPostCaptionForPreview && hasMedia && fromPostCaptionExpanded && (
-                  <div
-                    className="absolute left-0 right-0 bottom-0 z-30 px-4 pb-3 pt-4 pointer-events-none"
-                    aria-hidden
-                  >
-                    <div className="inline-block max-w-full rounded-2xl bg-black/45 px-3 py-2">
-                      <p className="text-sm text-white/95 break-words" style={{ lineHeight: 1.35 }}>
-                        {fromPostCaptionForPreview}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
             {/* Text overlays — draggable, position in % */}
             {primaryId && primaryOverlays.length > 0 && (
               <div
-                className="absolute inset-0 z-20"
+                className={`absolute inset-0 ${fromPostCard ? "z-[25]" : "z-20"}`}
                 style={{ pointerEvents: "none" }}
               >
                 <div
@@ -1265,7 +1190,7 @@ export default function NewStatusPage() {
                 <span className="text-white/90 text-sm font-medium">Opening…</span>
               </div>
             )}
-            {selectedItems.length > 1 && (
+            {selectedItems.length > 1 && !fromPostCard && (
               <>
                 <button
                   type="button"
@@ -1289,7 +1214,7 @@ export default function NewStatusPage() {
                 </button>
               </>
             )}
-            {selectedItems.length === 1 && primaryItem && isImageFile(primaryItem.file) && (
+            {!fromPostId && selectedItems.length === 1 && primaryItem && isImageFile(primaryItem.file) && (
               <button
                 type="button"
                 onClick={openCropForPrimary}
@@ -1385,16 +1310,18 @@ export default function NewStatusPage() {
                     ) : (
                       <img src={it.previewUrl} alt="" className="w-full h-full object-cover" />
                     )}
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); removeItem(it.id); }}
-                      className="absolute top-0 right-0 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-500/90 active:scale-90 transition-all"
-                      aria-label="Remove"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    {!it.fromPostRemote && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeItem(it.id); }}
+                        className="absolute top-0 right-0 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-500/90 active:scale-90 transition-all"
+                        aria-label="Remove"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
                     {it.isVideo && it.videoDuration && (
                       <span className="absolute bottom-0 right-0 px-1 rounded bg-black/80 text-[9px] text-white font-medium">
                         {it.videoDuration}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
-import { connectDB, StatusModel, CircleRelationshipModel, NotificationModel, User } from "@/lib/db";
+import { connectDB, StatusModel, CircleRelationshipModel, NotificationModel, User, PostModel } from "@/lib/db";
 import { sendPushToUserAsync } from "@/lib/pushSend";
 import {
   MAX_OVERLAYS_PER_STATUS,
@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
       caption?: string;
       textOverlays?: unknown[];
       mediaTransform?: { scale?: number; translateX?: number; translateY?: number };
+      /** Reference to original feed post; validated server-side (network visibility only). */
+      sourcePostId?: string;
     }>;
     visibility?: Visibility;
   };
@@ -87,21 +89,75 @@ export async function POST(request: NextRequest) {
   const visibility: Visibility =
     body.visibility === "inner_circle" || body.visibility === "trusted_circle" ? body.visibility : "everyone";
 
-  const normalized = items.map((it) => {
+  await connectDB();
+
+  type NormalizedItem = {
+    mediaUrl: string;
+    type: "image" | "video";
+    caption: string;
+    textOverlays: TextOverlay[];
+    mediaTransform: { scale: number; translateX: number; translateY: number };
+    sourcePostId?: mongoose.Types.ObjectId;
+  };
+
+  const normalized: NormalizedItem[] = [];
+
+  for (const it of items) {
     const rawOverlays = Array.isArray(it.textOverlays) ? it.textOverlays : [];
     const textOverlays = rawOverlays
       .slice(0, MAX_OVERLAYS_PER_STATUS)
       .map(normalizeOverlay)
       .filter((o): o is TextOverlay => o !== null);
     const mediaTransform = normalizeMediaTransform(it.mediaTransform);
-    return {
-      mediaUrl: it.mediaUrl,
-      type: it.type,
+    let mediaUrl = typeof it.mediaUrl === "string" ? it.mediaUrl.trim() : "";
+    let mediaType: "image" | "video" | undefined =
+      it.type === "image" || it.type === "video" ? it.type : undefined;
+    let sourcePostId: mongoose.Types.ObjectId | undefined;
+
+    const rawSourceId = typeof it.sourcePostId === "string" ? it.sourcePostId.trim() : "";
+    if (rawSourceId) {
+      if (!mongoose.Types.ObjectId.isValid(rawSourceId)) {
+        return NextResponse.json({ error: "Invalid sourcePostId" }, { status: 400 });
+      }
+      const post = await PostModel.findById(rawSourceId).select("visibility mediaUrls").lean().exec();
+      if (!post) {
+        return NextResponse.json({ error: "Source post not found" }, { status: 404 });
+      }
+      const vis = (post as { visibility?: string }).visibility ?? "network";
+      if (vis !== "network") {
+        return NextResponse.json(
+          { error: "Only posts visible to Everyone can be added to a story" },
+          { status: 403 }
+        );
+      }
+      const urls = ((post as { mediaUrls?: string[] }).mediaUrls ?? []).filter(Boolean);
+      if (urls.length === 0) {
+        return NextResponse.json({ error: "Source post has no media" }, { status: 400 });
+      }
+      const pick =
+        mediaUrl && urls.some((u) => u === mediaUrl) ? mediaUrl : urls[0];
+      const looksVideo = !pick.match(/\.(gif|webp|png|jpe?g|avif)$/i);
+      mediaUrl = pick;
+      mediaType = looksVideo ? "video" : "image";
+      sourcePostId = new mongoose.Types.ObjectId(rawSourceId);
+    }
+
+    if (!mediaUrl || !mediaType) {
+      return NextResponse.json(
+        { error: "Each item requires mediaUrl and type (image|video)" },
+        { status: 400 }
+      );
+    }
+
+    normalized.push({
+      mediaUrl,
+      type: mediaType,
       caption: typeof it.caption === "string" ? it.caption.trim().slice(0, 500) : "",
       textOverlays,
       mediaTransform,
-    };
-  });
+      sourcePostId,
+    });
+  }
 
   for (const it of normalized) {
     if (!it.mediaUrl || !it.type || (it.type !== "image" && it.type !== "video")) {
@@ -111,8 +167,6 @@ export async function POST(request: NextRequest) {
       );
     }
   }
-
-  await connectDB();
   const expiresAt = new Date(Date.now() + STATUS_TTL_MS);
   const userId = new mongoose.Types.ObjectId(session.userId);
 
@@ -125,6 +179,7 @@ export async function POST(request: NextRequest) {
       caption: it.caption,
       textOverlays: it.textOverlays,
       mediaTransform: it.mediaTransform,
+      ...(it.sourcePostId ? { sourcePostId: it.sourcePostId } : {}),
       expiresAt,
       createdAt: new Date(Date.now() + idx),
     })),
