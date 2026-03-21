@@ -68,7 +68,7 @@ export default function LoginPage() {
             Sign in
           </h1>
           <p className="text-sm text-[#6B7280]">
-            Enter your mobile number. We&apos;ll send a verification code.
+            Enter your mobile number. We&apos;ll send a verification code on WhatsApp.
           </p>
         </div>
         <form onSubmit={handleSendCode} className="space-y-5">

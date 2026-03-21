@@ -1,5 +1,8 @@
 import twilio from "twilio";
 
+/** Twilio Verify delivery channel. Default: whatsapp (set TWILIO_VERIFY_CHANNEL=sms to use SMS). */
+export type VerifyChannel = "whatsapp" | "sms";
+
 /**
  * Twilio Verify is used when all three env vars are set, unless OTP_PROVIDER=local.
  * Set OTP_PROVIDER=twilio to force Twilio even if you add more config later.
@@ -32,6 +35,14 @@ export function toE164(phoneDigits10: string): string {
   return `+${cc}${phoneDigits10}`;
 }
 
+export function getVerifyChannel(): VerifyChannel {
+  const raw = process.env.TWILIO_VERIFY_CHANNEL?.trim().toLowerCase();
+  if (raw === "sms") return "sms";
+  // Default: WhatsApp (OTP via Twilio Verify + WhatsApp Business)
+  if (raw === "whatsapp" || raw === undefined || raw === "") return "whatsapp";
+  return "whatsapp";
+}
+
 export type TwilioVerifySendResult =
   | { ok: true }
   | { ok: false; status: number; error: string };
@@ -42,9 +53,10 @@ export async function sendVerification(toE164Phone: string): Promise<TwilioVerif
     const authToken = process.env.TWILIO_AUTH_TOKEN!;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID!;
     const client = twilio(accountSid, authToken);
+    const channel = getVerifyChannel();
     await client.verify.v2.services(serviceSid).verifications.create({
       to: toE164Phone,
-      channel: "sms",
+      channel,
     });
     return { ok: true };
   } catch (e: unknown) {
@@ -100,7 +112,7 @@ function mapTwilioError(e: unknown): { status: number; error: string } {
     }
     return {
       status: status >= 500 ? 502 : 400,
-      error: "SMS verification service temporarily unavailable.",
+      error: "Verification service temporarily unavailable.",
     };
   }
   return { status: 500, error: "Verification failed" };

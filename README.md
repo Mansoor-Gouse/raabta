@@ -1,4 +1,4 @@
-﻿# Messaging PWA
+# Messaging PWA
 
 End-to-end messaging PWA with Stream Chat & Video, Material 3style UI (Tailwind), MongoDB, and device-bound phone verification.
 
@@ -34,7 +34,7 @@ End-to-end messaging PWA with Stream Chat & Video, Material 3style UI (Tailwind
    npm run dev
    ```
 
-6. **OTP**: Without Twilio env vars, OTP is stored locally and logged to the server console in development. For production SMS, set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` (Twilio Verify). See [DEPLOYMENT.md](./DEPLOYMENT.md#7-otp--sms-twilio-verify). Optional: `FIXED_OTP_CODE` + `ALLOW_FIXED_OTP` for static test codes.
+6. **OTP**: Without Twilio env vars, OTP is stored locally and logged to the server console in development. For production OTP (WhatsApp by default; optional SMS via `TWILIO_VERIFY_CHANNEL`), set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` (Twilio Verify). See [DEPLOYMENT.md](./DEPLOYMENT.md#7-otp--twilio-verify-whatsapp-or-sms). Optional: `FIXED_OTP_CODE` + `ALLOW_FIXED_OTP` for static test codes.
 
 ## Project structure
 
@@ -55,3 +55,4 @@ npm start
 ## Production deployment
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for database setup (MongoDB Atlas), environment variables, Stream Chat, and Web Push.
+
