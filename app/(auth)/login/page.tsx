@@ -1,8 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+const FirebasePhoneOtpForm = dynamic(
+  () => import("@/components/auth/FirebasePhoneOtpForm"),
+  { ssr: false }
+);
+
+const useFirebasePhoneOtp =
+  process.env.NEXT_PUBLIC_USE_FIREBASE_PHONE_OTP === "true";
 
 function normalizePhone(raw: string): string {
   return raw.replace(/\D/g, "").slice(0, 10);
@@ -15,7 +24,7 @@ function formatPhone(raw: string): string {
   return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
 }
 
-export default function LoginPage() {
+function LegacyLoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -127,4 +136,11 @@ export default function LoginPage() {
       </div>
     </main>
   );
+}
+
+export default function LoginPage() {
+  if (useFirebasePhoneOtp) {
+    return <FirebasePhoneOtpForm />;
+  }
+  return <LegacyLoginPage />;
 }

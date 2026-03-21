@@ -14,6 +14,9 @@ function getDeviceId(): string {
   return id;
 }
 
+const useFirebasePhoneOtp =
+  process.env.NEXT_PUBLIC_USE_FIREBASE_PHONE_OTP === "true";
+
 function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,13 +98,26 @@ function VerifyContent() {
   }, [name, finishLogin]);
 
   useEffect(() => {
+    if (useFirebasePhoneOtp) {
+      router.replace("/login");
+      return;
+    }
     if (!phone) router.replace("/login");
   }, [phone, router]);
 
   useEffect(() => {
+    if (useFirebasePhoneOtp) return;
     if (step === "code") codeInputRef.current?.focus();
     else nameInputRef.current?.focus();
   }, [step]);
+
+  if (useFirebasePhoneOtp) {
+    return (
+      <main className="min-h-dvh flex items-center justify-center p-4 bg-gradient-to-b from-[#FAFAFA] via-[#F5F5F5] to-[#F0F0F0]">
+        <p className="text-[#737373]">Redirecting…</p>
+      </main>
+    );
+  }
 
   if (step === "name") {
     return (
