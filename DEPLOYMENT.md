@@ -173,6 +173,16 @@ By default the app uses **`TWILIO_VERIFY_CHANNEL=whatsapp`** so the code is deli
 - **Local mode:** If Twilio env vars are omitted (or `OTP_PROVIDER=local`), the app uses the existing **MongoDB `OtpSession`** + hashed OTP from [`lib/otp.ts`](lib/otp.ts); in development the code is logged to the server console.
 - **Fixed test code:** `FIXED_OTP_CODE` works only when `NODE_ENV !== "production"` **or** `ALLOW_FIXED_OTP=true`, so production is not accidentally left open.
 
+### Temporary: skip OTP (`SKIP_OTP_VALIDATION`)
+
+If you set `SKIP_OTP_VALIDATION=true`, **send** does not call Twilio or store an OTP, and **verify** accepts **any 6-digit code** for a valid 10-digit phone. Use only for local/demo; **never** in a real production deployment.
+
+### Twilio trial vs production
+
+On a **trial** Twilio account, OTP is usually delivered only to **phone numbers you have verified** in the console (e.g. **Phone Numbers → Manage → Verified caller IDs**). If OTP works for one number (e.g. yours) but not others, add each test number there or **upgrade the account** so you can send to any valid number. Check the server log in development (`[Twilio]` warnings) for the exact error code.
+
+If **WhatsApp** is the Verify channel (`TWILIO_VERIFY_CHANNEL=whatsapp`), recipients must use WhatsApp on that number and your Twilio WhatsApp sender must be set up; try **`TWILIO_VERIFY_CHANNEL=sms`** if SMS is easier for testing.
+
 ### Vercel
 
 Add the Twilio variables under **Settings → Environment Variables** for Production (and Preview if needed), then redeploy.

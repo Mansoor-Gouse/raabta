@@ -97,6 +97,11 @@ function mapTwilioError(e: unknown): { status: number; error: string } {
     const err = e as { status?: number; code?: number; message?: string };
     const status = typeof err.status === "number" ? err.status : 500;
     const code = err.code;
+    const message = err.message || "";
+
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Twilio]", { code, status, message: message.slice(0, 200) });
+    }
 
     if (status === 429 || code === 20429) {
       return {
@@ -104,6 +109,30 @@ function mapTwilioError(e: unknown): { status: number; error: string } {
         error: "Too many requests. Try again later.",
       };
     }
+
+    // Trial account: destination not verified — only pre-verified numbers receive OTP
+    if (
+      code === 21608 ||
+      code === 21266 ||
+      /unverified.*trial|trial.*unverified/i.test(message) ||
+      /cannot send.*unverified/i.test(message)
+    ) {
+      return {
+        status: 400,
+        error:
+          "This number cannot receive OTP on a Twilio trial account. In Twilio Console, add the number under Phone Numbers → Manage → Verified Caller IDs (or upgrade the account).",
+      };
+    }
+
+    // Invalid / unsupported destination for Verify or WhatsApp
+    if (code === 60200 || code === 60202 || code === 21211) {
+      return {
+        status: 400,
+        error:
+          "Invalid or unsupported phone number for verification. Check the number and country code (+91 for India).",
+      };
+    }
+
     if (status >= 400 && status < 500) {
       return {
         status: 400,

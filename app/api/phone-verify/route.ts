@@ -26,6 +26,11 @@ function allowsFixedOtpBypass(): boolean {
   );
 }
 
+/** When true: no SMS/WhatsApp, no OTP check — any code works after send (dev/demo only). */
+function skipOtpValidation(): boolean {
+  return process.env.SKIP_OTP_VALIDATION === "true";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -56,6 +61,19 @@ export async function POST(request: NextRequest) {
           { error: "Please wait before requesting another code" },
           { status: 429 }
         );
+      }
+
+      if (skipOtpValidation()) {
+        if (process.env.NODE_ENV === "production") {
+          console.warn(
+            "[phone-verify] SKIP_OTP_VALIDATION is on — remove before real production"
+          );
+        }
+        sendCooldown.set(normalized, Date.now());
+        return NextResponse.json({
+          ok: true,
+          message: "OTP validation disabled — enter any 6 digits on the next screen",
+        });
       }
 
       if (shouldUseTwilioVerify()) {
@@ -96,6 +114,12 @@ export async function POST(request: NextRequest) {
         );
       }
       const normalized = normalizePhone(phone);
+      if (normalized.length !== 10) {
+        return NextResponse.json(
+          { error: "Invalid phone number" },
+          { status: 400 }
+        );
+      }
       const codeStr = String(code).trim();
       const fixedOtp = process.env.FIXED_OTP_CODE;
       const allowFixed =
@@ -104,7 +128,19 @@ export async function POST(request: NextRequest) {
         fixedOtp.length >= 4 &&
         codeStr === fixedOtp;
 
-      if (shouldUseTwilioVerify()) {
+      if (skipOtpValidation()) {
+        if (process.env.NODE_ENV === "production") {
+          console.warn(
+            "[phone-verify] SKIP_OTP_VALIDATION is on — remove before real production"
+          );
+        }
+        if (codeStr.length < 6) {
+          return NextResponse.json(
+            { error: "Enter a 6-digit code" },
+            { status: 400 }
+          );
+        }
+      } else if (shouldUseTwilioVerify()) {
         if (!isTwilioVerifyConfigured()) {
           return NextResponse.json(
             { error: "SMS verification is not configured" },
