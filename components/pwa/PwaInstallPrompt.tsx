@@ -139,7 +139,7 @@ export function PwaInstallPrompt() {
       >
         <div className="flex gap-3 items-start min-w-0">
           <div
-            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-black/[0.06] bg-white p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]"
+            className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border border-black/[0.06] bg-white p-8 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]"
             aria-hidden
           >
             <Image
@@ -148,7 +148,7 @@ export function PwaInstallPrompt() {
               width={192}
               height={192}
               className="h-full w-full max-h-full max-w-full object-contain object-center"
-              sizes="80px"
+              sizes="112px"
             />
           </div>
           <div className="flex-1 min-w-0 space-y-1">

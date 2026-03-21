@@ -82,9 +82,9 @@ export function NetworkLanding() {
           <p className="mt-8 text-lg sm:text-xl text-[#404040] font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
             A network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and collaboration—built for trust and real conversation.
           </p>
-          <p className="mt-3 text-sm text-[#737373] opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
+          {/* <p className="mt-3 text-sm text-[#737373] opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
             Sign in with your mobile number to use the full app—feed, chat, events, and more.
-          </p>
+          </p> */}
           <div className="mt-14 flex max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
             <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B]" aria-hidden />
             <blockquote className="flex-1 ml-4 px-6 py-6 rounded-2xl border border-black/[0.08] bg-white/95 text-left">
@@ -207,9 +207,9 @@ export function NetworkLanding() {
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-3">
               What you can do in the app
             </h2>
-            <p className="text-center text-[#737373] text-sm mb-12">
+            {/* <p className="text-center text-[#737373] text-sm mb-12">
               After you sign in, you can:
-            </p>
+            </p> */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 { text: "Connect with influential Muslims globally", icon: "map" },
@@ -277,9 +277,9 @@ export function NetworkLanding() {
             >
               Get Started
             </a>
-            <p className="mt-6 text-sm text-[#737373]">
+            {/* <p className="mt-6 text-sm text-[#737373]">
               One-time verification on your phone—then you&apos;re in.
-            </p>
+            </p> */}
             <p className="mt-2 text-sm text-[#737373]">
               A calm, trusted space for people who take faith and community seriously.
             </p>
