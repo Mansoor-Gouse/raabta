@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -441,7 +441,7 @@ export function StoryPostEmbed({
                             WebkitLineClamp: 1,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
-                          } as any)
+                          } as CSSProperties)
                         : undefined),
                     }}
                   >
