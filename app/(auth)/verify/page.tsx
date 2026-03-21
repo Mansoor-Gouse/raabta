@@ -181,7 +181,7 @@ function VerifyContent() {
             Verify
           </h1>
           <p className="text-sm text-[#6B7280]">
-            Enter the 6-digit code sent via WhatsApp to{" "}
+            Enter the 6-digit code sent via SMS to{" "}
             <span className="font-medium text-[#111827]">{phone}</span>.
           </p>
         </div>
