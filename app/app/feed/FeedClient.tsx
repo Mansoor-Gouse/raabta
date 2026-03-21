@@ -81,6 +81,15 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
     if (panel) lastScrollTopRef.current = panel.scrollTop;
   }, [activeIndex]);
 
+  /** Entering Stories: start at top so rings aren’t scrolled off-screen (esp. if outer scroll ever moved). */
+  useEffect(() => {
+    if (activeIndex !== 1) return;
+    const el = storiesPanelRef.current;
+    if (el && el.scrollTop > 0) {
+      el.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [activeIndex]);
+
   const handlePanelScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
     // Use the actual scrolling element to avoid any ref/staleness issues.
     const newTop = (e.currentTarget as HTMLElement).scrollTop;
@@ -322,7 +331,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
           role="tabpanel"
           aria-labelledby="feed-tab-0"
           aria-label="Posts"
-          className="min-w-full flex-shrink-0 min-h-0 h-full snap-start overflow-y-auto no-scrollbar bg-[var(--ig-bg)] px-3 pb-1 flex flex-col"
+          className="min-w-full flex-shrink-0 min-h-0 h-full snap-start overflow-y-auto overscroll-y-contain no-scrollbar bg-[var(--ig-bg)] px-3 pb-1 flex flex-col"
           onScroll={handlePanelScroll}
         >
           {loading ? (
@@ -418,7 +427,7 @@ export function FeedClient({ isActive = true, showTitle = true }: { isActive?: b
           role="tabpanel"
           aria-labelledby="feed-tab-1"
           aria-label="Stories"
-          className="min-w-full flex-shrink-0 min-h-0 h-full snap-start overflow-y-auto no-scrollbar bg-[var(--ig-bg-primary)] flex flex-col"
+          className="min-w-full flex-shrink-0 min-h-0 h-full snap-start overflow-y-auto overscroll-y-contain no-scrollbar bg-[var(--ig-bg-primary)] flex flex-col"
           onScroll={handlePanelScroll}
         >
           <StoryBar />

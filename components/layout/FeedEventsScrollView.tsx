@@ -156,10 +156,12 @@ export function FeedEventsScrollView() {
         className="flex-1 min-h-0 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth no-scrollbar"
         style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
       >
-        {/* Panel 0: Feed */}
+        {/* Panel 0: Feed — no vertical scroll here; FeedClient owns Posts/Stories scrollers.
+            Otherwise scrolling the post list scrolls this outer section and switching to Stories
+            leaves the viewport scrolled down so story rings look "missing" at the top. */}
         <section
           aria-label="Feed"
-          className="min-w-full w-full flex-shrink-0 snap-start overflow-y-auto overflow-x-hidden bg-[var(--ig-bg)]"
+          className="min-w-full w-full flex-shrink-0 snap-start overflow-x-hidden overflow-y-hidden flex flex-col min-h-0 bg-[var(--ig-bg)]"
         >
           <FeedClient isActive={panelIndex === 0} showTitle={false} />
         </section>

@@ -80,10 +80,10 @@ export function NetworkLanding() {
             a network of faith
           </p>
           <p className="mt-8 text-lg sm:text-xl text-[#404040] font-normal max-w-2xl mx-auto leading-relaxed opacity-0 animate-[network-fade-in_0.8s_ease-out_0.25s_forwards]">
-            An exclusive network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and collaboration.
+            A network where thoughtful, affluent, and influential Muslims connect through faith, dialogue, and collaboration—built for trust and real conversation.
           </p>
           <p className="mt-3 text-sm text-[#737373] opacity-0 animate-[network-fade-in_0.8s_ease-out_0.28s_forwards]">
-            By application. Curated.
+            Sign in with your mobile number to use the full app—feed, chat, events, and more.
           </p>
           <div className="mt-14 flex max-w-2xl mx-auto opacity-0 animate-[network-fade-in_0.8s_ease-out_0.35s_forwards]">
             <div className="w-1 flex-shrink-0 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0B0B0B]" aria-hidden />
@@ -124,8 +124,8 @@ export function NetworkLanding() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {[
                 {
-                  title: "Private Circles",
-                  desc: "Trusted circles with influential Muslims.",
+                  title: "Circles & trust",
+                  desc: "Smaller circles for deeper conversations with people you trust.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <circle cx="12" cy="12" r="4" />
@@ -147,8 +147,8 @@ export function NetworkLanding() {
                   ),
                 },
                 {
-                  title: "Exclusive Gatherings",
-                  desc: "Private dinners, retreats, and salons.",
+                  title: "Events & gatherings",
+                  desc: "Discover dinners, retreats, and salons in the app.",
                   icon: (
                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
@@ -205,15 +205,17 @@ export function NetworkLanding() {
         <FadeInSection>
           <div className="max-w-4xl mx-auto">
             <h2 className="network-serif text-3xl sm:text-4xl font-light text-center text-[#0B0B0B] mb-3">
-              Benefits of the Network
+              What you can do in the app
             </h2>
-            <p className="text-center text-[#737373] text-sm mb-12">As a member you get:</p>
+            <p className="text-center text-[#737373] text-sm mb-12">
+              After you sign in, you can:
+            </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 { text: "Connect with influential Muslims globally", icon: "map" },
                 { text: "Exchange ideas with like-minded believers", icon: "refresh" },
                 { text: "Collaborate on charitable initiatives", icon: "handshake" },
-                { text: "Attend and host exclusive gatherings", icon: "calendar" },
+                { text: "Find and join gatherings and events", icon: "calendar" },
                 { text: "Build lasting relationships in faith", icon: "heart" },
                 { text: "Create impact with leaders and change-makers", icon: "award" },
               ].map(({ text, icon }, i) => (
@@ -276,10 +278,10 @@ export function NetworkLanding() {
               Get Started
             </a>
             <p className="mt-6 text-sm text-[#737373]">
-              Get started with your mobile number to access the app.
+              One-time verification on your phone—then you&apos;re in.
             </p>
             <p className="mt-2 text-sm text-[#737373]">
-              Curated. Private.
+              A calm, trusted space for people who take faith and community seriously.
             </p>
           </div>
         </FadeInSection>
