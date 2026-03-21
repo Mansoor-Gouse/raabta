@@ -138,8 +138,18 @@ export function PwaInstallPrompt() {
         className="pointer-events-auto w-full max-w-md rounded-2xl border border-black/[0.08] bg-white/95 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-3"
       >
         <div className="flex gap-3 items-start min-w-0">
-          <div className="shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-black/[0.06] bg-white relative">
-            <Image src="/icon-192.png" alt="" fill className="object-cover" sizes="48px" />
+          <div
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/[0.06] bg-white p-1.5 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]"
+            aria-hidden
+          >
+            <Image
+              src="/icon-192.png"
+              alt=""
+              width={192}
+              height={192}
+              className="h-full w-full object-contain"
+              sizes="56px"
+            />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
             <p className="text-sm font-semibold text-[#0B0B0B]">Install The Rope</p>
