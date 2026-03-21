@@ -102,7 +102,7 @@ export function NetworkLanding() {
               href="/login"
               className="network-cta-primary inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
-              Request Membership
+              Get Started
             </a>
             <a
               href="#the-idea"
@@ -260,7 +260,7 @@ export function NetworkLanding() {
       </section>
 
       {/* Final CTA */}
-      <section id="request" className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
+      <section id="get-started" className="relative py-28 px-6 bg-gradient-to-b from-[#F5F5F5] via-[#FAFAFA] to-white">
         <FadeInSection>
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="network-serif text-3xl sm:text-4xl md:text-5xl font-light text-[#0B0B0B] mb-5 leading-tight">
@@ -273,41 +273,14 @@ export function NetworkLanding() {
               href="/login"
               className="network-cta-primary inline-flex items-center justify-center px-10 py-4 rounded-full bg-gradient-to-r from-[#1a1a1a] to-[#0B0B0B] text-white font-medium hover:from-[#252525] hover:to-[#151515] transition-all duration-300 focus-visible:outline-none active:scale-[0.98]"
             >
-              Request Membership
+              Get Started
             </a>
             <p className="mt-6 text-sm text-[#737373]">
-              Apply once; we&apos;ll review and be in touch.
+              Get started with your mobile number to access the app.
             </p>
             <p className="mt-2 text-sm text-[#737373]">
               Curated. Private.
             </p>
-          </div>
-        </FadeInSection>
-      </section>
-
-      {/* How it works */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F5F5F5]">
-        <FadeInSection>
-          <div className="max-w-3xl mx-auto">
-            <h2 className="network-serif text-2xl sm:text-3xl font-light text-center text-[#0B0B0B] mb-10">
-              How it works
-            </h2>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-10">
-              <div className="flex flex-col items-center text-center">
-                <span className="w-9 h-9 rounded-full border border-black/[0.12] flex items-center justify-center text-[#171717] font-medium text-sm mb-2">1</span>
-                <p className="text-[#404040] font-medium text-sm">Apply</p>
-              </div>
-              <span className="hidden sm:block text-black/20 text-lg" aria-hidden>→</span>
-              <div className="flex flex-col items-center text-center">
-                <span className="w-9 h-9 rounded-full border border-black/[0.12] flex items-center justify-center text-[#171717] font-medium text-sm mb-2">2</span>
-                <p className="text-[#404040] font-medium text-sm">We review</p>
-              </div>
-              <span className="hidden sm:block text-black/20 text-lg" aria-hidden>→</span>
-              <div className="flex flex-col items-center text-center">
-                <span className="w-9 h-9 rounded-full border border-black/[0.12] flex items-center justify-center text-[#171717] font-medium text-sm mb-2">3</span>
-                <p className="text-[#404040] font-medium text-sm">Join</p>
-              </div>
-            </div>
           </div>
         </FadeInSection>
       </section>
@@ -320,10 +293,7 @@ export function NetworkLanding() {
           </p>
           <div className="flex gap-6">
             <a href="/login" className="text-sm text-[#404040] hover:text-[#0B0B0B] transition-colors">
-              Request Membership
-            </a>
-            <a href="/login" className="text-sm text-[#404040] hover:text-[#0B0B0B] transition-colors">
-              Sign in
+              Get Started
             </a>
           </div>
         </div>
