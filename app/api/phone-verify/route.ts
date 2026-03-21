@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB, User } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { verifyOtpSession, storeOtpSession, generateOtpCode } from "@/lib/otp";
+import {
+  shouldUseTwilioVerify,
+  isTwilioVerifyConfigured,
+  toE164,
+  sendVerification,
+  checkVerification,
+} from "@/lib/twilio-verify";
 
 // Rate limit: allow 1 send per phone per 60s (simple in-memory for demo; use Redis in prod)
 const sendCooldown = new Map<string, number>();
@@ -9,6 +16,14 @@ const COOLDOWN_MS = 60_000;
 
 function normalizePhone(phone: string): string {
   return phone.replace(/\D/g, "").slice(-10);
+}
+
+/** FIXED_OTP bypass: dev by default; production only if ALLOW_FIXED_OTP=true */
+function allowsFixedOtpBypass(): boolean {
+  return (
+    process.env.ALLOW_FIXED_OTP === "true" ||
+    process.env.NODE_ENV !== "production"
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -42,8 +57,29 @@ export async function POST(request: NextRequest) {
           { status: 429 }
         );
       }
+
+      if (shouldUseTwilioVerify()) {
+        if (!isTwilioVerifyConfigured()) {
+          return NextResponse.json(
+            { error: "SMS verification is not configured" },
+            { status: 503 }
+          );
+        }
+        const e164 = toE164(normalized);
+        const result = await sendVerification(e164);
+        if (!result.ok) {
+          return NextResponse.json(
+            { error: result.error },
+            { status: result.status }
+          );
+        }
+        sendCooldown.set(normalized, Date.now());
+        return NextResponse.json({ ok: true, message: "Code sent" });
+      }
+
       const fixedOtp = process.env.FIXED_OTP_CODE;
-      const otpCode = fixedOtp && fixedOtp.length >= 4 ? fixedOtp : generateOtpCode();
+      const otpCode =
+        fixedOtp && fixedOtp.length >= 4 ? fixedOtp : generateOtpCode();
       await storeOtpSession(normalized, otpCode);
       sendCooldown.set(normalized, Date.now());
       if (!fixedOtp && process.env.NODE_ENV !== "production") {
@@ -62,14 +98,43 @@ export async function POST(request: NextRequest) {
       const normalized = normalizePhone(phone);
       const codeStr = String(code).trim();
       const fixedOtp = process.env.FIXED_OTP_CODE;
-      const valid =
-        (fixedOtp && fixedOtp.length >= 4 && codeStr === fixedOtp) ||
-        (await verifyOtpSession(normalized, codeStr));
-      if (!valid) {
-        return NextResponse.json(
-          { error: "Invalid or expired code" },
-          { status: 400 }
-        );
+      const allowFixed =
+        allowsFixedOtpBypass() &&
+        !!fixedOtp &&
+        fixedOtp.length >= 4 &&
+        codeStr === fixedOtp;
+
+      if (shouldUseTwilioVerify()) {
+        if (!isTwilioVerifyConfigured()) {
+          return NextResponse.json(
+            { error: "SMS verification is not configured" },
+            { status: 503 }
+          );
+        }
+        if (!allowFixed) {
+          const check = await checkVerification(toE164(normalized), codeStr);
+          if (!check.ok) {
+            return NextResponse.json(
+              { error: check.error },
+              { status: check.status }
+            );
+          }
+          if (!check.approved) {
+            return NextResponse.json(
+              { error: "Invalid or expired code" },
+              { status: 400 }
+            );
+          }
+        }
+      } else {
+        const valid =
+          allowFixed || (await verifyOtpSession(normalized, codeStr));
+        if (!valid) {
+          return NextResponse.json(
+            { error: "Invalid or expired code" },
+            { status: 400 }
+          );
+        }
       }
       await connectDB();
       let user = await User.findOne({ phone: normalized });

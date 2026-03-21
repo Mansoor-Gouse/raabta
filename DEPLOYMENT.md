@@ -2,7 +2,7 @@
 
 Production setup for database, environment variables, and optional services (Stream, Web Push).
 
-**OTP:** Leave as-is for now. No SMS provider or code changes required; you can add Twilio/Firebase later when needed.
+**OTP:** Optional **Twilio Verify** for real SMS in production. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` (see [§7](#7-otp--sms-twilio-verify)). For local/dev without Twilio, omit those vars and use the local MongoDB OTP (console logs the code when `NODE_ENV !== "production"`), or set `FIXED_OTP_CODE` with `ALLOW_FIXED_OTP=true` (or non-production) for a static test code.
 
 ---
 
@@ -32,11 +32,17 @@ Do these in order. Your repo is already on GitHub.
    | `SESSION_SECRET` | Long random string (32+ chars); e.g. run in PowerShell: `[Convert]::ToBase64String((1..32 \| ForEach-Object { Get-Random -Maximum 256 }) -as [byte[]])` |
    | `NEXT_PUBLIC_STREAM_API_KEY` | From [Stream dashboard](https://dashboard.getstream.io/) |
    | `STREAM_SECRET` | From Stream dashboard (same app) |
-| `FIXED_OTP_CODE` | Optional. When set (e.g. `123456`), this code is accepted for any phone; no SMS needed. |
+| `FIXED_OTP_CODE` | Optional. Static test code; only honored when `ALLOW_FIXED_OTP=true` or non-production. |
+| `ALLOW_FIXED_OTP` | Optional. Set `true` to allow `FIXED_OTP_CODE` in **production** (avoid in real deployments). |
+| `TWILIO_ACCOUNT_SID` | Twilio Verify: Account SID from [Twilio Console](https://console.twilio.com/). |
+| `TWILIO_AUTH_TOKEN` | Twilio Verify: Auth Token (server-only). |
+| `TWILIO_VERIFY_SERVICE_SID` | Twilio Verify: Verify Service SID (Create a Verify service → SMS). |
+| `TWILIO_DEFAULT_COUNTRY_CODE` | Optional. Digits only, default `91` (E.164 for stored 10-digit numbers). |
+| `OTP_PROVIDER` | Optional. `twilio` or `local` — overrides auto-detection (default: Twilio if all Twilio vars set, else local). |
 
 5. **Deployments** → open the latest deployment → **Redeploy** (or push a new commit) so the app runs with the new env vars.
 
-Your app URL will be like `https://raabta-xxx.vercel.app`. For login without SMS, set `FIXED_OTP_CODE` (e.g. `123456`) in Vercel env vars; users can enter that code for any phone.
+Your app URL will be like `https://raabta-xxx.vercel.app`. For login without Twilio, either omit Twilio vars (local OTP / dev console) or set `FIXED_OTP_CODE` and `ALLOW_FIXED_OTP=true` for a static test code (not for real users).
 
 ---
 
@@ -75,7 +81,13 @@ Set these in your hosting dashboard (Vercel, Railway, Render, or in `.env` for D
 | `NEXT_PUBLIC_STREAM_API_KEY` | Yes | Stream Chat/Video API key (public, safe in client). |
 | `STREAM_SECRET` | Yes | Stream secret (server-only; never expose). |
 | `DEVICE_BINDING_SALT` | No | Salt for device-binding hashes; omit to use default. |
-| `FIXED_OTP_CODE` | No | When set (e.g. `123456`), this code is accepted for any phone; no SMS. |
+| `FIXED_OTP_CODE` | No | Static OTP for testing; requires `ALLOW_FIXED_OTP=true` or non-production. |
+| `ALLOW_FIXED_OTP` | No | `true` to allow fixed OTP in production. |
+| `TWILIO_ACCOUNT_SID` | No* | *Required for Twilio Verify SMS. |
+| `TWILIO_AUTH_TOKEN` | No* | Twilio Auth Token. |
+| `TWILIO_VERIFY_SERVICE_SID` | No* | Verify Service SID. |
+| `TWILIO_DEFAULT_COUNTRY_CODE` | No | Default `91` (India); E.164 prefix for stored 10-digit phones. |
+| `OTP_PROVIDER` | No | `twilio` or `local` to force provider. |
 | `VAPID_PUBLIC_KEY` | No | Web Push: public key (from `npx web-push generate-vapid-keys`). |
 | `VAPID_PRIVATE_KEY` | No | Web Push: private key. Set both or neither for push to work. |
 
@@ -137,6 +149,24 @@ After changing env vars, **redeploy** so the new values are picked up.
 
 ---
 
-## 7. OTP / SMS in production
+## 7. OTP / SMS (Twilio Verify)
 
-Leave as-is for now. When you want real SMS in production, integrate a provider (Twilio, MSG91, Firebase Phone Auth, etc.) in `app/api/phone-verify/route.ts` and set provider-specific env vars (e.g. `TWILIO_*`) in Vercel.
+Production SMS OTP uses **Twilio Verify** when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` are set (unless `OTP_PROVIDER=local`).
+
+### Twilio Console (one-time)
+
+1. Sign up at [twilio.com](https://www.twilio.com/) and open the **[Console](https://console.twilio.com/)**.
+2. Copy **Account SID** and **Auth Token** → set `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` in your deployment env (never commit).
+3. Go to **Verify** → **Services** → **Create** a Verify Service. Copy the **Service SID** → `TWILIO_VERIFY_SERVICE_SID`.
+4. In the Verify Service, ensure **SMS** is enabled and that your target geography is allowed (e.g. **India +91** for national numbers stored as 10 digits).
+5. Phone numbers are sent to Twilio as **E.164**: by default `+` + `TWILIO_DEFAULT_COUNTRY_CODE` (default `91`) + 10 digits.
+
+### Behavior
+
+- **Twilio mode:** `send` starts a Verify SMS; `verify` checks the code with Twilio (no OTP hash stored in MongoDB for that flow).
+- **Local mode:** If Twilio env vars are omitted (or `OTP_PROVIDER=local`), the app uses the existing **MongoDB `OtpSession`** + hashed OTP from [`lib/otp.ts`](lib/otp.ts); in development the code is logged to the server console.
+- **Fixed test code:** `FIXED_OTP_CODE` works only when `NODE_ENV !== "production"` **or** `ALLOW_FIXED_OTP=true`, so production is not accidentally left open.
+
+### Vercel
+
+Add the Twilio variables under **Settings → Environment Variables** for Production (and Preview if needed), then redeploy.

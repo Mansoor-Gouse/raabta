@@ -18,6 +18,7 @@ import { useVideoMute } from "@/components/layout/VideoMuteContext";
 import { StoryPostEmbed } from "@/components/feed/StoryPostEmbed";
 import type { PostCardPost } from "@/components/feed/PostCard";
 import { StoryFeedStyleMedia } from "./StoryFeedStyleMedia";
+import { FeedPostReactionBarPlaceholder } from "@/components/feed/FeedPostReactionBar";
 
 const IMAGE_DURATION_MS = 5000;
 
@@ -107,14 +108,12 @@ export function StoryViewer({
   const statuses = session?.statuses ?? [];
   const currentStatus = statuses[statusIndex];
   const totalInSession = statuses.length;
+  /** Post-embed stories: StoryPostEmbed owns play/pause; StoryViewer must not fight with video.play(). */
+  const isEmbedStory = Boolean(currentStatus?.sourcePostId && embedPost);
 
   useEffect(() => {
     setMediaReady(false);
   }, [currentStatus?._id]);
-
-  useEffect(() => {
-    if (embedPost) setMediaReady(true);
-  }, [embedPost]);
 
   useEffect(() => {
     setStoryShareOpen(false);
@@ -282,16 +281,34 @@ export function StoryViewer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (isPaused || viewersDrawerOpen) {
+    if (viewersDrawerOpen) {
       video.pause();
       return;
     }
+    if (isEmbedStory) {
+      video.muted = globalMuted;
+      if (isPaused) video.pause();
+      return;
+    }
     video.muted = globalMuted;
+    if (isPaused) {
+      video.pause();
+      return;
+    }
     video.play().catch(() => {
-      // If autoplay with audio is blocked, fall back to muted playback.
       if (!globalMuted) setGlobalMuted(true);
     });
-  }, [isPaused, viewersDrawerOpen, currentStatus?._id, globalMuted, setGlobalMuted]);
+  }, [isEmbedStory, isPaused, viewersDrawerOpen, currentStatus?._id, globalMuted, setGlobalMuted]);
+
+  /** After long-press pause, StoryPostEmbed can resume; clear paused so we don't keep forcing pause. */
+  useEffect(() => {
+    if (!isEmbedStory || !mediaReady) return;
+    const video = videoRef.current;
+    if (!video) return;
+    const onPlay = () => setIsPaused(false);
+    video.addEventListener("play", onPlay);
+    return () => video.removeEventListener("play", onPlay);
+  }, [isEmbedStory, mediaReady, currentStatus?._id]);
 
   useEffect(() => {
     if (!currentStatus || isPaused || viewersDrawerOpen) return;
@@ -498,8 +515,15 @@ export function StoryViewer({
                 }}
               />
               <div className="flex-1 min-w-0 flex items-center justify-center min-h-0 overflow-hidden pointer-events-none">
-                <div className="pointer-events-auto w-full max-w-md px-2 sm:px-3 py-2 flex flex-col justify-center min-h-0">
-                  <StoryPostEmbed post={embedPost} navigateOnTap externalVideoRef={videoRef} />
+                <div className="pointer-events-auto w-full px-3 py-2 flex flex-col justify-center min-h-0">
+                  <StoryPostEmbed
+                    post={embedPost}
+                    navigateOnTap
+                    externalVideoRef={videoRef}
+                    videoLoop={false}
+                    className="w-full"
+                    onMediaReady={() => setMediaReady(true)}
+                  />
                 </div>
               </div>
               <button
@@ -520,16 +544,18 @@ export function StoryViewer({
                 transform: `scale(${t.scale}) translate(${t.translateX}px, ${t.translateY}px)`,
               };
               return (
-                <div className="absolute inset-0 flex items-center justify-center p-3">
-                  <div className="w-full max-w-md rounded-xl overflow-hidden border border-[var(--ig-border-light)] shadow-sm bg-[var(--ig-bg-primary)]">
+                <div className="absolute inset-0 flex items-center justify-center px-3">
+                  <article className="w-full max-w-full bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm">
                     <StoryFeedStyleMedia
                       mediaUrl={currentStatus.mediaUrl}
                       type={currentStatus.type}
                       transformStyle={transformStyle}
                       videoRef={videoRef}
                       onReady={() => setMediaReady(true)}
+                      showPausedOverlay={isVideo && isPaused}
                     />
-                  </div>
+                    <FeedPostReactionBarPlaceholder />
+                  </article>
                 </div>
               );
             })()
@@ -838,6 +864,9 @@ export function StoryViewer({
     advance,
     globalMuted,
     setGlobalMuted,
+    isPaused,
+    isVideo,
+    isEmbedStory,
   ]);
 
   if (typeof document === "undefined" || !session || statuses.length === 0) return null;

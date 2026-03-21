@@ -13,6 +13,7 @@ import {
 } from "@/components/layout/InstagramIcons";
 import { useVideoMute } from "@/components/layout/VideoMuteContext";
 import type { PostCardPost } from "@/components/feed/PostCard";
+import { POST_CARD_MEDIA_CONTAINER_CLASS } from "@/components/feed/PostCardMediaStyles";
 
 const CAPTION_LINE_HEIGHT = 1.35;
 
@@ -23,6 +24,10 @@ type StoryPostEmbedProps = {
   navigateOnTap?: boolean;
   /** Sync main video element with StoryViewer progress / pause (feed post videos only). */
   externalVideoRef?: React.MutableRefObject<HTMLVideoElement | null>;
+  /** Feed preview loops; story viewer must not loop so `ended` advances the story. */
+  videoLoop?: boolean;
+  /** Fires when main image/video is ready (for story progress / loading UI). */
+  onMediaReady?: () => void;
 };
 
 function timeAgo(date: string) {
@@ -54,6 +59,8 @@ export function StoryPostEmbed({
   className = "",
   navigateOnTap = true,
   externalVideoRef,
+  videoLoop = true,
+  onMediaReady,
 }: StoryPostEmbedProps) {
   const router = useRouter();
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -78,10 +85,20 @@ export function StoryPostEmbed({
   const likedSampleInitial = likedSampleName?.charAt(0)?.toUpperCase() || "?";
   const likeCount = post.likeCount;
 
+  /** Match PostCard: only pause when switching media, not on first paint (story has no inView replay). */
+  const prevMediaKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!currentIsVideo) setVideoPlaying(false);
-    else videoRef.current?.pause();
-  }, [mediaIndex, currentIsVideo]);
+    const key = `${mediaIndex}:${media ?? ""}`;
+    if (!currentIsVideo) {
+      setVideoPlaying(false);
+      prevMediaKeyRef.current = key;
+      return;
+    }
+    if (prevMediaKeyRef.current !== null && prevMediaKeyRef.current !== key) {
+      videoRef.current?.pause();
+    }
+    prevMediaKeyRef.current = key;
+  }, [mediaIndex, currentIsVideo, media]);
 
   useEffect(() => {
     setMediaLoaded(false);
@@ -148,7 +165,7 @@ export function StoryPostEmbed({
 
   return (
     <article
-      className={`bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm max-h-[min(92dvh,920px)] flex flex-col ${className}`}
+      className={`bg-[var(--ig-bg-primary)] border border-[var(--ig-border-light)] rounded-xl overflow-hidden shadow-sm w-full ${className}`}
       onClick={handleCardClick}
       role={navigateOnTap ? "link" : undefined}
       tabIndex={navigateOnTap ? 0 : undefined}
@@ -308,7 +325,7 @@ export function StoryPostEmbed({
 
       {post.mediaUrls.length > 0 && (
         <div
-          className={["relative w-full bg-black cursor-pointer", reelLayoutActive ? "z-[0]" : ""].join(" ")}
+          className={[POST_CARD_MEDIA_CONTAINER_CLASS, reelLayoutActive ? "z-[0]" : ""].join(" ")}
           style={{
             aspectRatio: mediaAspectRatio,
             minHeight: "160px",
@@ -352,28 +369,40 @@ export function StoryPostEmbed({
               ) : (
                 <>
                   <video
+                    key={media}
                     ref={(el) => {
                       (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
                       if (externalVideoRef) externalVideoRef.current = el;
+                      if (el != null && el.readyState >= 2) {
+                        setMediaLoaded(true);
+                        onMediaReady?.();
+                      }
                     }}
                     src={media}
                     className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
                       mediaLoaded ? "opacity-100" : "opacity-0"
                     }`}
                     playsInline
-                    loop
+                    loop={videoLoop}
                     muted={isMuted}
                     autoPlay
+                    onClick={toggleVideoPlay}
                     onPlay={() => setVideoPlaying(true)}
                     onPause={() => setVideoPlaying(false)}
-                    onLoadedData={() => setMediaLoaded(true)}
+                    onLoadedData={() => {
+                      setMediaLoaded(true);
+                      onMediaReady?.();
+                    }}
                     onLoadedMetadata={(e) => {
                       const v = e.currentTarget;
                       if (v.videoWidth > 0 && v.videoHeight > 0) {
                         setMediaAspectRatio(`${v.videoWidth} / ${v.videoHeight}`);
                       }
                     }}
-                    onError={() => setMediaLoaded(true)}
+                    onError={() => {
+                      setMediaLoaded(true);
+                      onMediaReady?.();
+                    }}
                   />
                   <button
                     type="button"
@@ -407,7 +436,10 @@ export function StoryPostEmbed({
                   </div>
                   <div
                     className="absolute inset-y-0 left-1/4 right-1/4 cursor-pointer pointer-events-auto z-10"
-                    onClick={toggleVideoPlay}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleVideoPlay(e);
+                    }}
                     aria-label={videoPlaying ? "Pause" : "Play"}
                   />
                 </>

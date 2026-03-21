@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useVideoMute } from "@/components/layout/VideoMuteContext";
+import { POST_CARD_MEDIA_CONTAINER_CLASS } from "@/components/feed/PostCardMediaStyles";
 
 export type StoryFeedStyleMediaProps = {
   mediaUrl: string;
@@ -12,6 +13,8 @@ export type StoryFeedStyleMediaProps = {
   onReady?: () => void;
   /** Story playback advances on end; feed embed uses loop. Default false. */
   videoLoop?: boolean;
+  /** Show center play glyph when story video is paused (matches feed PostCard). */
+  showPausedOverlay?: boolean;
   className?: string;
 };
 
@@ -26,6 +29,7 @@ export function StoryFeedStyleMedia({
   videoRef,
   onReady,
   videoLoop = false,
+  showPausedOverlay = false,
   className = "",
 }: StoryFeedStyleMediaProps) {
   const [mediaLoaded, setMediaLoaded] = useState(false);
@@ -62,7 +66,7 @@ export function StoryFeedStyleMedia({
 
   return (
     <div
-      className={`relative w-full bg-black ${className}`}
+      className={`${POST_CARD_MEDIA_CONTAINER_CLASS} ${className}`}
       style={{
         aspectRatio: mediaAspectRatio,
         minHeight: "160px",
@@ -153,6 +157,15 @@ export function StoryFeedStyleMedia({
               </svg>
             )}
           </button>
+          {showPausedOverlay && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20" aria-hidden>
+              <div className="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
+                <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

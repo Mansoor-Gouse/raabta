@@ -19,6 +19,7 @@
     "react-easy-crop": "^5.0.4",
     "stream-chat": "^9.27.0",
     "stream-chat-react": "^11.24.0",
+    "twilio": "^5.13.0",
     "uuid": "^10.0.0",
     "web-push": "^3.6.7"
   },

@@ -15,6 +15,7 @@ import {
 } from "@/components/layout/InstagramIcons";
 import { ReportButton } from "@/components/report/ReportButton";
 import { useVideoMute } from "@/components/layout/VideoMuteContext";
+import { POST_CARD_MEDIA_CONTAINER_CLASS } from "@/components/feed/PostCardMediaStyles";
 
 export type PostCardPost = {
   _id: string;
@@ -615,7 +616,7 @@ export function PostCard({
       {post.mediaUrls.length > 0 && (
         <div
           className={[
-            "relative w-full bg-black cursor-default",
+            POST_CARD_MEDIA_CONTAINER_CLASS,
             reelLayoutActive ? "z-[0]" : "",
           ].join(" ")}
           style={{
