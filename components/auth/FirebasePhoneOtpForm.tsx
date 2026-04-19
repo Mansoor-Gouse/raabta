@@ -57,11 +57,16 @@ export default function FirebasePhoneOtpForm() {
     else nameInputRef.current?.focus();
   }, [step]);
 
+  // Recreate verifier when the phone step is shown so the widget sits inside the card; cleared when leaving this step.
   useEffect(() => {
+    if (step !== "phone") {
+      recaptchaVerifierRef.current = null;
+      return;
+    }
+
     let verifier: RecaptchaVerifier | null = null;
     try {
       const auth = getFirebaseAuth();
-      // Firebase Phone Auth requires reCAPTCHA on web. "compact" shows a small widget; "invisible" hides it (badge may still appear).
       verifier = new RecaptchaVerifier(auth, "firebase-recaptcha-container", {
         size: "compact",
       });
@@ -70,6 +75,7 @@ export default function FirebasePhoneOtpForm() {
       console.error(e);
       setError("Firebase is not configured correctly.");
     }
+
     return () => {
       try {
         verifier?.clear();
@@ -78,7 +84,7 @@ export default function FirebasePhoneOtpForm() {
       }
       recaptchaVerifierRef.current = null;
     };
-  }, []);
+  }, [step]);
 
   const finishLogin = useCallback(async () => {
     const deviceId = getDeviceId();
@@ -201,16 +207,6 @@ export default function FirebasePhoneOtpForm() {
 
   return (
     <>
-      {/* Always mounted (Firebase requirement). Shown on phone step — placed above the form so it’s visible. */}
-      <div
-        id="firebase-recaptcha-container"
-        className={
-          step === "phone"
-            ? "mx-auto flex min-h-[78px] w-full max-w-[400px] justify-center px-4 pb-2 pt-4"
-            : "sr-only"
-        }
-        aria-hidden={step !== "phone"}
-      />
       {step === "name" ? (
       <main
         className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-6"
@@ -416,6 +412,13 @@ export default function FirebasePhoneOtpForm() {
               {error}
             </p>
           )}
+          <div className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-3 sm:px-3">
+            <p className="mb-2 text-center text-xs font-medium text-[#6B7280]">Security check</p>
+            <div
+              id="firebase-recaptcha-container"
+              className="flex min-h-[78px] w-full flex-col items-center justify-center [&_iframe]:max-w-full"
+            />
+          </div>
           <button
             type="submit"
             disabled={loading || normalizePhone(phone).length < 10}
@@ -425,8 +428,7 @@ export default function FirebasePhoneOtpForm() {
           </button>
         </form>
         <p className="text-center text-[11px] leading-relaxed text-[#9CA3AF] px-1">
-          SMS sign-in uses Google reCAPTCHA. Complete the challenge above this card, then tap Send
-          code.
+          Complete the security check, then tap Send code. SMS is protected by Google reCAPTCHA.
         </p>
         <p className="text-center">
           <Link
